@@ -15,8 +15,6 @@ import {
 
 type Role = "USER" | "ADMIN" | string;
 
-const IFMA_MODE = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
-
 export type AuthUser = {
   id: string;
   nome?: string;
@@ -39,7 +37,7 @@ export type AuthUser = {
   academicVerifiedAt?: string | null;
   matricula?: string | null;
 
-  // Documentos para modo SaaS tradicional
+  // Documentos para modo SaaS tradicional (mantidos na tipagem caso a API retorne)
   documentFrontImage?: string | null;
   documentBackImage?: string | null;
   addressProof?: string | null;
@@ -99,7 +97,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(JSON.parse(storedUser));
 
           try {
-            // 👇 ALTERADO DE "/auth/me" PARA "/users/me" 👇
             await api.get("/users/me");
           } catch (err: any) {
             const status = err.response?.status;
@@ -122,40 +119,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return detach;
   }, []);
 
-  // ── Atualiza o status acadêmico consultando o backend ──────────────────────
-  // Chamada pelo SuapVerifyScreen após verificação bem-sucedida,
-  // para refletir isAcademicVerified=true no estado local.
-  // ── Atualiza o usuário por completo (Status, Documentos, etc) ──────────────
-  // ── Atualiza o status do usuário de forma dinâmica (IFMA ou Comercial) ───────
   const refreshUser = useCallback(async () => {
     try {
-      if (IFMA_MODE) {
-        const res = await api.get("/auth/ifma/status");
-        // ... lógica do IFMA
-      } else {
-        // 👇 ALTERADO DE "/auth/me" PARA "/users/me" 👇
-        const res = await api.get("/users/me");
-
-        setUser((prev) => {
-          if (!prev) return prev;
-          const next: AuthUser = {
-            ...prev,
-            ...res.data,
-          };
-          SecureStore.setItemAsync("user", JSON.stringify(next)).catch(
-            () => {},
-          );
-          return next;
-        });
-      }
+      const res = await api.get("/auth/ifma/status");
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next: AuthUser = {
+          ...prev,
+          ...res.data,
+        };
+        SecureStore.setItemAsync("user", JSON.stringify(next)).catch(() => {});
+        return next;
+      });
     } catch (e) {
       console.log("Erro ao recarregar dados do usuário:", e);
     }
   }, []);
 
-  // ── signInWithToken ────────────────────────────────────────────────────────
-  // Aceita um redirectFn opcional para que o chamador (login, Google, etc.)
-  // possa controlar a navegação sem criar dependência circular com o router.
   async function signInWithToken(
     token: string,
     userData: AuthUser,
@@ -168,16 +148,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(userData);
 
-    // ── Guard IFMA: redireciona para verificação SUAP se necessário ──────────
     if (redirectFn) {
-      if (IFMA_MODE && !userData.isAcademicVerified) {
+      if (!userData.isAcademicVerified) {
         redirectFn("/suap-verify");
       } else {
         redirectFn("/home");
       }
     }
 
-    // Registra push token em background
     try {
       const pushToken = await registerForPush(userData.id);
       if (pushToken) {
@@ -228,7 +206,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: AuthUser;
       };
 
-      // Passa undefined como redirectFn — quem chama login() controla a navegação
       await signInWithToken(token, userData);
       return { success: true };
     } catch (error: any) {
@@ -244,7 +221,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 👇 FUNÇÃO DE REGISTRO ATUALIZADA AQUI 👇
   async function register(
     name: string,
     email: string,
@@ -263,8 +239,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         senha,
         acceptedTerms,
         acceptedPrivacy,
-        cpf, // Enviando CPF para o backend
-        address, // Enviando Endereço para o backend
+        cpf,
+        address,
       });
 
       return { success: true };

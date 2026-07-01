@@ -7,7 +7,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { GameTimeRange } from "./GameTimeRange";
-import PriceRange from "./PriceRange";
 import { styles } from "./styles";
 
 interface Props {
@@ -24,14 +23,7 @@ export function FilterCard({ onApply, initialValues }: Props) {
   const [players, setPlayers] = useState<number | null>(initial.players);
   const [age, setAge] = useState<number | null>(initial.age);
   const [stars, setStars] = useState<number[]>(initial.stars);
-
-  const [priceMin, setPriceMin] = useState<number>(initial.priceMin);
-  const [priceMax, setPriceMax] = useState<number>(initial.priceMax);
-
   const [timeMax, setTimeMax] = useState<number>(initial.timeMax);
-
-  // 👇 DETECTA SE O APLICATIVO ESTÁ RODANDO NO MODO ACADÊMICO DO IFMA
-  const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
   useEffect(() => {
     const v = initialValues ?? DEFAULT_FILTERS;
@@ -39,8 +31,6 @@ export function FilterCard({ onApply, initialValues }: Props) {
     setPlayers(v.players);
     setAge(v.age);
     setStars(v.stars);
-    setPriceMin(v.priceMin);
-    setPriceMax(v.priceMax);
     setTimeMax(v.timeMax);
   }, [initialValues]);
 
@@ -55,8 +45,6 @@ export function FilterCard({ onApply, initialValues }: Props) {
     setPlayers(DEFAULT_FILTERS.players);
     setAge(DEFAULT_FILTERS.age);
     setStars(DEFAULT_FILTERS.stars);
-    setPriceMin(DEFAULT_FILTERS.priceMin);
-    setPriceMax(DEFAULT_FILTERS.priceMax);
     setTimeMax(DEFAULT_FILTERS.timeMax);
 
     resetFilters();
@@ -68,11 +56,9 @@ export function FilterCard({ onApply, initialValues }: Props) {
       players !== DEFAULT_FILTERS.players ||
       age !== DEFAULT_FILTERS.age ||
       stars.length > 0 ||
-      (!isIfmaMode && priceMin !== DEFAULT_FILTERS.priceMin) ||
-      (!isIfmaMode && priceMax !== DEFAULT_FILTERS.priceMax) ||
       timeMax !== DEFAULT_FILTERS.timeMax
     );
-  }, [status, players, age, stars, priceMin, priceMax, timeMax, isIfmaMode]);
+  }, [status, players, age, stars, timeMax]);
 
   return (
     <ScrollView
@@ -137,18 +123,6 @@ export function FilterCard({ onApply, initialValues }: Props) {
             </TouchableOpacity>
           ))}
         </View>
-
-        {/* 👇 CONDICIONAL: SE FOR MODO IFMA, OCULTA COMPLETAMENTE O FILTRO DE PREÇO */}
-        {!isIfmaMode && (
-          <PriceRange
-            valueMin={priceMin}
-            valueMax={priceMax}
-            onChange={(min, max) => {
-              setPriceMin(min);
-              setPriceMax(max);
-            }}
-          />
-        )}
 
         <Text style={styles.title}>Quantidade de jogadores</Text>
         <View style={styles.row}>
@@ -245,8 +219,8 @@ export function FilterCard({ onApply, initialValues }: Props) {
               players,
               age,
               stars,
-              priceMin,
-              priceMax,
+              priceMin: DEFAULT_FILTERS.priceMin, // Mantido apenas para evitar erro de TS
+              priceMax: DEFAULT_FILTERS.priceMax, // Mantido apenas para evitar erro de TS
               timeMax,
             })
           }
