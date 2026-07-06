@@ -16,41 +16,26 @@ export function RegistrationBanner() {
 
   const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
-  if (isIfmaMode) {
-    if (user?.isAcademicVerified) return null;
-
-    return (
-      <Pressable
-        style={styles.containerWarning}
-        onPress={() => router.push("/suap-verify")}
-      >
-        <View style={styles.iconWrapWarning}>
-          <Ionicons name="school" size={24} color="#B8860B" />
-        </View>
-        <View style={styles.textWrap}>
-          <Text style={styles.titleWarn}>Vínculo Acadêmico</Text>
-          <Text style={styles.subtitleWarn}>
-            Verifique seu SUAP para liberar os aluguéis no campus Timon.
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color="#B8860B" />
-      </Pressable>
-    );
-  }
-
-  if (user?.registrationStatus === "APPROVED") return null;
+  // 1. Se já está totalmente aprovado, esconde o banner
+  if (isIfmaMode && user?.isAcademicVerified) return null;
+  if (!isIfmaMode && user?.registrationStatus === "APPROVED") return null;
 
   const isRejected = user?.registrationStatus === "REJECTED";
+  const isPending = user?.registrationStatus === "PENDING";
 
-  const hasAllDocs = Boolean(
-    user?.documentFrontImage &&
-    user?.documentBackImage &&
-    user?.addressProof &&
-    user?.selfieWithId,
-  );
+  // 2. Verifica os documentos consoante o modo
+  const hasAllDocs = isIfmaMode
+    ? Boolean(user?.enrollmentProof) // No IFMA, basta o comprovativo
+    : Boolean(
+        user?.documentFrontImage &&
+        user?.documentBackImage &&
+        user?.addressProof &&
+        user?.selfieWithId,
+      );
 
-  const isAnalysis = user?.registrationStatus === "PENDING" && hasAllDocs;
+  const isAnalysis = isPending && hasAllDocs;
 
+  // 3. Estado: EM ANÁLISE
   if (isAnalysis) {
     return (
       <View style={styles.containerInfo}>
@@ -60,14 +45,16 @@ export function RegistrationBanner() {
         <View style={styles.textWrap}>
           <Text style={styles.titleInfo}>Em Análise</Text>
           <Text style={styles.subtitleInfo}>
-            Seus documentos estão sendo avaliados pela nossa equipe. Aguarde a
-            aprovação!
+            {isIfmaMode
+              ? "Seu comprovante de vínculo está sendo avaliado. Aguarde a liberação!"
+              : "Seus documentos estão sendo avaliados pela nossa equipe. Aguarde a aprovação!"}
           </Text>
         </View>
       </View>
     );
   }
 
+  // 4. Estado: REJEITADO (Leva para DocumentsScreen)
   if (isRejected) {
     return (
       <Pressable
@@ -80,7 +67,7 @@ export function RegistrationBanner() {
         <View style={styles.textWrap}>
           <Text style={styles.titleError}>Atenção aos seus documentos</Text>
           <Text style={styles.subtitleError}>
-            Houve um problema. Toque aqui para ver o motivo e reenviar as fotos.
+            Houve um problema. Toque aqui para ver o motivo e reenviar.
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#DC2626" />
@@ -88,18 +75,27 @@ export function RegistrationBanner() {
     );
   }
 
+  // 5. Estado: PENDENTE DE ENVIO (Leva para DocumentsScreen)
   return (
     <Pressable
       style={styles.containerWarning}
       onPress={() => router.push("/profile/documents")}
     >
       <View style={styles.iconWrapWarning}>
-        <Ionicons name="warning" size={24} color="#B8860B" />
+        <Ionicons
+          name={isIfmaMode ? "school" : "warning"}
+          size={24}
+          color="#B8860B"
+        />
       </View>
       <View style={styles.textWrap}>
-        <Text style={styles.titleWarn}>Termine seu cadastro!</Text>
+        <Text style={styles.titleWarn}>
+          {isIfmaMode ? "Vínculo Acadêmico" : "Termine seu cadastro!"}
+        </Text>
         <Text style={styles.subtitleWarn}>
-          Envie seus documentos para liberar o aluguel de jogos do acervo.
+          {isIfmaMode
+            ? "Envie seu comprovante de matrícula para liberar os aluguéis no campus Timon."
+            : "Envie seus documentos para liberar o aluguel de jogos do acervo."}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#B8860B" />

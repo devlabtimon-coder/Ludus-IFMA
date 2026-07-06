@@ -188,6 +188,7 @@ export default function RegisterFormIFMA() {
     }
 
     setLoading(true);
+    alert("O App está tentando conectar em: " + api.defaults.baseURL);
     try {
       await api.post("/auth/ifma/register", {
         name: cleanName,
@@ -213,10 +214,36 @@ export default function RegisterFormIFMA() {
         });
       }, 1400);
     } catch (e: any) {
-      const code = e?.response?.data?.code;
-      const msg = e?.response?.data?.error || "Erro ao iniciar cadastro.";
+      // 👇 ERRO DEIXOU DE SER SILENCIOSO AQUI 👇
+      console.error("ERRO COMPLETO NO FRONTEND:", e);
 
-      if (code === "INVALID_INSTITUTIONAL_EMAIL") {
+      const status = e?.response?.status;
+      const code = e?.response?.data?.code;
+
+      // Tenta apanhar o erro enviado pelo backend. Se não existir, apanha o erro do Axios.
+      const msg =
+        e?.response?.data?.error ||
+        e?.message ||
+        "Erro desconhecido ao iniciar o registo.";
+
+      // 1. O telemóvel não encontrou o servidor
+      if (e?.message === "Network Error") {
+        showAlert(
+          "error",
+          "Erro de Conexão",
+          "O aplicativo não conseguiu conectar-se ao servidor. Verifique o arquivo api.ts (use o IP da sua rede WiFi em vez de localhost) e veja se o servidor está rodando.",
+        );
+      }
+      // 2. A rota não está registada no backend
+      else if (status === 404) {
+        showAlert(
+          "error",
+          "Rota Inválida (404)",
+          "O servidor não encontrou a rota /auth/ifma/register.",
+        );
+      }
+      // 3. Erros tratados do nosso Backend
+      else if (code === "INVALID_INSTITUTIONAL_EMAIL") {
         showAlert("error", "E-mail inválido", msg);
       } else if (code === "MATRICULA_IN_USE") {
         showAlert(
@@ -225,9 +252,10 @@ export default function RegisterFormIFMA() {
           "Esta matrícula já está associada a uma conta Ludus.",
         );
       } else if (code === "WAIT_BEFORE_RESEND") {
-        showAlert("info", "Aguarde", msg);
+        showAlert("info", "Aguarde um momento", msg);
       } else {
-        showAlert("error", "Erro", msg);
+        // Exibe qualquer outro erro na íntegra
+        showAlert("error", "Erro do Servidor", msg);
       }
     } finally {
       setLoading(false);
@@ -298,10 +326,10 @@ export default function RegisterFormIFMA() {
               placeholder="Ex: 20241INF.TMN0001"
               placeholderTextColor="#999"
               value={matricula}
-              onChangeText={(t) => setMatricula(t.toUpperCase())} // Adicione o .toUpperCase() aqui
+              onChangeText={(t) => setMatricula(t.toUpperCase())}
               autoCapitalize="characters"
               autoCorrect={false}
-              spellCheck={false} // Evita que o teclado marque como erro ortográfico
+              spellCheck={false}
               returnKeyType="next"
               onSubmitEditing={() => passRef.current?.focus()}
             />

@@ -5,6 +5,7 @@ import { DocumentPicker } from "@/src/components/Profie/DocumentPicker";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
+import * as ExpoDocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -25,22 +26,18 @@ export default function DocumentsScreen() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
 
-  // 👇 INICIAMOS OS ESTADOS COM AS FOTOS QUE JÁ ESTÃO SALVAS NO BANCO 👇
   const [docFront, setDocFront] = useState<string | null>(
     user?.documentFrontImage || null,
   );
   const [docBack, setDocBack] = useState<string | null>(
     user?.documentBackImage || null,
   );
-  const [addressProof, setAddressProof] = useState<string | null>(
-    user?.addressProof || null,
-  );
-  const [selfieWithId, setSelfieWithId] = useState<string | null>(
-    user?.selfieWithId || null,
+
+  const [enrollmentProof, setEnrollmentProof] = useState<any>(
+    user?.enrollmentProof || null,
   );
 
   const [loading, setLoading] = useState(false);
-
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState<AlertType>("info");
   const [alertTitle, setAlertTitle] = useState("");
@@ -53,62 +50,69 @@ export default function DocumentsScreen() {
     setAlertVisible(true);
   };
 
+  const pickEnrollmentProof = async () => {
+    try {
+      const result = await ExpoDocumentPicker.getDocumentAsync({
+        type: ["application/pdf", "image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        setEnrollmentProof(result.assets[0]);
+      }
+    } catch (error) {
+      console.error("Erro ao selecionar documento:", error);
+    }
+  };
+
   const handleSubmit = async () => {
-    // Validação se os 4 documentos estão preenchidos na tela
-    if (!docFront || !docBack || !addressProof || !selfieWithId) {
+    if (!docFront || !docBack || !enrollmentProof) {
       return showAlert(
         "info",
-        "Faltam documentos",
-        "Por favor, anexe todas as fotos solicitadas, incluindo a sua selfie com o documento.",
+        "Faltam informações",
+        "Por favor, anexe todos os documentos solicitados.",
       );
     }
 
     setLoading(true);
     try {
       const formData = new FormData();
-      let hasNewFile = false; // Controle para saber se ele realmente trocou alguma foto
+      let hasChanges = false;
 
-      // Só enviamos para a API as fotos NOVAS (que não começam com 'http' do banco de dados)
       if (docFront && !docFront.startsWith("http")) {
         formData.append("documentFront", {
           uri: docFront,
           name: "docFront.jpg",
           type: "image/jpeg",
         } as any);
-        hasNewFile = true;
+        hasChanges = true;
       }
+
       if (docBack && !docBack.startsWith("http")) {
         formData.append("documentBack", {
           uri: docBack,
           name: "docBack.jpg",
           type: "image/jpeg",
         } as any);
-        hasNewFile = true;
-      }
-      if (addressProof && !addressProof.startsWith("http")) {
-        formData.append("addressProof", {
-          uri: addressProof,
-          name: "address.jpg",
-          type: "image/jpeg",
-        } as any);
-        hasNewFile = true;
-      }
-      if (selfieWithId && !selfieWithId.startsWith("http")) {
-        formData.append("selfieWithId", {
-          uri: selfieWithId,
-          name: "selfie.jpg",
-          type: "image/jpeg",
-        } as any);
-        hasNewFile = true;
+        hasChanges = true;
       }
 
-      // Se ele não mudou nenhuma foto e apertou enviar, avisamos
-      if (!hasNewFile) {
+      // Comprovante (Pode ser PDF ou Imagem)
+      if (enrollmentProof && typeof enrollmentProof !== "string") {
+        formData.append("enrollmentProof", {
+          uri: enrollmentProof.uri,
+          name: enrollmentProof.name || "comprovante.pdf",
+          type: enrollmentProof.mimeType || "application/pdf",
+        } as any);
+        hasChanges = true;
+      }
+
+      if (!hasChanges) {
         setLoading(false);
         return showAlert(
           "info",
           "Nenhuma alteração",
-          "Você não enviou nenhuma foto nova.",
+          "Você não modificou nenhum arquivo.",
         );
       }
 
@@ -121,19 +125,20 @@ export default function DocumentsScreen() {
       showAlert(
         "success",
         "Enviado com sucesso!",
-        "Seus documentos estão em análise. Você será notificado assim que aprovarmos.",
+        "Seus documentos estão em análise. Você será notificado assim que o vínculo for aprovado.",
       );
 
       setTimeout(() => {
         setAlertVisible(false);
         router.back();
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      const serverMsg = error.response?.data?.error;
       showAlert(
         "error",
         "Erro no envio",
-        "Não foi possível enviar os documentos. Tente novamente.",
+        serverMsg || "Não foi possível enviar os documentos. Tente novamente.",
       );
     } finally {
       setLoading(false);
@@ -154,89 +159,108 @@ export default function DocumentsScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scroll}
           >
-            <Text style={styles.title}>Validação de Conta</Text>
+            <View style={styles.headerTitleRow}>
+              <View style={styles.iconWrap}>
+                <Ionicons name="documents" size={26} color="#ffffff" />
+              </View>
+              <Text style={styles.title}>Documentação</Text>
+            </View>
+
             <Text style={styles.subtitle}>
-              Anexe seus documentos para liberar o aluguel de jogos.
+              Anexe as fotos do seu documento e o comprovante do SUAP para
+              liberar os aluguéis no IFMA.
             </Text>
 
-            {/* 👇 CAIXA AMARELA RESTAURADA AQUI 👇 */}
+            {/* CAIXA DE INFORMAÇÃO COM TONS LUDUS (AZUL SUAVE) */}
             <View style={styles.infoBox}>
-              <Text style={styles.infoTitle}>Por que pedimos isso?</Text>
-              <Text style={styles.infoText}>
-                Para garantir a segurança do nosso acervo de jogos, precisamos
-                confirmar sua identidade antes de liberar os aluguéis.
-              </Text>
-            </View>
-
-            {/* Dicas de Fotografia */}
-            <View style={styles.tipsBox}>
-              <View style={styles.tipsHeader}>
-                <Ionicons name="bulb" size={20} color="#1D4ED8" />
-                <Text style={styles.tipsTitle}>
-                  Dicas para aprovação rápida
-                </Text>
+              <View style={styles.infoBoxHeader}>
+                <Ionicons name="shield-checkmark" size={18} color="#31358B" />
+                <Text style={styles.infoTitle}>Ambiente Seguro</Text>
               </View>
-              <Text style={styles.tipsText}>
-                • Vá para um ambiente bem iluminado.
-              </Text>
-              <Text style={styles.tipsText}>
-                • Retire o documento do plástico.
-              </Text>
-              <Text style={styles.tipsText}>
-                • Evite reflexos de luz e flash estourado.
-              </Text>
-              <Text style={styles.tipsText}>
-                • Certifique-se de que as letras estão nítidas.
+              <Text style={styles.infoText}>
+                Este aplicativo é de uso exclusivo da comunidade do IFMA Campus
+                Timon. Seus dados estão criptografados e serão usados
+                exclusivamente para a aprovação do cadastro.
               </Text>
             </View>
 
+            {/* CAIXA DE REJEIÇÃO */}
             {user?.registrationStatus === "REJECTED" && (
               <View style={styles.rejectedBox}>
-                <Text style={styles.rejectedTitle}>
-                  Atenção: Documentos Recusados
-                </Text>
+                <View style={styles.rejectedHeader}>
+                  <Ionicons name="alert-circle" size={18} color="#E62325" />
+                  <Text style={styles.rejectedTitle}>
+                    Documentação Recusada
+                  </Text>
+                </View>
                 <Text style={styles.rejectedText}>
                   {user?.rejectReason ||
-                    "Por favor, envie novas fotos mais nítidas."}
+                    "Por favor, verifique a qualidade dos arquivos e envie novamente."}
                 </Text>
               </View>
             )}
 
-            <DocumentPicker
-              label="1. Selfie segurando o Documento"
-              description="Tire uma foto sua segurando a frente do seu RG ou CNH próximo ao rosto. Não tampe nenhuma informação."
-              imageUri={selfieWithId}
-              onImageSelected={setSelfieWithId}
-            />
+            {/* SELETOR DE COMPROVANTE (PDF/FOTO) */}
+            <View style={styles.enrollmentBox}>
+              <Text style={styles.inputLabel}>Comprovante de Matrícula</Text>
+              <Text style={styles.enrollmentDesc}>
+                Baixe o PDF do comprovante no SUAP ou tire um print legível da
+                tela onde aparece seu nome e status.
+              </Text>
+              <Pressable
+                style={styles.uploadButton}
+                onPress={pickEnrollmentProof}
+              >
+                <Ionicons
+                  name={
+                    enrollmentProof ? "document-text" : "cloud-upload-outline"
+                  }
+                  size={28}
+                  color="#31358B"
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.uploadButtonText} numberOfLines={1}>
+                    {typeof enrollmentProof === "string"
+                      ? "Comprovante já salvo (Toque para trocar)"
+                      : enrollmentProof?.name
+                        ? enrollmentProof.name
+                        : "Selecionar Arquivo (PDF ou Imagem)"}
+                  </Text>
+                  {enrollmentProof && typeof enrollmentProof !== "string" && (
+                    <Text style={styles.uploadSubtext}>
+                      Arquivo pronto para envio
+                    </Text>
+                  )}
+                </View>
+              </Pressable>
+            </View>
 
-            <DocumentPicker
-              label="2. Documento - Frente"
-              description="Lado com a sua foto (RG ou CNH)."
-              imageUri={docFront}
-              onImageSelected={setDocFront}
-            />
+            {/* FOTOS DOS DOCUMENTOS */}
+            <View style={styles.docsContainer}>
+              <DocumentPicker
+                label="Frente do Documento (RG/CNH)"
+                description="Foto nítida do lado que contém a sua foto."
+                imageUri={docFront}
+                onImageSelected={setDocFront}
+              />
 
-            <DocumentPicker
-              label="3. Documento - Verso"
-              description="Lado com seus dados pessoais e assinatura."
-              imageUri={docBack}
-              onImageSelected={setDocBack}
-            />
+              <DocumentPicker
+                label="Verso do Documento"
+                description="Foto do lado que contém seus dados e CPF."
+                imageUri={docBack}
+                onImageSelected={setDocBack}
+              />
+            </View>
 
-            <DocumentPicker
-              label="4. Comprovante de Residência"
-              description="Conta de luz, água ou internet no seu nome ou de pais (Máx. 3 meses)."
-              imageUri={addressProof}
-              onImageSelected={setAddressProof}
-            />
-
+            {/* BOTÃO PRINCIPAL (VERMELHO LUDUS) */}
             <Pressable
               style={[styles.button, loading && { opacity: 0.7 }]}
               onPress={handleSubmit}
               disabled={loading}
             >
+              <Ionicons name="paper-plane-outline" size={20} color="#FFF" />
               <Text style={styles.buttonText}>
-                {loading ? "Enviando..." : "Enviar para Análise"}
+                {loading ? "Enviando arquivos..." : "Enviar para Análise"}
               </Text>
             </Pressable>
           </ScrollView>
@@ -255,86 +279,170 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#04096E" },
-  bottomArea: { flex: 1, justifyContent: "flex-end" },
+  root: {
+    flex: 1,
+    backgroundColor: "#31358B",
+  },
+  bottomArea: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    maxHeight: height * 0.85,
-    height: height * 0.85,
-    padding: 28,
+    maxHeight: height * 0.88,
+    height: height * 0.88,
+    paddingHorizontal: 24,
+    paddingTop: 32,
   },
-  scroll: { paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: "700", color: "#535353", marginBottom: 8 },
-  subtitle: { fontSize: 16, color: "#535353", marginBottom: 16 },
-
-  // Estilo da Caixa Amarela (Restaurada)
-  infoBox: {
-    backgroundColor: "#FFF9E6",
-    borderColor: "#FBBC04",
-    borderWidth: 1,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
+  scroll: {
+    paddingBottom: 40,
   },
-  infoTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#B8860B",
-    marginBottom: 6,
-  },
-  infoText: {
-    fontSize: 14,
-    color: "#535353",
-    lineHeight: 20,
-  },
-
-  // Estilo do quadro de Dicas (Azul)
-  tipsBox: {
-    backgroundColor: "#EFF6FF",
-    borderColor: "#93C5FD",
-    borderWidth: 1,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  tipsHeader: {
+  headerTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
-    gap: 6,
+    marginBottom: 10,
+    gap: 12,
   },
-  tipsTitle: { fontSize: 15, fontWeight: "700", color: "#1E3A8A" },
-  tipsText: {
-    fontSize: 13,
-    color: "#1D4ED8",
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: "#FBBC04",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#0A1F5C",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginBottom: 20,
     lineHeight: 22,
     fontWeight: "500",
   },
 
+  infoBox: {
+    backgroundColor: "#F0F2FF",
+    borderWidth: 1,
+    borderColor: "rgba(49,53,139,0.15)",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 20,
+  },
+  infoBoxHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 6,
+  },
+  infoTitle: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#31358B",
+  },
+  infoText: {
+    fontSize: 13,
+    color: "#535353",
+    lineHeight: 19,
+    fontWeight: "600",
+  },
+
   rejectedBox: {
     backgroundColor: "#FEF2F2",
-    borderColor: "#E62325",
     borderWidth: 1,
+    borderColor: "#E62325",
     padding: 16,
     borderRadius: 16,
     marginBottom: 24,
   },
-  rejectedTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#E62325",
+  rejectedHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     marginBottom: 6,
   },
-  rejectedText: { fontSize: 14, color: "#991B1B", lineHeight: 20 },
-  button: {
-    backgroundColor: "#04096E",
-    paddingVertical: 16,
-    borderRadius: 16,
+  rejectedTitle: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#E62325",
+  },
+  rejectedText: {
+    fontSize: 13,
+    color: "#991B1B",
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#0A1F5C",
+    marginBottom: 8,
+  },
+
+  enrollmentBox: {
+    marginBottom: 24,
+  },
+  enrollmentDesc: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 12,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  uploadButton: {
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#F7F8FF",
+    borderWidth: 1.5,
+    borderColor: "#31358B",
+    borderStyle: "dashed",
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 14,
+  },
+  uploadButtonText: {
+    color: "#31358B",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  uploadSubtext: {
+    color: "#6B7280",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+
+  docsContainer: {
+    marginTop: 10,
+  },
+
+  button: {
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: "#E62325",
+    paddingVertical: 18,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 10,
     marginBottom: 20,
+    shadowColor: "#E62325",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "900",
+  },
 });

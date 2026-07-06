@@ -56,6 +56,9 @@ type GameDetails = {
 
   // RF017
   tier?: string | null;
+
+  // MECÂNICAS
+  mechanics?: string[];
 };
 
 type AlertType = "error" | "success" | "info";
@@ -65,7 +68,6 @@ export default function GameDetailsScreen() {
   const { user, refreshUser } = useAuth();
   const isAdmin = user?.role === "ADMIN";
 
-  // Sempre que o utilizador abrir a tela deste jogo, verificamos o status real dele no servidor.
   useFocusEffect(
     useCallback(() => {
       refreshUser();
@@ -78,7 +80,6 @@ export default function GameDetailsScreen() {
     [params.id],
   );
 
-  // Estados do Modal de Bloqueio
   const [blockModalVisible, setBlockModalVisible] = useState(false);
   const [blockType, setBlockType] = useState<BlockType>(null);
 
@@ -279,7 +280,6 @@ export default function GameDetailsScreen() {
       .catch(() => setCanRate(false));
   }, [game?.id]);
 
-  // Função central para envio das datas do calendário para a API
   const handleConfirmRental = useCallback(
     async (startDateIso: string, endDateIso: string) => {
       if (!game) return;
@@ -300,7 +300,6 @@ export default function GameDetailsScreen() {
         setRentOpen(false);
         await fetchDetails();
       } catch (e: any) {
-        // Se não aceitou os termos, salva as datas no ref e abre modal de termos
         if (isTermsBlocked(e)) {
           pendingRentRef.current = { startDateIso, endDateIso };
           setTermsOpen(true);
@@ -362,7 +361,6 @@ export default function GameDetailsScreen() {
       const pending = pendingRentRef.current;
       pendingRentRef.current = null;
 
-      // Dispara novamente o agendamento com as datas recuperadas da memória
       await handleConfirmRental(pending.startDateIso, pending.endDateIso);
     } catch {
       showAlert(
@@ -377,7 +375,7 @@ export default function GameDetailsScreen() {
 
   const openRentFlow = useCallback(() => {
     if (!game) return;
-    setRentOpen(true); // Abre direto o modal do calendário, sem buscar cópias primeiro!
+    setRentOpen(true);
   }, [game]);
 
   const checkFavorite = useCallback(async (gameId: string) => {
@@ -499,10 +497,17 @@ export default function GameDetailsScreen() {
                 minTime={game.minTime}
                 maxTime={game.maxTime}
                 minAge={game.minAge}
-                // adicionar essas propriedades na API:
-                // complexity={game.complexity}
-                // year={game.yearPublished}
               />
+
+              {game.mechanics && game.mechanics.length > 0 && (
+                <View style={styles.mechanicsContainer}>
+                  {game.mechanics.map((mechanic, index) => (
+                    <View key={index} style={styles.mechanicPill}>
+                      <Text style={styles.mechanicText}>{mechanic}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
 
               <View style={styles.tabs}>
                 <Pressable
@@ -690,11 +695,10 @@ export default function GameDetailsScreen() {
             onAction={() => {
               setBlockModalVisible(false);
 
-              if (blockType === "IFMA_UNVERIFIED") {
-                router.push("/suap-verify");
-              } else if (blockType === "DOCS_PENDING") {
+              if (blockType === "DOCS_PENDING") {
                 // Apenas fecha o modal
               } else {
+                // 👇 Qualquer outro bloqueio agora envia para os documentos
                 router.push("/profile/documents");
               }
             }}
@@ -754,6 +758,27 @@ const styles = StyleSheet.create({
     color: "#FBBC04",
     fontWeight: "900",
     fontSize: 13,
+  },
+
+  mechanicsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  mechanicPill: {
+    backgroundColor: "#F0F2FF",
+    borderWidth: 1,
+    borderColor: "rgba(49,53,139,0.1)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  mechanicText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#31358B",
   },
 
   tabs: {

@@ -19,7 +19,6 @@ api.interceptors.response.use(
     const status = error?.response?.status;
     const code = error?.response?.data?.code;
 
-    // 1. TRATAMENTO DE BLOQUEIO ADMINISTRATIVO
     if (status === 403 && code === "ACCOUNT_BLOCKED") {
       await SecureStore.deleteItemAsync("token");
       await SecureStore.deleteItemAsync("user");

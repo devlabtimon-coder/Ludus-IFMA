@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "207930819945",
-    "project_id": "ludus-888c7",
-    "storage_bucket": "ludus-888c7.firebasestorage.app"
+    "project_number": "706484468010",
+    "project_id": "ludus-23d75",
+    "storage_bucket": "ludus-23d75.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:207930819945:android:835ad163540701c440e9f8",
+        "mobilesdk_app_id": "1:706484468010:android:de44780d09d55d1aad8653",
         "android_client_info": {
           "package_name": "com.ludus.android"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDzpFwe4UslJDBsnAlxqtQ7GH_VqaAsZoo"
+          "current_key": "AIzaSyCUaAvExap7unkJiwf2tjdj-CNjIF5ZC3c"
         }
       ],
       "services": {

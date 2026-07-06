@@ -43,6 +43,9 @@ export type AuthUser = {
   addressProof?: string | null;
   selfieWithId?: string | null;
 
+  // 👇 ADICIONADO AQUI 👇
+  enrollmentProof?: string | null;
+
   registrationStatus?: "PENDING" | "APPROVED" | "REJECTED";
   rejectReason?: string | null;
 };
@@ -121,7 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await api.get("/auth/ifma/status");
+      // 👇 Alterado de /auth/ifma/status para /users/me
+      const res = await api.get("/users/me");
       setUser((prev) => {
         if (!prev) return prev;
         const next: AuthUser = {
@@ -149,11 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
 
     if (redirectFn) {
-      if (!userData.isAcademicVerified) {
-        redirectFn("/suap-verify");
-      } else {
-        redirectFn("/home");
-      }
+      // 👇 Removido o bloqueio. Todos vão direto para a Home!
+      redirectFn("/home");
     }
 
     try {

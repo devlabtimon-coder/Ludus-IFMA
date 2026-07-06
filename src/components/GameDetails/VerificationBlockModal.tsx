@@ -23,33 +23,32 @@ export function VerificationBlockModal({
 }: Props) {
   if (!type) return null;
 
-  // Dicionário atualizado com as cores oficiais do Ludus
   const content = {
     IFMA_UNVERIFIED: {
       icon: "school",
-      color: "#FBBC04", // Amarelo Ludus
+      color: "#FBBC04",
       bg: "#FFF9E6",
       title: "Vínculo Necessário 🎓",
       message:
-        "Para alugar jogos no campus Timon, precisamos que você valide seu vínculo acadêmico através do SUAP.",
-      actionText: "Vincular SUAP",
+        "Para alugar jogos no campus Timon, precisamos que você envie alguns documentos que comprovem seu vínculo com o IFMA.",
+      actionText: "Enviar Documentos",
       showCancel: true,
-      textColor: "#04096E", // Texto escuro no botão amarelo
+      textColor: "#ffffff",
     },
     DOCS_UNVERIFIED: {
       icon: "warning",
-      color: "#FBBC04", // Amarelo Ludus
+      color: "#FBBC04",
       bg: "#FFF9E6",
       title: "Quase lá! 🛡️",
       message:
         "Para garantir a segurança do nosso acervo, precisamos que você envie a foto do seu documento e comprovante de residência.",
       actionText: "Enviar Agora",
       showCancel: true,
-      textColor: "#04096E", // Texto escuro no botão amarelo
+      textColor: "#04096E",
     },
     DOCS_PENDING: {
       icon: "time",
-      color: "#04096E", // Azul Ludus (Corrigido!)
+      color: "#04096E",
       bg: "#F0F2FF",
       title: "Em Análise ⏳",
       message:
@@ -60,7 +59,7 @@ export function VerificationBlockModal({
     },
     DOCS_REJECTED: {
       icon: "alert-circle",
-      color: "#E62325", // Vermelho Ludus
+      color: "#E62325",
       bg: "#FEF2F2",
       title: "Atenção aos Documentos",
       message:
@@ -111,7 +110,7 @@ export function VerificationBlockModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(4,9,110,0.6)", // Fundo escurecido com um toque do azul Ludus
+    backgroundColor: "rgba(4,9,110,0.6)",
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
