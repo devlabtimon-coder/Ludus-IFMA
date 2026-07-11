@@ -12,7 +12,28 @@
           "package_name": "com.ludus.android"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "706484468010-0g1nleefcdjp0vhfusc2epam0ovvlv7g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ludus.android",
+            "certificate_hash": "c1c0492bd7a306df9d0aa57feac425c398d09354"
+          }
+        },
+        {
+          "client_id": "706484468010-8vkl29n2em35g4s3md470impvlk68lho.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ludus.android",
+            "certificate_hash": "4ccfef8f3090eae8ebd808f265e22620442f9244"
+          }
+        },
+        {
+          "client_id": "706484468010-usc5ukmojk20cmvd005atqbfn9kst25l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCUaAvExap7unkJiwf2tjdj-CNjIF5ZC3c"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "706484468010-usc5ukmojk20cmvd005atqbfn9kst25l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
