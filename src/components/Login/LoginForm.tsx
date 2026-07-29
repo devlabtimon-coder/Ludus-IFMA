@@ -4,10 +4,17 @@ import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Image, Pressable, Text, TextInput, View } from "react-native";
 import LudusAlert from "../common/LudusAlert/LudusAlert";
 
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+// 1. CONFIGURAÇÃO GLOBAL (Fora do componente)
+// O SDK é inicializado instantaneamente ao carregar o arquivo, blindando-o contra falhas do useEffect.
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  offlineAccess: false,
+});
 
 export function LoginForm() {
   const router = useRouter();
@@ -20,33 +27,16 @@ export function LoginForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertType, setAlertType] = useState<"error" | "success" | "info">("info");
+  const [alertType, setAlertType] = useState<"error" | "success" | "info">(
+    "info",
+  );
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-
-  useEffect(() => {
-    const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-    const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-
-    if (!webClientId) {
-      console.warn("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID não definido");
-      return;
-    }
-    if (!webClientId) {
-      console.warn("Probela com env")
-    }
-    console.log("CHAVE IOS CLIENT: ", iosClientId)
-    GoogleSignin.configure({
-      webClientId,
-      offlineAccess: false,
-      iosClientId: iosClientId,
-    });
-  }, []);
 
   const showAlert = (
     type: "error" | "success" | "info",
     title: string,
-    message: string
+    message: string,
   ) => {
     setAlertType(type);
     setAlertTitle(title);
@@ -54,37 +44,60 @@ export function LoginForm() {
     setAlertVisible(true);
   };
 
-  
   const handleLogin = async () => {
     const cleanedEmail = email.trim().toLowerCase();
     const cleanedPassword = senha.trim();
 
     if (!cleanedEmail || !cleanedPassword) {
-      return showAlert("info", "Inventário vazio", "Preencha e-mail e senha para continuar.");
+      return showAlert(
+        "info",
+        "Inventário vazio",
+        "Preencha e-mail e senha para continuar.",
+      );
     }
 
     const result = await login(cleanedEmail, cleanedPassword);
 
     if (result.success) {
-      showAlert("success", "Acesso liberado 🛡️", "Bem-vindo de volta ao Ludus!");
+      showAlert(
+        "success",
+        "Acesso liberado 🛡️",
+        "Bem-vindo de volta ao Ludus!",
+      );
 
       setTimeout(() => {
         setAlertVisible(false);
 
-        if (result.user?.role === "ADMIN") {
+        if ((result as any).user?.role === "ADMIN") {
           return router.replace("/admin/manage");
         }
 
         router.replace("/home");
       }, 1200);
     } else {
-      showAlert("error", "Falha crítica", result.message || "E-mail ou senha incorretos");
+      showAlert(
+        "error",
+        "Falha crítica",
+        result.message || "E-mail ou senha incorretos",
+      );
     }
   };
 
-  
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
+
+    // 2. TESTE DE FOGO DA VARIÁVEL DE AMBIENTE
+    // Isso garante que o app não tente fazer login cego se a variável falhar no build
+    const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+    if (!clientId) {
+      showAlert(
+        "error",
+        "Erro Estrutural",
+        "Web Client ID ausente no APK. O eas.json não injetou a chave.",
+      );
+      setGoogleLoading(false);
+      return;
+    }
 
     try {
       await GoogleSignin.hasPlayServices({
@@ -94,9 +107,7 @@ export function LoginForm() {
       const userInfo: any = await GoogleSignin.signIn();
 
       const idToken =
-        userInfo?.idToken ||
-        userInfo?.data?.idToken ||
-        userInfo?.user?.idToken;
+        userInfo?.idToken || userInfo?.data?.idToken || userInfo?.user?.idToken;
 
       if (!idToken) {
         throw new Error("Token do Google não encontrado.");
@@ -106,7 +117,11 @@ export function LoginForm() {
 
       await signInWithToken(res.data.token, res.data.user);
 
-      showAlert("success", "Login com Google ✅", "Você entrou com sua conta Google.");
+      showAlert(
+        "success",
+        "Login com Google ✅",
+        "Você entrou com sua conta Google.",
+      );
 
       setTimeout(() => {
         setAlertVisible(false);
@@ -136,7 +151,7 @@ export function LoginForm() {
         "Erro Google",
         e?.response?.data?.error ||
           e?.message ||
-          "Falha ao autenticar com Google."
+          "Falha ao autenticar com Google.",
       );
     } finally {
       setGoogleLoading(false);
@@ -145,7 +160,9 @@ export function LoginForm() {
 
   return (
     <View style={styles.container}>
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
+      >
         <Image
           source={require("../../../assets/logo-dice.png")}
           style={{ width: 63, height: 63, marginRight: 10 }}
