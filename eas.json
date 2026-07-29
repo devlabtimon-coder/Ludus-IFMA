@@ -17,7 +17,8 @@
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "706484468010-usc5ukmojk20cmvd005atqbfn9kst25l.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "706484468010-0g1nleefcdjp0vhfusc2epam0ovvlv7g.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1008142639242-d4q2e3cpr97q87bm3ovs9h3jagefsojr.apps.googleusercontent.com",
-        "EXPO_PUBLIC_API_URL": "https://backend-ludus-production-d1f7.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://backend-ludus-production-d1f7.up.railway.app",
+        "EXPO_PUBLIC_IFMA_MODE": "true"
       }
     }
   },
