@@ -145,6 +145,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userData: AuthUser,
     redirectFn?: (path: string) => void,
   ) {
+    if (!token || typeof token !== "string") {
+      console.error(
+        "FALHA CRÍTICA: Token inválido ou undefined recebido:",
+        token,
+      );
+      throw new Error(
+        "Não foi possível gerar a credencial de acesso. Tente novamente.",
+      );
+    }
+
+    if (!userData) {
+      console.error("FALHA CRÍTICA: userData undefined recebido:", userData);
+      throw new Error("Não foi possível carregar os dados do perfil.");
+    }
+
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
     await SecureStore.setItemAsync("token", token);
@@ -153,7 +168,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
 
     if (redirectFn) {
-      // 👇 Removido o bloqueio. Todos vão direto para a Home!
       redirectFn("/home");
     }
 
