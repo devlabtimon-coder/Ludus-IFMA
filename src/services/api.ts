@@ -1,10 +1,23 @@
 import axios from "axios";
+import axiosRetry from "axios-retry";
 import * as SecureStore from "expo-secure-store";
 import { showLudusAlert } from "./alert.service";
 import { goToVerify } from "./navigation";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
+  timeout: 25000,
+});
+
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) => {
+    return (
+      axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+      error.code === "ECONNABORTED"
+    );
+  },
 });
 
 api.interceptors.request.use(async (config) => {
@@ -23,7 +36,6 @@ api.interceptors.response.use(
       await SecureStore.deleteItemAsync("token");
       await SecureStore.deleteItemAsync("user");
 
-      // Usando o LudusAlert no lugar do Alert nativo
       showLudusAlert({
         type: "error",
         title: "Acesso Bloqueado",
@@ -31,12 +43,9 @@ api.interceptors.response.use(
           "Sua conta foi suspensa por um administrador. Contate o suporte para mais informações.",
       });
 
-      // Ao deletar o token, o AuthContext.user deve virar null
-      // e o app deve redirecionar para o Login automaticamente.
       return Promise.reject(error);
     }
 
-    // 2. Lógica de Verificação (Email/Phone)
     const url = (error?.config?.url || "").toString();
     const isVerifyRelated =
       url.includes("/auth/verify-email") ||
