@@ -14,6 +14,19 @@ interface Props {
   initialValues?: FilterValues;
 }
 
+// Lista das mecânicas mais comuns para aparecer no filtro
+const POPULAR_MECHANICS = [
+  "Gestão de Mão",
+  "Rolagem de Dados",
+  "Cooperativo",
+  "Blefe",
+  "Dedução",
+  "Alocação de Trabalhadores",
+  "Controle de Área",
+  "Construção de Baralho",
+  "Party Game",
+];
+
 export function FilterCard({ onApply, initialValues }: Props) {
   const { resetFilters } = useFilters();
 
@@ -25,6 +38,9 @@ export function FilterCard({ onApply, initialValues }: Props) {
   const [stars, setStars] = useState<number[]>(initial.stars);
   const [timeMax, setTimeMax] = useState<number>(initial.timeMax);
 
+  const [tier, setTier] = useState<string[]>(initial.tier);
+  const [mechanics, setMechanics] = useState<string[]>(initial.mechanics);
+
   useEffect(() => {
     const v = initialValues ?? DEFAULT_FILTERS;
     setStatus(v.status);
@@ -32,11 +48,25 @@ export function FilterCard({ onApply, initialValues }: Props) {
     setAge(v.age);
     setStars(v.stars);
     setTimeMax(v.timeMax);
+    setTier(v.tier);
+    setMechanics(v.mechanics);
   }, [initialValues]);
 
   function toggleStar(value: number) {
     setStars((prev) =>
       prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value],
+    );
+  }
+
+  function toggleTier(value: string) {
+    setTier((prev) =>
+      prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value],
+    );
+  }
+
+  function toggleMechanic(value: string) {
+    setMechanics((prev) =>
+      prev.includes(value) ? prev.filter((m) => m !== value) : [...prev, value],
     );
   }
 
@@ -46,6 +76,8 @@ export function FilterCard({ onApply, initialValues }: Props) {
     setAge(DEFAULT_FILTERS.age);
     setStars(DEFAULT_FILTERS.stars);
     setTimeMax(DEFAULT_FILTERS.timeMax);
+    setTier(DEFAULT_FILTERS.tier);
+    setMechanics(DEFAULT_FILTERS.mechanics);
 
     resetFilters();
   };
@@ -56,9 +88,11 @@ export function FilterCard({ onApply, initialValues }: Props) {
       players !== DEFAULT_FILTERS.players ||
       age !== DEFAULT_FILTERS.age ||
       stars.length > 0 ||
-      timeMax !== DEFAULT_FILTERS.timeMax
+      timeMax !== DEFAULT_FILTERS.timeMax ||
+      tier.length > 0 ||
+      mechanics.length > 0
     );
-  }, [status, players, age, stars, timeMax]);
+  }, [status, players, age, stars, timeMax, tier, mechanics]);
 
   return (
     <ScrollView
@@ -124,6 +158,27 @@ export function FilterCard({ onApply, initialValues }: Props) {
           ))}
         </View>
 
+        {/* 👇 Nova Seção: Tier (Atualizada para estilo Rank) */}
+        <Text style={styles.title}>Tier (Classificação)</Text>
+        <View style={styles.row}>
+          {["Latão", "Bronze", "Prata", "Ouro", "Diamante"].map((value) => (
+            <TouchableOpacity
+              key={value}
+              style={[styles.chip, tier.includes(value) && styles.chipActive]}
+              onPress={() => toggleTier(value)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  tier.includes(value) && styles.chipTextActive,
+                ]}
+              >
+                {value}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Text style={styles.title}>Quantidade de jogadores</Text>
         <View style={styles.row}>
           {[null, 2, 3, 4, 5, 6, 7, 8].map((value) => (
@@ -165,6 +220,29 @@ export function FilterCard({ onApply, initialValues }: Props) {
         </View>
 
         <GameTimeRange valueMax={timeMax} onChange={(max) => setTimeMax(max)} />
+
+        <Text style={styles.title}>Mecânicas</Text>
+        <View style={styles.row}>
+          {POPULAR_MECHANICS.map((mechanic) => (
+            <TouchableOpacity
+              key={mechanic}
+              style={[
+                styles.chip,
+                mechanics.includes(mechanic) && styles.chipActive,
+              ]}
+              onPress={() => toggleMechanic(mechanic)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  mechanics.includes(mechanic) && styles.chipTextActive,
+                ]}
+              >
+                {mechanic}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <Text style={styles.title}>Avaliação (Estrelas)</Text>
         <View
@@ -219,9 +297,11 @@ export function FilterCard({ onApply, initialValues }: Props) {
               players,
               age,
               stars,
-              priceMin: DEFAULT_FILTERS.priceMin, // Mantido apenas para evitar erro de TS
-              priceMax: DEFAULT_FILTERS.priceMax, // Mantido apenas para evitar erro de TS
+              priceMin: DEFAULT_FILTERS.priceMin,
+              priceMax: DEFAULT_FILTERS.priceMax,
               timeMax,
+              tier,
+              mechanics,
             })
           }
         >
