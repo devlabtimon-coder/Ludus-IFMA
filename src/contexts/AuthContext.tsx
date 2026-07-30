@@ -43,7 +43,6 @@ export type AuthUser = {
   addressProof?: string | null;
   selfieWithId?: string | null;
 
-  // 👇 ADICIONADO AQUI 👇
   enrollmentProof?: string | null;
 
   registrationStatus?: "PENDING" | "APPROVED" | "REJECTED";
@@ -69,6 +68,7 @@ type AuthContextValue = {
     acceptedPrivacy: boolean,
     cpf: string,
     address: string,
+    matricula: string, // 👇 ADICIONADO AQUI
   ) => Promise<AuthResult>;
   logout: () => Promise<void>;
   signInWithToken: (
@@ -124,7 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      // 👇 Alterado de /auth/ifma/status para /users/me
       const res = await api.get("/users/me");
       setUser((prev) => {
         if (!prev) return prev;
@@ -245,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     acceptedPrivacy: boolean,
     cpf: string,
     address: string,
+    matricula: string, // 👇 RECEBE A MATRÍCULA AQUI
   ): Promise<AuthResult> {
     try {
       await api.post("/auth/register", {
@@ -256,6 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         acceptedPrivacy,
         cpf,
         address,
+        matricula, // 👇 ENVIA A MATRÍCULA PARA O BACKEND AQUI
       });
 
       return { success: true };
