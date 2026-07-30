@@ -10,6 +10,8 @@ export type FilterValues = {
   priceMin: number;
   priceMax: number;
   timeMax: number;
+  tier: string[];
+  mechanics: string[];
 };
 
 export const DEFAULT_FILTERS: FilterValues = {
@@ -20,6 +22,8 @@ export const DEFAULT_FILTERS: FilterValues = {
   priceMin: 0,
   priceMax: 1000,
   timeMax: 999,
+  tier: [],
+  mechanics: [],
 };
 
 type FiltersContextData = {
@@ -44,18 +48,28 @@ export function FiltersProvider({ children }: { children: React.ReactNode }) {
     if (filters.players !== DEFAULT_FILTERS.players) count++;
     if (filters.age !== DEFAULT_FILTERS.age) count++;
     if (filters.stars.length > 0) count++;
-    if (filters.priceMin !== DEFAULT_FILTERS.priceMin || filters.priceMax !== DEFAULT_FILTERS.priceMax) count++;
+    if (
+      filters.priceMin !== DEFAULT_FILTERS.priceMin ||
+      filters.priceMax !== DEFAULT_FILTERS.priceMax
+    )
+      count++;
     if (filters.timeMax !== DEFAULT_FILTERS.timeMax) count++;
+
+    // 👇 Nova lógica de contagem para os novos filtros
+    if (filters.tier.length > 0) count++;
+    if (filters.mechanics.length > 0) count++;
 
     return count;
   }, [filters]);
 
   const value = useMemo(
     () => ({ filters, setFilters, resetFilters, activeCount }),
-    [filters, activeCount]
+    [filters, activeCount],
   );
 
-  return <FiltersContext.Provider value={value}>{children}</FiltersContext.Provider>;
+  return (
+    <FiltersContext.Provider value={value}>{children}</FiltersContext.Provider>
+  );
 }
 
 export function useFilters() {
