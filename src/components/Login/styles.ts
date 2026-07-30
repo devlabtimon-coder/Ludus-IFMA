@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
   inputPassword: {
     flex: 1,
     paddingVertical: 16,
-    color: "#333"
+    color: "#333",
   },
 
   eye: {
@@ -123,5 +123,4 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
     textDecorationLine: "underline",
   },
-
 });

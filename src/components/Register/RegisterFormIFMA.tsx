@@ -7,8 +7,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useMemo, useRef, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -282,218 +280,208 @@ export default function RegisterFormIFMA() {
     }
   }
 
-  const Wrapper: any = Platform.OS === "ios" ? KeyboardAvoidingView : View;
-  const wrapperProps =
-    Platform.OS === "ios"
-      ? { behavior: "padding" as const, keyboardVerticalOffset: 0 }
-      : {};
-
   return (
     <View style={styles.container}>
-      <Wrapper style={{ flex: 1 }} {...wrapperProps}>
-        <ScrollView
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        >
-          <RegisterHeader />
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
+        <RegisterHeader />
 
-          {/* Nome */}
-          <Text style={styles.label}>Nome completo</Text>
-          <TextInput
-            ref={nameRef}
-            style={styles.input}
-            placeholder="Seu nome completo"
-            placeholderTextColor="#999"
-            value={name}
-            onChangeText={setName}
-            returnKeyType="next"
-            onSubmitEditing={() => emailRef.current?.focus()}
+        {/* Nome */}
+        <Text style={styles.label}>Nome completo</Text>
+        <TextInput
+          ref={nameRef}
+          style={styles.input}
+          placeholder="Seu nome completo"
+          placeholderTextColor="#999"
+          value={name}
+          onChangeText={setName}
+          returnKeyType="next"
+          onSubmitEditing={() => emailRef.current?.focus()}
+        />
+
+        {/* E-mail institucional */}
+        <Text style={styles.label}>E-mail institucional</Text>
+        <TextInput
+          ref={emailRef}
+          style={[
+            styles.input,
+            emailHint ? local.inputWarn : null,
+            isGoogleFlow ? { backgroundColor: "#E8EAF6", color: "#666" } : null, // Estilo visual de bloqueado
+          ]}
+          placeholder={`seu.nome${IFMA_DOMAIN}`}
+          placeholderTextColor="#999"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoCorrect={false}
+          returnKeyType="next"
+          onSubmitEditing={() => matriculaRef.current?.focus()}
+          textContentType="emailAddress"
+          editable={!isGoogleFlow} // Se veio do Google, o usuário não pode editar
+        />
+        {emailHint ? <Text style={local.hintText}>{emailHint}</Text> : null}
+
+        {/* Matrícula */}
+        <Text style={styles.label}>Matrícula SUAP</Text>
+        <View style={local.matriculaWrap}>
+          <Ionicons
+            name="card-outline"
+            size={18}
+            color="#04096E"
+            style={{ marginRight: 8 }}
           />
-
-          {/* E-mail institucional */}
-          <Text style={styles.label}>E-mail institucional</Text>
           <TextInput
-            ref={emailRef}
-            style={[
-              styles.input,
-              emailHint ? local.inputWarn : null,
-              isGoogleFlow
-                ? { backgroundColor: "#E8EAF6", color: "#666" }
-                : null, // Estilo visual de bloqueado
-            ]}
-            placeholder={`seu.nome${IFMA_DOMAIN}`}
+            ref={matriculaRef}
+            style={local.matriculaInput}
+            placeholder="Ex: 20241INF.TMN0001"
             placeholderTextColor="#999"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
+            value={matricula}
+            onChangeText={(t) => setMatricula(t.toUpperCase())}
+            autoCapitalize="characters"
             autoCorrect={false}
-            returnKeyType="next"
-            onSubmitEditing={() => matriculaRef.current?.focus()}
-            textContentType="emailAddress"
-            editable={!isGoogleFlow} // Se veio do Google, o usuário não pode editar
-          />
-          {emailHint ? <Text style={local.hintText}>{emailHint}</Text> : null}
-
-          {/* Matrícula */}
-          <Text style={styles.label}>Matrícula SUAP</Text>
-          <View style={local.matriculaWrap}>
-            <Ionicons
-              name="card-outline"
-              size={18}
-              color="#04096E"
-              style={{ marginRight: 8 }}
-            />
-            <TextInput
-              ref={matriculaRef}
-              style={local.matriculaInput}
-              placeholder="Ex: 20241INF.TMN0001"
-              placeholderTextColor="#999"
-              value={matricula}
-              onChangeText={(t) => setMatricula(t.toUpperCase())}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              spellCheck={false}
-              returnKeyType="next"
-              onSubmitEditing={() =>
-                isGoogleFlow ? null : passRef.current?.focus()
-              }
-            />
-          </View>
-          <Text style={local.matriculaHint}>
-            É o mesmo usuário que você usa para entrar no SUAP.
-          </Text>
-
-          {/* Telefone (opcional) */}
-          <Text style={styles.label}>
-            Telefone <Text style={local.optional}>(opcional)</Text>
-          </Text>
-          <TextInput
-            ref={phoneRef}
-            style={styles.input}
-            placeholder="(00) 00000-0000"
-            placeholderTextColor="#999"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
+            spellCheck={false}
             returnKeyType="next"
             onSubmitEditing={() =>
               isGoogleFlow ? null : passRef.current?.focus()
             }
-            textContentType="telephoneNumber"
           />
+        </View>
+        <Text style={local.matriculaHint}>
+          É o mesmo usuário que você usa para entrar no SUAP.
+        </Text>
 
-          {/* Se NÃO veio do Google, mostra a criação de senha */}
-          {!isGoogleFlow && (
-            <>
-              {/* Senha */}
-              <Text style={styles.label}>Senha do Ludus</Text>
-              <View
-                style={[
-                  styles.passwordWrapper,
-                  passwordError ? styles.fieldError : null,
-                ]}
-              >
-                <TextInput
-                  ref={passRef}
-                  style={styles.inputPassword}
-                  placeholder="Mínimo 6 caracteres"
-                  placeholderTextColor="#999"
-                  secureTextEntry={hidePassword}
-                  value={password}
-                  onChangeText={setPassword}
-                  onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                  returnKeyType="next"
-                  onSubmitEditing={() => confirmRef.current?.focus()}
-                  textContentType="newPassword"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-                <Pressable onPress={() => setHidePassword((v) => !v)}>
-                  <Ionicons
-                    name={hidePassword ? "eye-off" : "eye"}
-                    size={22}
-                    color={passwordError ? "#E62325" : "#535353"}
-                  />
-                </Pressable>
-              </View>
+        {/* Telefone (opcional) */}
+        <Text style={styles.label}>
+          Telefone <Text style={local.optional}>(opcional)</Text>
+        </Text>
+        <TextInput
+          ref={phoneRef}
+          style={styles.input}
+          placeholder="(00) 00000-0000"
+          placeholderTextColor="#999"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          returnKeyType="next"
+          onSubmitEditing={() =>
+            isGoogleFlow ? null : passRef.current?.focus()
+          }
+          textContentType="telephoneNumber"
+        />
 
-              <PasswordStrengthSection
-                visible={password.length > 0}
-                strength={passwordStrength}
-                rules={passwordRules}
+        {/* Se NÃO veio do Google, mostra a criação de senha */}
+        {!isGoogleFlow && (
+          <>
+            {/* Senha */}
+            <Text style={styles.label}>Senha do Ludus</Text>
+            <View
+              style={[
+                styles.passwordWrapper,
+                passwordError ? styles.fieldError : null,
+              ]}
+            >
+              <TextInput
+                ref={passRef}
+                style={styles.inputPassword}
+                placeholder="Mínimo 6 caracteres"
+                placeholderTextColor="#999"
+                secureTextEntry={hidePassword}
+                value={password}
+                onChangeText={setPassword}
+                onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmRef.current?.focus()}
+                textContentType="newPassword"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
-
-              {passwordError ? (
-                <Text style={styles.errorText}>{passwordError}</Text>
-              ) : null}
-
-              {/* Confirmar senha */}
-              <Text style={styles.label}>Confirmar senha</Text>
-              <View
-                style={[
-                  styles.passwordWrapper,
-                  confirmError ? styles.fieldError : null,
-                ]}
-              >
-                <TextInput
-                  ref={confirmRef}
-                  style={styles.inputPassword}
-                  placeholder="Repita a senha"
-                  placeholderTextColor="#999"
-                  secureTextEntry={hideConfirm}
-                  value={confirm}
-                  onChangeText={setConfirm}
-                  onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
-                  returnKeyType="done"
-                  onSubmitEditing={handleRegister}
-                  textContentType="newPassword"
-                  autoCapitalize="none"
-                  autoCorrect={false}
+              <Pressable onPress={() => setHidePassword((v) => !v)}>
+                <Ionicons
+                  name={hidePassword ? "eye-off" : "eye"}
+                  size={22}
+                  color={passwordError ? "#E62325" : "#535353"}
                 />
-                <Pressable onPress={() => setHideConfirm((v) => !v)}>
-                  <Ionicons
-                    name={hideConfirm ? "eye-off" : "eye"}
-                    size={22}
-                    color={confirmError ? "#E62325" : "#535353"}
-                  />
-                </Pressable>
-              </View>
+              </Pressable>
+            </View>
 
-              {confirmError ? (
-                <Text style={styles.errorText}>{confirmError}</Text>
-              ) : null}
-            </>
-          )}
+            <PasswordStrengthSection
+              visible={password.length > 0}
+              strength={passwordStrength}
+              rules={passwordRules}
+            />
 
-          <TermsConsentSection
-            acceptedTerms={acceptedTerms}
-            acceptedPrivacy={acceptedPrivacy}
-            onToggleTerms={() => setAcceptedTerms((v) => !v)}
-            onTogglePrivacy={() => setAcceptedPrivacy((v) => !v)}
-          />
+            {passwordError ? (
+              <Text style={styles.errorText}>{passwordError}</Text>
+            ) : null}
 
-          <Pressable
-            style={[styles.button, loading && { opacity: 0.7 }]}
-            onPress={handleRegister}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? "Processando..." : "Criar conta"}
-            </Text>
-          </Pressable>
+            {/* Confirmar senha */}
+            <Text style={styles.label}>Confirmar senha</Text>
+            <View
+              style={[
+                styles.passwordWrapper,
+                confirmError ? styles.fieldError : null,
+              ]}
+            >
+              <TextInput
+                ref={confirmRef}
+                style={styles.inputPassword}
+                placeholder="Repita a senha"
+                placeholderTextColor="#999"
+                secureTextEntry={hideConfirm}
+                value={confirm}
+                onChangeText={setConfirm}
+                onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
+                returnKeyType="done"
+                onSubmitEditing={handleRegister}
+                textContentType="newPassword"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Pressable onPress={() => setHideConfirm((v) => !v)}>
+                <Ionicons
+                  name={hideConfirm ? "eye-off" : "eye"}
+                  size={22}
+                  color={confirmError ? "#E62325" : "#535353"}
+                />
+              </Pressable>
+            </View>
 
-          <Text style={styles.register}>
-            Já possui uma conta?{" "}
-            <Text style={styles.link} onPress={() => router.replace("/login")}>
-              Entrar
-            </Text>
+            {confirmError ? (
+              <Text style={styles.errorText}>{confirmError}</Text>
+            ) : null}
+          </>
+        )}
+
+        <TermsConsentSection
+          acceptedTerms={acceptedTerms}
+          acceptedPrivacy={acceptedPrivacy}
+          onToggleTerms={() => setAcceptedTerms((v) => !v)}
+          onTogglePrivacy={() => setAcceptedPrivacy((v) => !v)}
+        />
+
+        <Pressable
+          style={[styles.button, loading && { opacity: 0.7 }]}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Processando..." : "Criar conta"}
           </Text>
-        </ScrollView>
-      </Wrapper>
+        </Pressable>
+
+        <Text style={styles.register}>
+          Já possui uma conta?{" "}
+          <Text style={styles.link} onPress={() => router.replace("/login")}>
+            Entrar
+          </Text>
+        </Text>
+      </ScrollView>
 
       <LudusAlert
         visible={alertVisible}

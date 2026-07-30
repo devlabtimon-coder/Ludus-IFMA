@@ -131,7 +131,6 @@ export function LoginForm() {
 
       const res = await api.post("/auth/google", { idToken });
 
-      // 3. O DESVIO DE FLUXO (Usuário Novo - Vai para o Register reaproveitado)
       if (res.data.needsCompletion || res.data.isNewUser) {
         showAlert(
           "info",
@@ -150,14 +149,13 @@ export function LoginForm() {
                 userInfo?.user?.name ||
                 userInfo?.data?.user?.name,
               googleIdToken: idToken,
-              isGoogle: "true", // 👈 AQUI ESTÁ A MÁGICA PARA AVISAR A TELA DE REGISTRO!
+              isGoogle: "true",
             },
           });
         }, 1200);
         return;
       }
 
-      // 4. FLUXO NORMAL (Usuário já existe e possui cadastro completo)
       await signInWithToken(res.data.token, res.data.user);
 
       showAlert(
@@ -168,8 +166,6 @@ export function LoginForm() {
 
       setTimeout(() => {
         setAlertVisible(false);
-
-        // 👇 BLOQUEIO DE TELEFONE REMOVIDO DAQUI! Vai direto pra Home ou Admin.
 
         if (res.data.user?.role === "ADMIN") {
           return router.replace("/admin/manage");
