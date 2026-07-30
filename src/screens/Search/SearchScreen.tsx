@@ -3,7 +3,14 @@ import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Image, Pressable, RefreshControl, Text, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 
 import GameCard, { Game } from "@/src/components/Search/GameCard";
 import SearchBackground from "@/src/components/Search/SearchBackground";
@@ -15,7 +22,9 @@ export default function SearchScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const qParam = Array.isArray(params.q) ? params.q[0] : (params.q as string | undefined);
+  const qParam = Array.isArray(params.q)
+    ? params.q[0]
+    : (params.q as string | undefined);
   const initialQ = (qParam || "").toString();
 
   const { filters, activeCount } = useFilters();
@@ -29,7 +38,8 @@ export default function SearchScreen() {
   const requestIdRef = useRef(0);
 
   const queryParams = useMemo(() => {
-    const status = safeFilters.status === "ALL" ? undefined : safeFilters.status;
+    const status =
+      safeFilters.status === "ALL" ? undefined : safeFilters.status;
 
     const sendPrice =
       safeFilters.priceMin !== DEFAULT_FILTERS.priceMin ||
@@ -48,6 +58,11 @@ export default function SearchScreen() {
       priceMax: sendPrice ? safeFilters.priceMax : undefined,
 
       timeMax: sendTime ? safeFilters.timeMax : undefined,
+
+      tier: safeFilters.tier.length ? safeFilters.tier.join(",") : undefined,
+      mechanics: safeFilters.mechanics.length
+        ? safeFilters.mechanics.join(",")
+        : undefined,
     };
   }, [q, safeFilters]);
 
@@ -143,7 +158,9 @@ export default function SearchScreen() {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>
+                <Text
+                  style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}
+                >
                   {activeCount > 9 ? "9+" : activeCount}
                 </Text>
               </View>
@@ -161,12 +178,26 @@ export default function SearchScreen() {
             paddingTop: 4,
             flexGrow: 1,
           }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           ListEmptyComponent={
-            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 50 }}>
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingBottom: 50,
+              }}
+            >
               <Image
                 source={EMPTY_IMAGE}
-                style={{ width: 140, height: 140, marginBottom: 18, opacity: 0.85 }}
+                style={{
+                  width: 140,
+                  height: 140,
+                  marginBottom: 18,
+                  opacity: 0.85,
+                }}
                 resizeMode="contain"
               />
               <Text
