@@ -4,6 +4,7 @@ import { TermsConsentSection } from "@/src/components/Register/TermsConsentSecti
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useMemo, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -46,6 +47,9 @@ export default function RegisterFormIFMA() {
   const initialEmail = (params.googleEmail as string) || "";
   const initialName = (params.googleName as string) || "";
   const googleIdToken = (params.googleIdToken as string) || "";
+
+  // Identifica se estamos no fluxo do Google
+  const isGoogleFlow = !!googleIdToken || !!initialEmail;
 
   // 2. Injeta os valores iniciais nos estados!
   const [name, setName] = useState(initialName);
@@ -163,18 +167,21 @@ export default function RegisterFormIFMA() {
       );
     }
 
-    if (password.length < 6) {
-      setTouched((t) => ({ ...t, password: true }));
-      return showAlert("info", "Senha fraca", "Use pelo menos 6 caracteres.");
-    }
+    // A senha SÓ É OBRIGATÓRIA se NÃO for o fluxo do Google
+    if (!isGoogleFlow) {
+      if (password.length < 6) {
+        setTouched((t) => ({ ...t, password: true }));
+        return showAlert("info", "Senha fraca", "Use pelo menos 6 caracteres.");
+      }
 
-    if (password !== confirm) {
-      setTouched((t) => ({ ...t, confirm: true }));
-      return showAlert(
-        "info",
-        "Senhas diferentes",
-        "A confirmação não confere.",
-      );
+      if (password !== confirm) {
+        setTouched((t) => ({ ...t, confirm: true }));
+        return showAlert(
+          "info",
+          "Senhas diferentes",
+          "A confirmação não confere.",
+        );
+      }
     }
 
     if (!acceptedTerms || !acceptedPrivacy) {
@@ -188,30 +195,52 @@ export default function RegisterFormIFMA() {
     setLoading(true);
 
     try {
-      await api.post("/auth/ifma/register", {
+      const response = await api.post("/auth/ifma/register", {
         name: cleanName,
         email: cleanEmail,
         matricula: cleanMatricula,
         phone: cleanPhone || undefined,
-        senha: password,
+        senha: password || "", // Manda vazio se for Google
         acceptedTerms,
         acceptedPrivacy,
-        googleIdToken: googleIdToken || undefined, // Mandando o token caso seja um cadastro via Google
+        googleIdToken: googleIdToken || undefined,
+        isGoogle: isGoogleFlow, // FLAG QUE AVISA O BACKEND
       });
 
-      showAlert(
-        "success",
-        "Cadastro iniciado! 🎉",
-        "Enviamos um código para seu e-mail institucional. Confirme para continuar.",
-      );
+      if (isGoogleFlow) {
+        // Fluxo Google: Salva sessão e vai pra Home direto
+        await SecureStore.setItemAsync("token", response.data.token);
+        await SecureStore.setItemAsync(
+          "user",
+          JSON.stringify(response.data.user),
+        );
 
-      setTimeout(() => {
-        setAlertVisible(false);
-        router.push({
-          pathname: "/verify",
-          params: { email: cleanEmail },
-        });
-      }, 1400);
+        showAlert(
+          "success",
+          "Tudo pronto! 🎉",
+          "Seu cadastro foi concluído com sucesso via Google.",
+        );
+
+        setTimeout(() => {
+          setAlertVisible(false);
+          router.replace("/home");
+        }, 1400);
+      } else {
+        // Fluxo Normal: Vai para verificar e-mail
+        showAlert(
+          "success",
+          "Cadastro iniciado! 🎉",
+          "Enviamos um código para seu e-mail institucional. Confirme para continuar.",
+        );
+
+        setTimeout(() => {
+          setAlertVisible(false);
+          router.push({
+            pathname: "/verify",
+            params: { email: cleanEmail },
+          });
+        }, 1400);
+      }
     } catch (e: any) {
       console.error("ERRO COMPLETO NO FRONTEND:", e);
 
@@ -291,7 +320,7 @@ export default function RegisterFormIFMA() {
             style={[
               styles.input,
               emailHint ? local.inputWarn : null,
-              initialEmail
+              isGoogleFlow
                 ? { backgroundColor: "#E8EAF6", color: "#666" }
                 : null, // Estilo visual de bloqueado
             ]}
@@ -305,7 +334,7 @@ export default function RegisterFormIFMA() {
             returnKeyType="next"
             onSubmitEditing={() => matriculaRef.current?.focus()}
             textContentType="emailAddress"
-            editable={!initialEmail} // Se veio do Google, o usuário não pode editar
+            editable={!isGoogleFlow} // Se veio do Google, o usuário não pode editar
           />
           {emailHint ? <Text style={local.hintText}>{emailHint}</Text> : null}
 
@@ -329,7 +358,9 @@ export default function RegisterFormIFMA() {
               autoCorrect={false}
               spellCheck={false}
               returnKeyType="next"
-              onSubmitEditing={() => passRef.current?.focus()}
+              onSubmitEditing={() =>
+                isGoogleFlow ? null : passRef.current?.focus()
+              }
             />
           </View>
           <Text style={local.matriculaHint}>
@@ -349,87 +380,94 @@ export default function RegisterFormIFMA() {
             onChangeText={setPhone}
             keyboardType="phone-pad"
             returnKeyType="next"
-            onSubmitEditing={() => passRef.current?.focus()}
+            onSubmitEditing={() =>
+              isGoogleFlow ? null : passRef.current?.focus()
+            }
             textContentType="telephoneNumber"
           />
 
-          {/* Senha */}
-          <Text style={styles.label}>Senha do Ludus</Text>
-          <View
-            style={[
-              styles.passwordWrapper,
-              passwordError ? styles.fieldError : null,
-            ]}
-          >
-            <TextInput
-              ref={passRef}
-              style={styles.inputPassword}
-              placeholder="Mínimo 6 caracteres"
-              placeholderTextColor="#999"
-              secureTextEntry={hidePassword}
-              value={password}
-              onChangeText={setPassword}
-              onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-              returnKeyType="next"
-              onSubmitEditing={() => confirmRef.current?.focus()}
-              textContentType="newPassword"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable onPress={() => setHidePassword((v) => !v)}>
-              <Ionicons
-                name={hidePassword ? "eye-off" : "eye"}
-                size={22}
-                color={passwordError ? "#E62325" : "#535353"}
+          {/* Se NÃO veio do Google, mostra a criação de senha */}
+          {!isGoogleFlow && (
+            <>
+              {/* Senha */}
+              <Text style={styles.label}>Senha do Ludus</Text>
+              <View
+                style={[
+                  styles.passwordWrapper,
+                  passwordError ? styles.fieldError : null,
+                ]}
+              >
+                <TextInput
+                  ref={passRef}
+                  style={styles.inputPassword}
+                  placeholder="Mínimo 6 caracteres"
+                  placeholderTextColor="#999"
+                  secureTextEntry={hidePassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                  returnKeyType="next"
+                  onSubmitEditing={() => confirmRef.current?.focus()}
+                  textContentType="newPassword"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Pressable onPress={() => setHidePassword((v) => !v)}>
+                  <Ionicons
+                    name={hidePassword ? "eye-off" : "eye"}
+                    size={22}
+                    color={passwordError ? "#E62325" : "#535353"}
+                  />
+                </Pressable>
+              </View>
+
+              <PasswordStrengthSection
+                visible={password.length > 0}
+                strength={passwordStrength}
+                rules={passwordRules}
               />
-            </Pressable>
-          </View>
 
-          <PasswordStrengthSection
-            visible={password.length > 0}
-            strength={passwordStrength}
-            rules={passwordRules}
-          />
+              {passwordError ? (
+                <Text style={styles.errorText}>{passwordError}</Text>
+              ) : null}
 
-          {passwordError ? (
-            <Text style={styles.errorText}>{passwordError}</Text>
-          ) : null}
+              {/* Confirmar senha */}
+              <Text style={styles.label}>Confirmar senha</Text>
+              <View
+                style={[
+                  styles.passwordWrapper,
+                  confirmError ? styles.fieldError : null,
+                ]}
+              >
+                <TextInput
+                  ref={confirmRef}
+                  style={styles.inputPassword}
+                  placeholder="Repita a senha"
+                  placeholderTextColor="#999"
+                  secureTextEntry={hideConfirm}
+                  value={confirm}
+                  onChangeText={setConfirm}
+                  onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
+                  returnKeyType="done"
+                  onSubmitEditing={handleRegister}
+                  textContentType="newPassword"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Pressable onPress={() => setHideConfirm((v) => !v)}>
+                  <Ionicons
+                    name={hideConfirm ? "eye-off" : "eye"}
+                    size={22}
+                    color={confirmError ? "#E62325" : "#535353"}
+                  />
+                </Pressable>
+              </View>
 
-          {/* Confirmar senha */}
-          <Text style={styles.label}>Confirmar senha</Text>
-          <View
-            style={[
-              styles.passwordWrapper,
-              confirmError ? styles.fieldError : null,
-            ]}
-          >
-            <TextInput
-              ref={confirmRef}
-              style={styles.inputPassword}
-              placeholder="Repita a senha"
-              placeholderTextColor="#999"
-              secureTextEntry={hideConfirm}
-              value={confirm}
-              onChangeText={setConfirm}
-              onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
-              returnKeyType="done"
-              onSubmitEditing={handleRegister}
-              textContentType="newPassword"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable onPress={() => setHideConfirm((v) => !v)}>
-              <Ionicons
-                name={hideConfirm ? "eye-off" : "eye"}
-                size={22}
-                color={confirmError ? "#E62325" : "#535353"}
-              />
-            </Pressable>
-          </View>
-
-          {confirmError ? (
-            <Text style={styles.errorText}>{confirmError}</Text>
-          ) : null}
+              {confirmError ? (
+                <Text style={styles.errorText}>{confirmError}</Text>
+              ) : null}
+            </>
+          )}
 
           <TermsConsentSection
             acceptedTerms={acceptedTerms}

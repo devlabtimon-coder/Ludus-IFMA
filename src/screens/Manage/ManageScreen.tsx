@@ -20,7 +20,12 @@ export default function ManageScreen() {
         <Text style={styles.title}>Painel Administrativo</Text>
         <Text style={styles.subtitle}>
           Gerencie o catálogo do Ludus{" "}
-          <Pressable onPress={() => router.push("/suap-verify")}>
+          <Pressable
+            onPress={async () => {
+              await logout();
+              router.replace("/onboarding");
+            }}
+          >
             <Text>Sair</Text>
           </Pressable>
         </Text>

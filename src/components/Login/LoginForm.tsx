@@ -142,7 +142,7 @@ export function LoginForm() {
         setTimeout(() => {
           setAlertVisible(false);
           router.replace({
-            pathname: "/register", // Redirecionando para a tela de registro principal
+            pathname: "/register",
             params: {
               googleEmail: res.data.user?.email || userEmail,
               googleName:
@@ -150,6 +150,7 @@ export function LoginForm() {
                 userInfo?.user?.name ||
                 userInfo?.data?.user?.name,
               googleIdToken: idToken,
+              isGoogle: "true", // 👈 AQUI ESTÁ A MÁGICA PARA AVISAR A TELA DE REGISTRO!
             },
           });
         }, 1200);
@@ -168,16 +169,7 @@ export function LoginForm() {
       setTimeout(() => {
         setAlertVisible(false);
 
-        if (res.data.needsPhoneVerification) {
-          router.replace({
-            pathname: "/verify",
-            params: {
-              email: res.data.user.email,
-              phone: res.data.user.phone ?? "",
-            },
-          });
-          return;
-        }
+        // 👇 BLOQUEIO DE TELEFONE REMOVIDO DAQUI! Vai direto pra Home ou Admin.
 
         if (res.data.user?.role === "ADMIN") {
           return router.replace("/admin/manage");
