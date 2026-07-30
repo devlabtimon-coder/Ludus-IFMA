@@ -8,8 +8,6 @@ import { useState } from "react";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
 import LudusAlert from "../common/LudusAlert/LudusAlert";
 
-// 1. CONFIGURAÇÃO GLOBAL (Fora do componente)
-// O SDK é inicializado instantaneamente ao carregar o arquivo, blindando-o contra falhas do useEffect.
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
@@ -86,8 +84,6 @@ export function LoginForm() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
 
-    // 2. TESTE DE FOGO DA VARIÁVEL DE AMBIENTE
-    // Isso garante que o app não tente fazer login cego se a variável falhar no build
     const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
     if (!clientId) {
       showAlert(
@@ -106,6 +102,26 @@ export function LoginForm() {
 
       const userInfo: any = await GoogleSignin.signIn();
 
+      const userEmail = userInfo?.user?.email || userInfo?.data?.user?.email;
+
+      if (userEmail) {
+        const cleanEmail = userEmail.trim().toLowerCase();
+        const isIfma =
+          cleanEmail.endsWith("@ifma.edu.br") ||
+          cleanEmail.endsWith("@acad.ifma.edu.br");
+
+        if (!isIfma) {
+          await GoogleSignin.signOut();
+          showAlert(
+            "error",
+            "Acesso Negado",
+            "Apenas contas institucionais do IFMA são permitidas.",
+          );
+          setGoogleLoading(false);
+          return;
+        }
+      }
+
       const idToken =
         userInfo?.idToken || userInfo?.data?.idToken || userInfo?.user?.idToken;
 
@@ -115,6 +131,32 @@ export function LoginForm() {
 
       const res = await api.post("/auth/google", { idToken });
 
+      // 3. O DESVIO DE FLUXO (Usuário Novo - Vai para o Register reaproveitado)
+      if (res.data.needsCompletion || res.data.isNewUser) {
+        showAlert(
+          "info",
+          "Quase lá! 🎲",
+          "Finalize seu cadastro com os dados institucionais.",
+        );
+
+        setTimeout(() => {
+          setAlertVisible(false);
+          router.replace({
+            pathname: "/register", // Redirecionando para a tela de registro principal
+            params: {
+              googleEmail: res.data.user?.email || userEmail,
+              googleName:
+                res.data.user?.name ||
+                userInfo?.user?.name ||
+                userInfo?.data?.user?.name,
+              googleIdToken: idToken,
+            },
+          });
+        }, 1200);
+        return;
+      }
+
+      // 4. FLUXO NORMAL (Usuário já existe e possui cadastro completo)
       await signInWithToken(res.data.token, res.data.user);
 
       showAlert(
@@ -145,6 +187,11 @@ export function LoginForm() {
       }, 1000);
     } catch (e: any) {
       console.log("Google Login Error:", e);
+
+      if (e.code === "SIGN_IN_CANCELLED" || e.message?.includes("CANCELLED")) {
+        setGoogleLoading(false);
+        return;
+      }
 
       showAlert(
         "error",

@@ -1,19 +1,9 @@
-/**
- * RegisterFormIFMA.tsx
- *
- * Formulário de cadastro da versão IFMA do Ludus.
- * Diferenças em relação ao RegisterForm padrão:
- *  - Campo de matrícula
- *  - Validação de e-mail @acad.ifma.edu.br
- *  - Após verificação do e-mail → redireciona para tela de verificação SUAP
- */
-
 import { PasswordStrengthSection } from "@/src/components/Register/PasswordStrengthSection";
 import { RegisterHeader } from "@/src/components/Register/RegisterHeader";
 import { TermsConsentSection } from "@/src/components/Register/TermsConsentSection";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -51,8 +41,16 @@ function getPasswordStrength(password: string) {
 export default function RegisterFormIFMA() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  // 1. Pesca os parâmetros que vieram do Google (se existirem)
+  const params = useLocalSearchParams();
+  const initialEmail = (params.googleEmail as string) || "";
+  const initialName = (params.googleName as string) || "";
+  const googleIdToken = (params.googleIdToken as string) || "";
+
+  // 2. Injeta os valores iniciais nos estados!
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
+
   const [matricula, setMatricula] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -188,7 +186,7 @@ export default function RegisterFormIFMA() {
     }
 
     setLoading(true);
-    alert("O App está tentando conectar em: " + api.defaults.baseURL);
+
     try {
       await api.post("/auth/ifma/register", {
         name: cleanName,
@@ -198,6 +196,7 @@ export default function RegisterFormIFMA() {
         senha: password,
         acceptedTerms,
         acceptedPrivacy,
+        googleIdToken: googleIdToken || undefined, // Mandando o token caso seja um cadastro via Google
       });
 
       showAlert(
@@ -214,36 +213,29 @@ export default function RegisterFormIFMA() {
         });
       }, 1400);
     } catch (e: any) {
-      // 👇 ERRO DEIXOU DE SER SILENCIOSO AQUI 👇
       console.error("ERRO COMPLETO NO FRONTEND:", e);
 
       const status = e?.response?.status;
       const code = e?.response?.data?.code;
 
-      // Tenta apanhar o erro enviado pelo backend. Se não existir, apanha o erro do Axios.
       const msg =
         e?.response?.data?.error ||
         e?.message ||
         "Erro desconhecido ao iniciar o registo.";
 
-      // 1. O telemóvel não encontrou o servidor
       if (e?.message === "Network Error") {
         showAlert(
           "error",
           "Erro de Conexão",
-          "O aplicativo não conseguiu conectar-se ao servidor. Verifique o arquivo api.ts (use o IP da sua rede WiFi em vez de localhost) e veja se o servidor está rodando.",
+          "O aplicativo não conseguiu conectar-se ao servidor. Verifique sua rede e o backend.",
         );
-      }
-      // 2. A rota não está registada no backend
-      else if (status === 404) {
+      } else if (status === 404) {
         showAlert(
           "error",
           "Rota Inválida (404)",
           "O servidor não encontrou a rota /auth/ifma/register.",
         );
-      }
-      // 3. Erros tratados do nosso Backend
-      else if (code === "INVALID_INSTITUTIONAL_EMAIL") {
+      } else if (code === "INVALID_INSTITUTIONAL_EMAIL") {
         showAlert("error", "E-mail inválido", msg);
       } else if (code === "MATRICULA_IN_USE") {
         showAlert(
@@ -254,7 +246,6 @@ export default function RegisterFormIFMA() {
       } else if (code === "WAIT_BEFORE_RESEND") {
         showAlert("info", "Aguarde um momento", msg);
       } else {
-        // Exibe qualquer outro erro na íntegra
         showAlert("error", "Erro do Servidor", msg);
       }
     } finally {
@@ -297,7 +288,13 @@ export default function RegisterFormIFMA() {
           <Text style={styles.label}>E-mail institucional</Text>
           <TextInput
             ref={emailRef}
-            style={[styles.input, emailHint ? local.inputWarn : null]}
+            style={[
+              styles.input,
+              emailHint ? local.inputWarn : null,
+              initialEmail
+                ? { backgroundColor: "#E8EAF6", color: "#666" }
+                : null, // Estilo visual de bloqueado
+            ]}
             placeholder={`seu.nome${IFMA_DOMAIN}`}
             placeholderTextColor="#999"
             value={email}
@@ -308,6 +305,7 @@ export default function RegisterFormIFMA() {
             returnKeyType="next"
             onSubmitEditing={() => matriculaRef.current?.focus()}
             textContentType="emailAddress"
+            editable={!initialEmail} // Se veio do Google, o usuário não pode editar
           />
           {emailHint ? <Text style={local.hintText}>{emailHint}</Text> : null}
 
