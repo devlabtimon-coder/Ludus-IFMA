@@ -1,15 +1,13 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    bottom: 0,
     width: "100%",
     padding: 28,
     backgroundColor: "#fff",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    flex: 1,
+    paddingBottom: Platform.OS === "ios" ? 100 : 60,
   },
 
   title: {

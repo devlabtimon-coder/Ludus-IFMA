@@ -4,15 +4,13 @@ const { height } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    bottom: 0,
+    minHeight: "100%",
     width: "100%",
-    maxHeight: height * 0.85,
-    height: height * 0.85,
     padding: 28,
     backgroundColor: "#fff",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
+    paddingBottom: 40,
   },
 
   scroll: {

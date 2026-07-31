@@ -5,31 +5,32 @@ import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 
 export default function Login() {
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View style={styles.container}>
-        <LoginBackground />
-        <BackButton />
+    <View style={styles.container}>
+      <LoginBackground />
+      <BackButton />
 
-        {/* Wrapper que empurra o card pra baixo */}
-        <View style={styles.bottomArea}>
-          <LoginForm />
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      <View style={styles.blueTopSpace} />
+
+      <KeyboardAvoidingView
+        style={styles.keyboardArea}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <LoginForm />
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#31358b",
+    backgroundColor: "#04096E",
   },
-
-  bottomArea: {
+  blueTopSpace: {
+    height: 140,
+    width: "100%",
+  },
+  keyboardArea: {
     flex: 1,
-    justifyContent: "flex-end",
   },
 });
