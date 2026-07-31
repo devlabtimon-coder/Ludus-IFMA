@@ -4,6 +4,8 @@ import { FilterValues, useFilters } from "@/src/contexts/FiltersContext";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
+import BackButton from "@/src/components/common/BackButton";
+
 export default function FilterScreen() {
   const router = useRouter();
   const { filters, setFilters } = useFilters();
@@ -15,8 +17,8 @@ export default function FilterScreen() {
       pathname: "/search",
       params: {
         ...nextFilters,
-        
-        stars: nextFilters.stars.join(","),
+        tier: nextFilters.tier.join(","),
+        mechanics: nextFilters.mechanics.join(","),
       } as any,
     });
   }
@@ -24,7 +26,10 @@ export default function FilterScreen() {
   return (
     <View style={{ flex: 1 }}>
       <FilterBackground />
+
       <FilterCard onApply={handleApplyFilters} initialValues={filters} />
+
+      <BackButton />
     </View>
   );
 }

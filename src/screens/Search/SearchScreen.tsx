@@ -52,7 +52,9 @@ export default function SearchScreen() {
       status,
       players: safeFilters.players ?? undefined,
       age: safeFilters.age ?? undefined,
-      stars: safeFilters.stars.length ? safeFilters.stars.join(",") : undefined,
+
+      // 🔥 Aqui enviamos a ordenação escolhida no filtro no lugar das estrelas!
+      sort: safeFilters.sort,
 
       priceMin: sendPrice ? safeFilters.priceMin : undefined,
       priceMax: sendPrice ? safeFilters.priceMax : undefined,

@@ -1,12 +1,11 @@
 import {
   DEFAULT_FILTERS,
+  FilterSort,
   FilterValues,
   useFilters,
 } from "@/src/contexts/FiltersContext";
-import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { GameTimeRange } from "./GameTimeRange";
 import { styles } from "./styles";
 
 interface Props {
@@ -14,17 +13,16 @@ interface Props {
   initialValues?: FilterValues;
 }
 
-// Lista das mecânicas mais comuns para aparecer no filtro
 const POPULAR_MECHANICS = [
-  "Gestão de Mão",
-  "Rolagem de Dados",
-  "Cooperativo",
-  "Blefe",
+  "Gerenciamento de Mãos",
+  "Eliminação de Jogadores",
+  "Apostas e Blefes",
   "Dedução",
-  "Alocação de Trabalhadores",
-  "Controle de Área",
-  "Construção de Baralho",
-  "Party Game",
+  "Memória",
+  "Toma Essa",
+  "Force sua sorte",
+  "Posicionamento Secreto",
+  "Jogadores com Diferentes Habilidades",
 ];
 
 export function FilterCard({ onApply, initialValues }: Props) {
@@ -35,7 +33,7 @@ export function FilterCard({ onApply, initialValues }: Props) {
   const [status, setStatus] = useState<FilterValues["status"]>(initial.status);
   const [players, setPlayers] = useState<number | null>(initial.players);
   const [age, setAge] = useState<number | null>(initial.age);
-  const [stars, setStars] = useState<number[]>(initial.stars);
+  const [sort, setSort] = useState<FilterSort>(initial.sort);
   const [timeMax, setTimeMax] = useState<number>(initial.timeMax);
 
   const [tier, setTier] = useState<string[]>(initial.tier);
@@ -46,17 +44,11 @@ export function FilterCard({ onApply, initialValues }: Props) {
     setStatus(v.status);
     setPlayers(v.players);
     setAge(v.age);
-    setStars(v.stars);
+    setSort(v.sort);
     setTimeMax(v.timeMax);
     setTier(v.tier);
     setMechanics(v.mechanics);
   }, [initialValues]);
-
-  function toggleStar(value: number) {
-    setStars((prev) =>
-      prev.includes(value) ? prev.filter((s) => s !== value) : [...prev, value],
-    );
-  }
 
   function toggleTier(value: string) {
     setTier((prev) =>
@@ -74,7 +66,7 @@ export function FilterCard({ onApply, initialValues }: Props) {
     setStatus(DEFAULT_FILTERS.status);
     setPlayers(DEFAULT_FILTERS.players);
     setAge(DEFAULT_FILTERS.age);
-    setStars(DEFAULT_FILTERS.stars);
+    setSort(DEFAULT_FILTERS.sort);
     setTimeMax(DEFAULT_FILTERS.timeMax);
     setTier(DEFAULT_FILTERS.tier);
     setMechanics(DEFAULT_FILTERS.mechanics);
@@ -87,50 +79,74 @@ export function FilterCard({ onApply, initialValues }: Props) {
       status !== DEFAULT_FILTERS.status ||
       players !== DEFAULT_FILTERS.players ||
       age !== DEFAULT_FILTERS.age ||
-      stars.length > 0 ||
+      sort !== DEFAULT_FILTERS.sort ||
       timeMax !== DEFAULT_FILTERS.timeMax ||
       tier.length > 0 ||
       mechanics.length > 0
     );
-  }, [status, players, age, stars, timeMax, tier, mechanics]);
+  }, [status, players, age, sort, timeMax, tier, mechanics]);
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 6, flexGrow: 1 }}
-    >
-      <View style={styles.card}>
-        <View
+    <View style={[styles.card, { paddingBottom: 0, marginTop: 125 }]}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <Text style={{ fontSize: 22, fontWeight: "900", color: "#0A1628" }}>
+          Filtros
+        </Text>
+
+        <TouchableOpacity
+          onPress={handleClear}
+          disabled={!canClear}
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
+            padding: 8,
+            backgroundColor: canClear ? "#FEF2F2" : "transparent",
+            borderRadius: 12,
           }}
         >
-          <Text style={{ fontSize: 22, fontWeight: "900", color: "#0A1628" }}>
-            Filtros
-          </Text>
-
-          <TouchableOpacity
-            onPress={handleClear}
-            disabled={!canClear}
+          <Text
             style={{
-              padding: 8,
-              backgroundColor: canClear ? "#FEF2F2" : "transparent",
-              borderRadius: 12,
+              color: canClear ? "#B3193A" : "#D1D5DB",
+              fontWeight: "800",
+              fontSize: 13,
             }}
           >
-            <Text
-              style={{
-                color: canClear ? "#B3193A" : "#D1D5DB",
-                fontWeight: "800",
-                fontSize: 13,
-              }}
+            Limpar Tudo
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}
+      >
+        <Text style={styles.title}>Ordenação</Text>
+        <View style={styles.row}>
+          {[
+            { label: "A - Z", value: "A-Z" },
+            { label: "Z - A", value: "Z-A" },
+            { label: "Melhores Avaliados", value: "TOP_RATED" },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.value}
+              style={[styles.chip, sort === item.value && styles.chipActive]}
+              onPress={() => setSort(item.value as FilterSort)}
             >
-              Limpar Tudo
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.chipText,
+                  sort === item.value && styles.chipTextActive,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <Text style={styles.title}>Status do jogo</Text>
@@ -158,7 +174,6 @@ export function FilterCard({ onApply, initialValues }: Props) {
           ))}
         </View>
 
-        {/* 👇 Nova Seção: Tier (Atualizada para estilo Rank) */}
         <Text style={styles.title}>Tier (Classificação)</Text>
         <View style={styles.row}>
           {["Latão", "Bronze", "Prata", "Ouro", "Diamante"].map((value) => (
@@ -219,7 +234,33 @@ export function FilterCard({ onApply, initialValues }: Props) {
           ))}
         </View>
 
-        <GameTimeRange valueMax={timeMax} onChange={(max) => setTimeMax(max)} />
+        <Text style={styles.title}>Tempo Máximo de Jogo</Text>
+        <View style={styles.row}>
+          {[
+            { label: "Qualquer", value: 999 },
+            { label: "15 min", value: 15 },
+            { label: "30 min", value: 30 },
+            { label: "45 min", value: 45 },
+            { label: "60 min", value: 60 },
+            { label: "90 min", value: 90 },
+            { label: "120 min", value: 120 },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.value}
+              style={[styles.chip, timeMax === item.value && styles.chipActive]}
+              onPress={() => setTimeMax(item.value)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  timeMax === item.value && styles.chipTextActive,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <Text style={styles.title}>Mecânicas</Text>
         <View style={styles.row}>
@@ -244,51 +285,6 @@ export function FilterCard({ onApply, initialValues }: Props) {
           ))}
         </View>
 
-        <Text style={styles.title}>Avaliação (Estrelas)</Text>
-        <View
-          style={{
-            backgroundColor: "#F9FAFB",
-            paddingHorizontal: 16,
-            borderRadius: 20,
-          }}
-        >
-          {[5, 4, 3, 2, 1].map((star, index) => (
-            <TouchableOpacity
-              key={star}
-              style={[styles.starRow, index === 4 && { borderBottomWidth: 0 }]}
-              onPress={() => toggleStar(star)}
-            >
-              <View style={{ flexDirection: "row", gap: 4 }}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Ionicons
-                    key={i}
-                    name={i < star ? "star" : "star-outline"}
-                    size={20}
-                    color={i < star ? "#FBBC04" : "#D1D5DB"}
-                  />
-                ))}
-              </View>
-
-              <View
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 8,
-                  backgroundColor: stars.includes(star) ? "#B3193A" : "#FFF",
-                  borderWidth: stars.includes(star) ? 0 : 2,
-                  borderColor: "#E5E7EB",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {stars.includes(star) && (
-                  <Ionicons name="checkmark" size={16} color="#FFF" />
-                )}
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         <TouchableOpacity
           style={styles.button}
           onPress={() =>
@@ -296,7 +292,7 @@ export function FilterCard({ onApply, initialValues }: Props) {
               status,
               players,
               age,
-              stars,
+              sort,
               priceMin: DEFAULT_FILTERS.priceMin,
               priceMax: DEFAULT_FILTERS.priceMax,
               timeMax,
@@ -307,7 +303,7 @@ export function FilterCard({ onApply, initialValues }: Props) {
         >
           <Text style={styles.buttonText}>Aplicar Filtros</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

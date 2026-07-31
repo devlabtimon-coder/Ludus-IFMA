@@ -2,18 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet } from "react-native";
 
-// 1. Criamos a tipagem para aceitar a cor como opcional
 interface BackButtonProps {
   color?: string;
 }
 
-// 2. Recebemos a prop e definimos o seu vermelho original como padrão
 export default function BackButton({ color = "#B3193A" }: BackButtonProps) {
   const router = useRouter();
 
   return (
     <Pressable style={styles.container} onPress={() => router.back()}>
-      {/* 3. Usamos a variável color aqui */}
       <Ionicons name="chevron-back" size={22} color={color} />
     </Pressable>
   );
