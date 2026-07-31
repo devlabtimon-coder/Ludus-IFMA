@@ -60,8 +60,10 @@ export const styles = StyleSheet.create({
 
   forgot: {
     textAlign: "right",
-    color: "#393939",
+    color: "#1E3932",
     marginBottom: 24,
+    textDecorationLine: "underline",
+    fontWeight: "600",
   },
 
   button: {

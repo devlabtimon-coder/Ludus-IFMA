@@ -1,5 +1,6 @@
 import { styles } from "@/src/components/Login/styles";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useRouter } from "expo-router";
@@ -28,6 +29,8 @@ export function LoginForm() {
   const [hidePassword, setHidePassword] = useState(true);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+
+  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
@@ -71,10 +74,136 @@ export function LoginForm() {
   };
 
   const handleLogin = async () => {
-    /* ... */
+    const cleanedEmail = email.trim().toLowerCase();
+    const cleanedPassword = senha.trim();
+
+    if (!cleanedEmail || !cleanedPassword) {
+      return showAlert(
+        "info",
+        "Inventário vazio",
+        "Preencha e-mail e senha para continuar.",
+      );
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await login(cleanedEmail, cleanedPassword);
+      if (result.success) {
+        showAlert("success", "Acesso liberado", "Bem-vindo de volta ao Ludus!");
+        setTimeout(() => {
+          setAlertVisible(false);
+          if ((result as any).user?.role === "ADMIN") {
+            return router.replace("/admin/manage");
+          }
+          router.replace("/home");
+        }, 1200);
+      } else {
+        showAlert(
+          "error",
+          "Falha crítica",
+          result.message || "E-mail ou senha incorretos",
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
   const handleGoogleLogin = async () => {
-    /* ... */
+    setGoogleLoading(true);
+    const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+    if (!clientId) {
+      showAlert(
+        "error",
+        "Erro Estrutural",
+        "Web Client ID ausente no APK. O eas.json não injetou a chave.",
+      );
+      setGoogleLoading(false);
+      return;
+    }
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      const userInfo: any = await GoogleSignin.signIn();
+      const userEmail = userInfo?.user?.email || userInfo?.data?.user?.email;
+
+      if (userEmail) {
+        const cleanEmail = userEmail.trim().toLowerCase();
+        const isIfma =
+          cleanEmail.endsWith("@ifma.edu.br") ||
+          cleanEmail.endsWith("@acad.ifma.edu.br");
+        if (!isIfma) {
+          await GoogleSignin.signOut();
+          showAlert(
+            "error",
+            "Acesso Negado",
+            "Apenas contas institucionais do IFMA são permitidas.",
+          );
+          setGoogleLoading(false);
+          return;
+        }
+      }
+
+      const idToken =
+        userInfo?.idToken || userInfo?.data?.idToken || userInfo?.user?.idToken;
+      if (!idToken) throw new Error("Token do Google não encontrado.");
+
+      const res = await api.post("/auth/google", { idToken });
+
+      if (res.data.needsCompletion || res.data.isNewUser) {
+        showAlert(
+          "info",
+          "Quase lá",
+          "Finalize seu cadastro com os dados institucionais.",
+        );
+        setTimeout(() => {
+          setAlertVisible(false);
+          router.replace({
+            pathname: "/register",
+            params: {
+              googleEmail: res.data.user?.email || userEmail,
+              googleName:
+                res.data.user?.name ||
+                userInfo?.user?.name ||
+                userInfo?.data?.user?.name,
+              googleIdToken: idToken,
+              isGoogle: "true",
+            },
+          });
+        }, 1200);
+        return;
+      }
+
+      await signInWithToken(res.data.token, res.data.user);
+      showAlert(
+        "success",
+        "Login com Google",
+        "Você entrou com sua conta Google.",
+      );
+      setTimeout(() => {
+        setAlertVisible(false);
+        if (res.data.user?.role === "ADMIN")
+          return router.replace("/admin/manage");
+        router.replace("/home");
+      }, 1000);
+    } catch (e: any) {
+      console.log("Google Login Error:", e);
+      if (e.code === "SIGN_IN_CANCELLED" || e.message?.includes("CANCELLED")) {
+        setGoogleLoading(false);
+        return;
+      }
+      showAlert(
+        "error",
+        "Erro Google",
+        e?.response?.data?.error ||
+          e?.message ||
+          "Falha ao autenticar com Google.",
+      );
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -117,10 +246,10 @@ export function LoginForm() {
         onFocus={() => handleFocus("email")}
         returnKeyType="next"
         onSubmitEditing={() => senhaRef.current?.focus()}
+        editable={!loading && !googleLoading}
       />
 
       <Text style={styles.label}>Senha</Text>
-
       <View
         style={styles.passwordWrapper}
         onLayout={(e) => handleLayout("senha", e.nativeEvent.layout.y)}
@@ -134,6 +263,7 @@ export function LoginForm() {
           onChangeText={setSenha}
           value={senha}
           onFocus={() => handleFocus("senha")}
+          editable={!loading && !googleLoading}
         />
         <Pressable onPress={() => setHidePassword(!hidePassword)}>
           <Ionicons
@@ -148,8 +278,15 @@ export function LoginForm() {
         <Text style={styles.forgot}>Esqueceu a senha?</Text>
       </Pressable>
 
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Logar</Text>
+      {/* 🔥 BOTÃO DE LOGAR BLINDADO CONTRA SPAM */}
+      <Pressable
+        style={[styles.button, loading && { opacity: 0.7 }]}
+        onPress={handleLogin}
+        disabled={loading || googleLoading} // Não permite clicar se estiver carregando ou no fluxo do Google
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Carregando..." : "Logar"}
+        </Text>
       </Pressable>
 
       <View style={styles.divider}>
@@ -161,7 +298,7 @@ export function LoginForm() {
       <Pressable
         style={[styles.googleButton, googleLoading && { opacity: 0.6 }]}
         onPress={handleGoogleLogin}
-        disabled={googleLoading}
+        disabled={googleLoading || loading}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Ionicons
