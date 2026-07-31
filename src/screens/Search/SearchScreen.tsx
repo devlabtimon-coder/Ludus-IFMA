@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -35,6 +36,9 @@ export default function SearchScreen() {
   const [games, setGames] = useState<Game[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
+  // 🔥 Novo estado para controlar o loading inicial e das buscas
+  const [isLoading, setIsLoading] = useState(true);
+
   const requestIdRef = useRef(0);
 
   const queryParams = useMemo(() => {
@@ -52,15 +56,10 @@ export default function SearchScreen() {
       status,
       players: safeFilters.players ?? undefined,
       age: safeFilters.age ?? undefined,
-
-      // 🔥 Aqui enviamos a ordenação escolhida no filtro no lugar das estrelas!
       sort: safeFilters.sort,
-
       priceMin: sendPrice ? safeFilters.priceMin : undefined,
       priceMax: sendPrice ? safeFilters.priceMax : undefined,
-
       timeMax: sendTime ? safeFilters.timeMax : undefined,
-
       tier: safeFilters.tier.length ? safeFilters.tier.join(",") : undefined,
       mechanics: safeFilters.mechanics.length
         ? safeFilters.mechanics.join(",")
@@ -71,6 +70,8 @@ export default function SearchScreen() {
   const fetchGames = useCallback(async () => {
     const currentId = ++requestIdRef.current;
 
+    setIsLoading(true);
+
     try {
       const res = await api.get("/games", { params: queryParams });
       if (currentId !== requestIdRef.current) return;
@@ -78,7 +79,13 @@ export default function SearchScreen() {
       setGames(res.data || []);
     } catch (e) {
       console.log("Erro ao buscar jogos:", e);
-      setGames([]);
+      if (currentId === requestIdRef.current) {
+        setGames([]);
+      }
+    } finally {
+      if (currentId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [queryParams]);
 
@@ -129,7 +136,7 @@ export default function SearchScreen() {
           }}
         >
           <Text style={{ fontSize: 22, fontWeight: "800", color: "#555" }}>
-            {games.length} Resultados
+            {isLoading ? "Buscando..." : `${games.length} Resultados`}
           </Text>
 
           <Pressable
@@ -181,7 +188,11 @@ export default function SearchScreen() {
             flexGrow: 1,
           }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#B3193A"
+            />
           }
           ListEmptyComponent={
             <View
@@ -190,30 +201,49 @@ export default function SearchScreen() {
                 alignItems: "center",
                 justifyContent: "center",
                 paddingBottom: 50,
+                marginTop: 60,
               }}
             >
-              <Image
-                source={EMPTY_IMAGE}
-                style={{
-                  width: 140,
-                  height: 140,
-                  marginBottom: 18,
-                  opacity: 0.85,
-                }}
-                resizeMode="contain"
-              />
-              <Text
-                style={{
-                  marginTop: 6,
-                  fontSize: 14,
-                  color: "#8B8EA1",
-                  textAlign: "center",
-                  paddingHorizontal: 30,
-                  lineHeight: 20,
-                }}
-              >
-                Tente buscar por outro nome ou ajuste os filtros.
-              </Text>
+              {isLoading ? (
+                <>
+                  <ActivityIndicator size="large" color="#B3193A" />
+                  <Text
+                    style={{
+                      marginTop: 16,
+                      fontSize: 15,
+                      color: "#8B8EA1",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Buscando jogos...
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Image
+                    source={EMPTY_IMAGE}
+                    style={{
+                      width: 140,
+                      height: 140,
+                      marginBottom: 18,
+                      opacity: 0.85,
+                    }}
+                    resizeMode="contain"
+                  />
+                  <Text
+                    style={{
+                      marginTop: 6,
+                      fontSize: 14,
+                      color: "#8B8EA1",
+                      textAlign: "center",
+                      paddingHorizontal: 30,
+                      lineHeight: 20,
+                    }}
+                  >
+                    Tente buscar por outro nome ou ajuste os filtros.
+                  </Text>
+                </>
+              )}
             </View>
           }
         />
