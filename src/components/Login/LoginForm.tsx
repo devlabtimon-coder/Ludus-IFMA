@@ -207,118 +207,122 @@ export function LoginForm() {
   };
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      style={[styles.container, { padding: 0 }]}
-      contentContainerStyle={{
-        flexGrow: 1,
-        padding: 28,
-        paddingBottom: Platform.OS === "ios" ? 140 : 250,
-      }}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-      bounces={false}
-    >
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
+    <View style={styles.container}>
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: 28,
+          paddingBottom: Platform.OS === "ios" ? 140 : 250,
+        }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        <Image
-          source={require("../../../assets/logo-dice.png")}
-          style={{ width: 63, height: 63, marginRight: 10 }}
-          resizeMode="contain"
-        />
-        <Text style={styles.title}>Bem-vindo ao Ludus</Text>
-      </View>
-      <Text style={styles.subtitle}>
-        Entre com seu e-mail cadastrado ou número de telefone.
-      </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 8,
+          }}
+        >
+          <Image
+            source={require("../../../assets/logo-dice.png")}
+            style={{ width: 63, height: 63, marginRight: 10 }}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Bem-vindo ao Ludus</Text>
+        </View>
+        <Text style={styles.subtitle}>
+          Entre com seu e-mail cadastrado ou número de telefone.
+        </Text>
 
-      <Text style={styles.label}>E-mail</Text>
-      <TextInput
-        ref={emailRef}
-        placeholder="Seu e-mail"
-        placeholderTextColor="#999"
-        style={styles.input}
-        onChangeText={setEmail}
-        value={email}
-        autoCapitalize="none"
-        onLayout={(e) => handleLayout("email", e.nativeEvent.layout.y)}
-        onFocus={() => handleFocus("email")}
-        returnKeyType="next"
-        onSubmitEditing={() => senhaRef.current?.focus()}
-        editable={!loading && !googleLoading}
-      />
-
-      <Text style={styles.label}>Senha</Text>
-      <View
-        style={styles.passwordWrapper}
-        onLayout={(e) => handleLayout("senha", e.nativeEvent.layout.y)}
-      >
+        <Text style={styles.label}>E-mail</Text>
         <TextInput
-          ref={senhaRef}
-          placeholder="Senha"
+          ref={emailRef}
+          placeholder="Seu e-mail"
           placeholderTextColor="#999"
-          secureTextEntry={hidePassword}
-          style={styles.inputPassword}
-          onChangeText={setSenha}
-          value={senha}
-          onFocus={() => handleFocus("senha")}
+          style={styles.input}
+          onChangeText={setEmail}
+          value={email}
+          autoCapitalize="none"
+          onLayout={(e) => handleLayout("email", e.nativeEvent.layout.y)}
+          onFocus={() => handleFocus("email")}
+          returnKeyType="next"
+          onSubmitEditing={() => senhaRef.current?.focus()}
           editable={!loading && !googleLoading}
         />
-        <Pressable onPress={() => setHidePassword(!hidePassword)}>
-          <Ionicons
-            name={hidePassword ? "eye-off" : "eye"}
-            size={24}
-            color="#535353"
+
+        <Text style={styles.label}>Senha</Text>
+        <View
+          style={styles.passwordWrapper}
+          onLayout={(e) => handleLayout("senha", e.nativeEvent.layout.y)}
+        >
+          <TextInput
+            ref={senhaRef}
+            placeholder="Senha"
+            placeholderTextColor="#999"
+            secureTextEntry={hidePassword}
+            style={styles.inputPassword}
+            onChangeText={setSenha}
+            value={senha}
+            onFocus={() => handleFocus("senha")}
+            editable={!loading && !googleLoading}
           />
-        </Pressable>
-      </View>
-
-      <Pressable onPress={() => router.push("/forgot-password")}>
-        <Text style={styles.forgot}>Esqueceu a senha?</Text>
-      </Pressable>
-
-      {/* 🔥 BOTÃO DE LOGAR BLINDADO CONTRA SPAM */}
-      <Pressable
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={handleLogin}
-        disabled={loading || googleLoading} // Não permite clicar se estiver carregando ou no fluxo do Google
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Carregando..." : "Logar"}
-        </Text>
-      </Pressable>
-
-      <View style={styles.divider}>
-        <View style={styles.line} />
-        <Text style={styles.or}>or</Text>
-        <View style={styles.line} />
-      </View>
-
-      <Pressable
-        style={[styles.googleButton, googleLoading && { opacity: 0.6 }]}
-        onPress={handleGoogleLogin}
-        disabled={googleLoading || loading}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Ionicons
-            name="logo-google"
-            size={24}
-            style={{ marginRight: 10 }}
-            color="#0409ce"
-          />
-          <Text style={styles.googleText}>
-            {googleLoading ? "Conectando..." : "Logar com Google"}
-          </Text>
+          <Pressable onPress={() => setHidePassword(!hidePassword)}>
+            <Ionicons
+              name={hidePassword ? "eye-off" : "eye"}
+              size={24}
+              color="#535353"
+            />
+          </Pressable>
         </View>
-      </Pressable>
 
-      <Text style={styles.register}>
-        Não possui uma conta?{" "}
-        <Text style={styles.link} onPress={() => router.push("/register")}>
-          Registre-se aqui!
+        <Pressable onPress={() => router.push("/forgot-password")}>
+          <Text style={styles.forgot}>Esqueceu a senha?</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, loading && { opacity: 0.7 }]}
+          onPress={handleLogin}
+          disabled={loading || googleLoading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Carregando..." : "Logar"}
+          </Text>
+        </Pressable>
+
+        <View style={styles.divider}>
+          <View style={styles.line} />
+          <Text style={styles.or}>or</Text>
+          <View style={styles.line} />
+        </View>
+
+        <Pressable
+          style={[styles.googleButton, googleLoading && { opacity: 0.6 }]}
+          onPress={handleGoogleLogin}
+          disabled={googleLoading || loading}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons
+              name="logo-google"
+              size={24}
+              style={{ marginRight: 10 }}
+              color="#0409ce"
+            />
+            <Text style={styles.googleText}>
+              {googleLoading ? "Conectando..." : "Logar com Google"}
+            </Text>
+          </View>
+        </Pressable>
+
+        <Text style={styles.register}>
+          Não possui uma conta?{" "}
+          <Text style={styles.link} onPress={() => router.push("/register")}>
+            Registre-se aqui!
+          </Text>
         </Text>
-      </Text>
+      </ScrollView>
 
       <LudusAlert
         visible={alertVisible}
@@ -327,6 +331,6 @@ export function LoginForm() {
         message={alertMessage}
         onClose={() => setAlertVisible(false)}
       />
-    </ScrollView>
+    </View>
   );
 }

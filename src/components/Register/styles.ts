@@ -4,13 +4,12 @@ const { height } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
   container: {
-    minHeight: "100%",
+    flex: 1,
     width: "100%",
-    padding: 28,
     backgroundColor: "#fff",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    paddingBottom: 40,
+    overflow: "hidden",
   },
 
   scroll: {

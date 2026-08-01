@@ -6,7 +6,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+// 🔥 Importamos Platform e ScrollView aqui
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import LudusAlert from "../common/LudusAlert/LudusAlert";
 import { styles } from "./styles";
 
@@ -264,190 +273,203 @@ export default function RegisterFormIFMA() {
   }
 
   return (
+    // 🔥 View principal: Borda arredondada fixa no lugar
     <View style={styles.container}>
-      <RegisterHeader />
+      {/* 🔥 ScrollView envelopando o formulário */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          padding: 28,
+          paddingBottom: Platform.OS === "ios" ? 140 : 250, // Espaço extra pro teclado
+        }}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        <RegisterHeader />
 
-      <Text style={styles.label}>Nome completo</Text>
-      <TextInput
-        ref={nameRef}
-        style={styles.input}
-        placeholder="Seu nome completo"
-        placeholderTextColor="#999"
-        value={name}
-        onChangeText={setName}
-        returnKeyType="next"
-        onSubmitEditing={() => emailRef.current?.focus()}
-      />
-
-      <Text style={styles.label}>E-mail institucional</Text>
-      <TextInput
-        ref={emailRef}
-        style={[
-          styles.input,
-          emailHint ? local.inputWarn : null,
-          isGoogleFlow ? { backgroundColor: "#E8EAF6", color: "#666" } : null,
-        ]}
-        placeholder={`seu.nome${IFMA_DOMAIN}`}
-        placeholderTextColor="#999"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        autoCorrect={false}
-        returnKeyType="next"
-        onSubmitEditing={() => matriculaRef.current?.focus()}
-        textContentType="emailAddress"
-        editable={!isGoogleFlow}
-      />
-      {emailHint ? <Text style={local.hintText}>{emailHint}</Text> : null}
-
-      <Text style={styles.label}>Matrícula SUAP</Text>
-      <View style={local.matriculaWrap}>
-        <Ionicons
-          name="card-outline"
-          size={18}
-          color="#04096E"
-          style={{ marginRight: 8 }}
-        />
+        <Text style={styles.label}>Nome completo</Text>
         <TextInput
-          ref={matriculaRef}
-          style={local.matriculaInput}
-          placeholder="Ex: 20241INF.TMN0001"
+          ref={nameRef}
+          style={styles.input}
+          placeholder="Seu nome completo"
           placeholderTextColor="#999"
-          value={matricula}
-          onChangeText={(t) => setMatricula(t.toUpperCase())}
-          autoCapitalize="characters"
+          value={name}
+          onChangeText={setName}
+          returnKeyType="next"
+          onSubmitEditing={() => emailRef.current?.focus()}
+        />
+
+        <Text style={styles.label}>E-mail institucional</Text>
+        <TextInput
+          ref={emailRef}
+          style={[
+            styles.input,
+            emailHint ? local.inputWarn : null,
+            isGoogleFlow ? { backgroundColor: "#E8EAF6", color: "#666" } : null,
+          ]}
+          placeholder={`seu.nome${IFMA_DOMAIN}`}
+          placeholderTextColor="#999"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
           autoCorrect={false}
-          spellCheck={false}
+          returnKeyType="next"
+          onSubmitEditing={() => matriculaRef.current?.focus()}
+          textContentType="emailAddress"
+          editable={!isGoogleFlow}
+        />
+        {emailHint ? <Text style={local.hintText}>{emailHint}</Text> : null}
+
+        <Text style={styles.label}>Matrícula SUAP</Text>
+        <View style={local.matriculaWrap}>
+          <Ionicons
+            name="card-outline"
+            size={18}
+            color="#04096E"
+            style={{ marginRight: 8 }}
+          />
+          <TextInput
+            ref={matriculaRef}
+            style={local.matriculaInput}
+            placeholder="Ex: 20241INF.TMN0001"
+            placeholderTextColor="#999"
+            value={matricula}
+            onChangeText={(t) => setMatricula(t.toUpperCase())}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            spellCheck={false}
+            returnKeyType="next"
+            onSubmitEditing={() =>
+              isGoogleFlow ? null : passRef.current?.focus()
+            }
+          />
+        </View>
+        <Text style={local.matriculaHint}>
+          É o mesmo usuário que você usa para entrar no SUAP.
+        </Text>
+
+        <Text style={styles.label}>
+          Telefone <Text style={local.optional}>(opcional)</Text>
+        </Text>
+        <TextInput
+          ref={phoneRef}
+          style={styles.input}
+          placeholder="(00) 00000-0000"
+          placeholderTextColor="#999"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
           returnKeyType="next"
           onSubmitEditing={() =>
             isGoogleFlow ? null : passRef.current?.focus()
           }
+          textContentType="telephoneNumber"
         />
-      </View>
-      <Text style={local.matriculaHint}>
-        É o mesmo usuário que você usa para entrar no SUAP.
-      </Text>
 
-      <Text style={styles.label}>
-        Telefone <Text style={local.optional}>(opcional)</Text>
-      </Text>
-      <TextInput
-        ref={phoneRef}
-        style={styles.input}
-        placeholder="(00) 00000-0000"
-        placeholderTextColor="#999"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        returnKeyType="next"
-        onSubmitEditing={() => (isGoogleFlow ? null : passRef.current?.focus())}
-        textContentType="telephoneNumber"
-      />
-
-      {!isGoogleFlow && (
-        <>
-          {/* Senha */}
-          <Text style={styles.label}>Senha do Ludus</Text>
-          <View
-            style={[
-              styles.passwordWrapper,
-              passwordError ? styles.fieldError : null,
-            ]}
-          >
-            <TextInput
-              ref={passRef}
-              style={styles.inputPassword}
-              placeholder="Mínimo 6 caracteres"
-              placeholderTextColor="#999"
-              secureTextEntry={hidePassword}
-              value={password}
-              onChangeText={setPassword}
-              onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-              returnKeyType="next"
-              onSubmitEditing={() => confirmRef.current?.focus()}
-              textContentType="newPassword"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable onPress={() => setHidePassword((v) => !v)}>
-              <Ionicons
-                name={hidePassword ? "eye-off" : "eye"}
-                size={22}
-                color={passwordError ? "#E62325" : "#535353"}
+        {!isGoogleFlow && (
+          <>
+            <Text style={styles.label}>Senha do Ludus</Text>
+            <View
+              style={[
+                styles.passwordWrapper,
+                passwordError ? styles.fieldError : null,
+              ]}
+            >
+              <TextInput
+                ref={passRef}
+                style={styles.inputPassword}
+                placeholder="Mínimo 6 caracteres"
+                placeholderTextColor="#999"
+                secureTextEntry={hidePassword}
+                value={password}
+                onChangeText={setPassword}
+                onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmRef.current?.focus()}
+                textContentType="newPassword"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
-            </Pressable>
-          </View>
-          <PasswordStrengthSection
-            visible={password.length > 0}
-            strength={passwordStrength}
-            rules={passwordRules}
-          />
-          {passwordError ? (
-            <Text style={styles.errorText}>{passwordError}</Text>
-          ) : null}
-
-          {/* Confirmar senha */}
-          <Text style={styles.label}>Confirmar senha</Text>
-          <View
-            style={[
-              styles.passwordWrapper,
-              confirmError ? styles.fieldError : null,
-            ]}
-          >
-            <TextInput
-              ref={confirmRef}
-              style={styles.inputPassword}
-              placeholder="Repita a senha"
-              placeholderTextColor="#999"
-              secureTextEntry={hideConfirm}
-              value={confirm}
-              onChangeText={setConfirm}
-              onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
-              returnKeyType="done"
-              onSubmitEditing={handleRegister}
-              textContentType="newPassword"
-              autoCapitalize="none"
-              autoCorrect={false}
+              <Pressable onPress={() => setHidePassword((v) => !v)}>
+                <Ionicons
+                  name={hidePassword ? "eye-off" : "eye"}
+                  size={22}
+                  color={passwordError ? "#E62325" : "#535353"}
+                />
+              </Pressable>
+            </View>
+            <PasswordStrengthSection
+              visible={password.length > 0}
+              strength={passwordStrength}
+              rules={passwordRules}
             />
-            <Pressable onPress={() => setHideConfirm((v) => !v)}>
-              <Ionicons
-                name={hideConfirm ? "eye-off" : "eye"}
-                size={22}
-                color={confirmError ? "#E62325" : "#535353"}
+            {passwordError ? (
+              <Text style={styles.errorText}>{passwordError}</Text>
+            ) : null}
+
+            <Text style={styles.label}>Confirmar senha</Text>
+            <View
+              style={[
+                styles.passwordWrapper,
+                confirmError ? styles.fieldError : null,
+              ]}
+            >
+              <TextInput
+                ref={confirmRef}
+                style={styles.inputPassword}
+                placeholder="Repita a senha"
+                placeholderTextColor="#999"
+                secureTextEntry={hideConfirm}
+                value={confirm}
+                onChangeText={setConfirm}
+                onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
+                returnKeyType="done"
+                onSubmitEditing={handleRegister}
+                textContentType="newPassword"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
-            </Pressable>
-          </View>
-          {confirmError ? (
-            <Text style={styles.errorText}>{confirmError}</Text>
-          ) : null}
-        </>
-      )}
+              <Pressable onPress={() => setHideConfirm((v) => !v)}>
+                <Ionicons
+                  name={hideConfirm ? "eye-off" : "eye"}
+                  size={22}
+                  color={confirmError ? "#E62325" : "#535353"}
+                />
+              </Pressable>
+            </View>
+            {confirmError ? (
+              <Text style={styles.errorText}>{confirmError}</Text>
+            ) : null}
+          </>
+        )}
 
-      <TermsConsentSection
-        acceptedTerms={acceptedTerms}
-        acceptedPrivacy={acceptedPrivacy}
-        onToggleTerms={() => setAcceptedTerms((v) => !v)}
-        onTogglePrivacy={() => setAcceptedPrivacy((v) => !v)}
-      />
+        <TermsConsentSection
+          acceptedTerms={acceptedTerms}
+          acceptedPrivacy={acceptedPrivacy}
+          onToggleTerms={() => setAcceptedTerms((v) => !v)}
+          onTogglePrivacy={() => setAcceptedPrivacy((v) => !v)}
+        />
 
-      <Pressable
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={handleRegister}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Processando..." : "Criar conta"}
+        <Pressable
+          style={[styles.button, loading && { opacity: 0.7 }]}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Processando..." : "Criar conta"}
+          </Text>
+        </Pressable>
+
+        <Text style={styles.register}>
+          Já possui uma conta?{" "}
+          <Text style={styles.link} onPress={() => router.replace("/login")}>
+            Entrar
+          </Text>
         </Text>
-      </Pressable>
+      </ScrollView>
 
-      <Text style={styles.register}>
-        Já possui uma conta?{" "}
-        <Text style={styles.link} onPress={() => router.replace("/login")}>
-          Entrar
-        </Text>
-      </Text>
-
+      {/* 🔥 Alert fora do ScrollView para ficar fixo por cima da tela toda */}
       <LudusAlert
         visible={alertVisible}
         type={alertType}

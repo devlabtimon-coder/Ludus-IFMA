@@ -1,13 +1,13 @@
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
   container: {
+    flex: 1,
     width: "100%",
-    padding: 28,
     backgroundColor: "#fff",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    paddingBottom: Platform.OS === "ios" ? 100 : 60,
+    overflow: "hidden",
   },
 
   title: {
