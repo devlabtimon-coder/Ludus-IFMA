@@ -26,26 +26,42 @@ function formatWhen(iso: string) {
 }
 
 function shouldShowExpand(body?: string) {
-  return (body || "").trim().length > 60; 
+  return (body || "").trim().length > 60;
 }
 
 function metaForType(type: string) {
   const t = (type || "").toUpperCase();
 
   if (t.startsWith("RENTAL_"))
-    return { icon: "game-controller" as const, tone: "blue" as const, label: "Aluguel" };
+    return {
+      icon: "dice-outline" as const,
+      tone: "blue" as const,
+      label: "Aluguel",
+    };
 
   if (t.startsWith("FAVORITE"))
     return { icon: "heart" as const, tone: "red" as const, label: "Favoritos" };
 
   if (t.startsWith("RATING"))
-    return { icon: "star" as const, tone: "yellow" as const, label: "Avaliação" };
+    return {
+      icon: "star" as const,
+      tone: "yellow" as const,
+      label: "Avaliação",
+    };
 
   if (t.includes("VERIFY") || t.includes("EMAIL") || t.includes("PHONE"))
-    return { icon: "shield-checkmark" as const, tone: "blue" as const, label: "Verificação" };
+    return {
+      icon: "shield-checkmark" as const,
+      tone: "blue" as const,
+      label: "Verificação",
+    };
 
   if (t.includes("LEVEL") || t.includes("POINTS"))
-    return { icon: "trophy" as const, tone: "yellow" as const, label: "Ranking" };
+    return {
+      icon: "trophy" as const,
+      tone: "yellow" as const,
+      label: "Ranking",
+    };
 
   return { icon: "megaphone" as const, tone: "red" as const, label: "Sistema" };
 }
@@ -96,7 +112,9 @@ export function NotificationItem({
           <View style={styles.top}>
             <View style={styles.pills}>
               <View style={[styles.pill, { backgroundColor: bg }]}>
-                <Text style={[styles.pillText, { color: tint }]}>{meta.label}</Text>
+                <Text style={[styles.pillText, { color: tint }]}>
+                  {meta.label}
+                </Text>
               </View>
 
               {isUnread && (
@@ -121,11 +139,20 @@ export function NotificationItem({
           {showExpand && (
             <Pressable
               onPress={() => setExpanded((v) => !v)}
-              style={[styles.expandBtn, { backgroundColor: "rgba(49,53,139,0.10)" }]}
+              style={[
+                styles.expandBtn,
+                { backgroundColor: "rgba(49,53,139,0.10)" },
+              ]}
               hitSlop={10}
             >
-              <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color={BLUE} />
-              <Text style={styles.expandText}>{expanded ? "Ver menos" : "Ver mais"}</Text>
+              <Ionicons
+                name={expanded ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={BLUE}
+              />
+              <Text style={styles.expandText}>
+                {expanded ? "Ver menos" : "Ver mais"}
+              </Text>
             </Pressable>
           )}
         </View>
@@ -168,7 +195,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  top: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  top: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
   pills: { flexDirection: "row", alignItems: "center", gap: 10 },
 
   pill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
@@ -181,7 +213,13 @@ const styles = StyleSheet.create({
   time: { fontWeight: "800", color: "#7A7E8B", fontSize: 12 },
 
   title: { marginTop: 8, fontWeight: "900", color: "#1E1E1E", fontSize: 14 },
-  body: { marginTop: 4, color: "#4A4A4A", fontWeight: "700", fontSize: 12, lineHeight: 16 },
+  body: {
+    marginTop: 4,
+    color: "#4A4A4A",
+    fontWeight: "700",
+    fontSize: 12,
+    lineHeight: 16,
+  },
 
   expandBtn: {
     marginTop: 10,

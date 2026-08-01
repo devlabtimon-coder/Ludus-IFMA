@@ -4,15 +4,21 @@ import { StyleSheet, Text, TextInput, View } from "react-native";
 type Props = {
   name: string;
   phone: string;
+  email: string;
+  isIfmaMode: boolean;
   onChangeName: (value: string) => void;
   onChangePhone: (value: string) => void;
+  onChangeEmail: (value: string) => void;
 };
 
 export function AccountPersonalForm({
   name,
   phone,
+  email,
+  isIfmaMode,
   onChangeName,
   onChangePhone,
+  onChangeEmail,
 }: Props) {
   return (
     <>
@@ -46,6 +52,25 @@ export function AccountPersonalForm({
           <Ionicons name="pencil-outline" size={18} color="#8B8EA1" />
         </View>
       </View>
+
+      {!isIfmaMode && (
+        <View style={styles.section}>
+          <Text style={styles.label}>E-mail</Text>
+
+          <View style={styles.inputWrap}>
+            <TextInput
+              value={email}
+              onChangeText={onChangeEmail}
+              placeholder="seu.email@exemplo.com"
+              placeholderTextColor="#8B8EA1"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+            />
+            <Ionicons name="pencil-outline" size={18} color="#8B8EA1" />
+          </View>
+        </View>
+      )}
     </>
   );
 }

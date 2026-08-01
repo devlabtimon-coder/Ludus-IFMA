@@ -11,14 +11,14 @@ import { api } from "@/src/services/api";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 type AlertType = "error" | "success" | "info";
@@ -81,7 +81,6 @@ export default function AccountScreen() {
   const router = useRouter();
   const { user, updateUser } = useAuth();
 
-  // 👇 Puxa a flag de Modo IFMA
   const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
   const [loading, setLoading] = useState(true);
@@ -165,7 +164,6 @@ export default function AccountScreen() {
     const cleanPhone = phone.replace(/\D/g, "");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // Se for Modo IFMA, o email não importa. Se não for, valida o Regex.
     const isEmailValid = isIfmaMode || emailRegex.test(email);
 
     return cleanName.length >= 3 && cleanPhone.length >= 10 && isEmailValid;
@@ -199,7 +197,6 @@ export default function AccountScreen() {
 
     setSaving(true);
     try {
-      // Se for modo IFMA, não enviamos o e-mail na requisição
       const payload: any = {
         name: cleanName,
         phone: cleanPhone,
@@ -349,7 +346,6 @@ export default function AccountScreen() {
                 onChangeEmail={setEmail}
               />
 
-              {/* Se for IFMA, renderiza o Card Fechado com aviso */}
               {isIfmaMode && (
                 <AccountInfoCard
                   icon="mail-outline"

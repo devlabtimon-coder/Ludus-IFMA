@@ -12,7 +12,7 @@ export type NotificationTypeFilterValue =
 type Counts = {
   all: number;
   rentals: number;
- 
+
   ratings: number;
   verify: number;
   progress: number;
@@ -26,9 +26,14 @@ const FILTERS: Array<{
   tone: "blue" | "red" | "yellow";
 }> = [
   { key: "all", label: "Tudo", icon: "apps", tone: "blue" },
-  { key: "rentals", label: "Aluguéis", icon: "game-controller", tone: "blue" },
+  { key: "rentals", label: "Aluguéis", icon: "dice-outline", tone: "blue" },
   { key: "ratings", label: "Avaliações", icon: "star", tone: "yellow" },
-  { key: "verify", label: "Verificação", icon: "shield-checkmark", tone: "blue" },
+  {
+    key: "verify",
+    label: "Verificação",
+    icon: "shield-checkmark",
+    tone: "blue",
+  },
   { key: "progress", label: "Ranking", icon: "trophy", tone: "yellow" },
   { key: "system", label: "Sistema", icon: "megaphone", tone: "red" },
 ];
@@ -46,7 +51,11 @@ export function NotificationsTypeFilter({
     <View style={{ marginBottom: 12 }}>
       <Text style={styles.sectionTitle}>Filtrar por tipo</Text>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 6 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingRight: 6 }}
+      >
         {FILTERS.map((f) => {
           const active = value === f.key;
           const tone = palette(f.tone);
@@ -57,14 +66,28 @@ export function NotificationsTypeFilter({
               onPress={() => onChange(f.key)}
               style={[
                 styles.chip,
-                active && { backgroundColor: tone.main, borderColor: tone.main },
+                active && {
+                  backgroundColor: tone.main,
+                  borderColor: tone.main,
+                },
               ]}
               hitSlop={8}
             >
-              <Ionicons name={f.icon} size={16} color={active ? "#fff" : tone.main} />
-              <Text style={[styles.chipText, active && { color: "#fff" }]}>{f.label}</Text>
+              <Ionicons
+                name={f.icon}
+                size={16}
+                color={active ? "#fff" : tone.main}
+              />
+              <Text style={[styles.chipText, active && { color: "#fff" }]}>
+                {f.label}
+              </Text>
 
-              <View style={[styles.count, active && { backgroundColor: "rgba(255,255,255,0.22)" }]}>
+              <View
+                style={[
+                  styles.count,
+                  active && { backgroundColor: "rgba(255,255,255,0.22)" },
+                ]}
+              >
                 <Text style={[styles.countText, active && { color: "#fff" }]}>
                   {counts[f.key] ?? 0}
                 </Text>

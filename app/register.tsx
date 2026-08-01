@@ -1,7 +1,7 @@
 import BackButton from "@/src/components/common/BackButton";
 import LoginBackground from "@/src/components/Login/LoginBackground";
 import RegisterFormIFMA from "@/src/components/Register/RegisterFormIFMA";
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 export default function Register() {
   return (
@@ -11,13 +11,9 @@ export default function Register() {
 
       <View style={styles.blueTopSpace} />
 
-      {/* 🔥 Trocamos o Scroll pelo KeyboardAvoidingView, igual na tela de Login! */}
-      <KeyboardAvoidingView
-        style={styles.keyboardArea}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <View style={styles.keyboardArea}>
         <RegisterFormIFMA />
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 }

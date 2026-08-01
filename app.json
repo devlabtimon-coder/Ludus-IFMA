@@ -62,7 +62,9 @@
           "iosUrlScheme": "com.googleusercontent.apps.1008142639242-l45f7prh3v5cpcs3n79mai63kqhe74fh"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -6,16 +6,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useMemo, useRef, useState } from "react";
-// 🔥 Importamos Platform e ScrollView aqui
 import {
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+
 import LudusAlert from "../common/LudusAlert/LudusAlert";
 import { styles } from "./styles";
 
@@ -160,6 +160,14 @@ export default function RegisterFormIFMA() {
       );
     }
 
+    if (cleanPhone.length < 10) {
+      return showAlert(
+        "info",
+        "Telefone obrigatório",
+        "Digite um número de telefone válido com DDD (WhatsApp).",
+      );
+    }
+
     if (!isGoogleFlow) {
       if (password.length < 6) {
         setTouched((t) => ({ ...t, password: true }));
@@ -273,17 +281,19 @@ export default function RegisterFormIFMA() {
   }
 
   return (
-    // 🔥 View principal: Borda arredondada fixa no lugar
     <View style={styles.container}>
-      {/* 🔥 ScrollView envelopando o formulário */}
-      <ScrollView
+      <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           padding: 28,
-          paddingBottom: Platform.OS === "ios" ? 140 : 250, // Espaço extra pro teclado
+          paddingBottom: Platform.OS === "ios" ? 140 : 250,
         }}
         keyboardShouldPersistTaps="handled"
         bounces={false}
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraHeight={Platform.OS === "ios" ? 140 : 160}
+        extraScrollHeight={20}
       >
         <RegisterHeader />
 
@@ -340,18 +350,14 @@ export default function RegisterFormIFMA() {
             autoCorrect={false}
             spellCheck={false}
             returnKeyType="next"
-            onSubmitEditing={() =>
-              isGoogleFlow ? null : passRef.current?.focus()
-            }
+            onSubmitEditing={() => phoneRef.current?.focus()}
           />
         </View>
         <Text style={local.matriculaHint}>
           É o mesmo usuário que você usa para entrar no SUAP.
         </Text>
 
-        <Text style={styles.label}>
-          Telefone <Text style={local.optional}>(opcional)</Text>
-        </Text>
+        <Text style={styles.label}>Telefone</Text>
         <TextInput
           ref={phoneRef}
           style={styles.input}
@@ -467,9 +473,8 @@ export default function RegisterFormIFMA() {
             Entrar
           </Text>
         </Text>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
-      {/* 🔥 Alert fora do ScrollView para ficar fixo por cima da tela toda */}
       <LudusAlert
         visible={alertVisible}
         type={alertType}
