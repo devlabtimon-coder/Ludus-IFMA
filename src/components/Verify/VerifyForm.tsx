@@ -231,13 +231,15 @@ export default function VerifyForm() {
 
       if (token && user) {
         await signInWithToken(token, user);
-        router.replace("/suap-verify");
+        // 🔥 Atualizado para redirecionar para a home
+        router.replace("/home");
         return;
       }
 
       showAlert("success", "Verificado 🎉", "Conta criada com sucesso!");
       setTimeout(() => {
-        router.replace("/suap-verify");
+        // 🔥 Atualizado para redirecionar para a home
+        router.replace("/home");
       }, 700);
     } catch (error: any) {
       const message =

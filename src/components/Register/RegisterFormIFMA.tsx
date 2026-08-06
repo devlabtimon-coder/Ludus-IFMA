@@ -1,10 +1,10 @@
 import { PasswordStrengthSection } from "@/src/components/Register/PasswordStrengthSection";
 import { RegisterHeader } from "@/src/components/Register/RegisterHeader";
 import { TermsConsentSection } from "@/src/components/Register/TermsConsentSection";
+import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import { useMemo, useRef, useState } from "react";
 import {
   Platform,
@@ -41,6 +41,7 @@ function getPasswordStrength(password: string) {
 
 export default function RegisterFormIFMA() {
   const router = useRouter();
+  const { signInWithToken } = useAuth();
 
   const params = useLocalSearchParams();
   const initialEmail = (params.googleEmail as string) || "";
@@ -208,11 +209,7 @@ export default function RegisterFormIFMA() {
       });
 
       if (isGoogleFlow) {
-        await SecureStore.setItemAsync("token", response.data.token);
-        await SecureStore.setItemAsync(
-          "user",
-          JSON.stringify(response.data.user),
-        );
+        await signInWithToken(response.data.token, response.data.user);
 
         showAlert(
           "success",
