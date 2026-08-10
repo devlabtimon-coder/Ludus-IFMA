@@ -1,19 +1,18 @@
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
-// @ts-ignore - Ignora o falso-positivo de tipagem do Firebase
 import auth from "@react-native-firebase/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View,
+  Animated,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import LudusAlert from "../common/LudusAlert/LudusAlert";
 import { styles } from "./styles";
@@ -277,7 +276,6 @@ export default function VerifyPhoneForm() {
                     overflow: "hidden",
                   }}
                 >
-                  {/* Puxa o ícone de SMS que você já tem configurado! */}
                   <VerifyHero method="sms" />
                 </Animated.View>
               )}

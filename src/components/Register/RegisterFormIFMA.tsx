@@ -21,10 +21,12 @@ import { styles } from "./styles";
 
 type AlertType = "error" | "success" | "info";
 
-const IFMA_DOMAIN = "@acad.ifma.edu.br";
+const IFMA_DOMAINS = ["@acad.ifma.edu.br", "@ifma.edu.br"];
 
-const isValidIfmaEmail = (email: string) =>
-  email.trim().toLowerCase().endsWith(IFMA_DOMAIN);
+const isValidIfmaEmail = (email: string) => {
+  const clean = email.trim().toLowerCase();
+  return IFMA_DOMAINS.some((domain) => clean.endsWith(domain));
+};
 
 function getPasswordStrength(password: string) {
   if (!password) return { score: 0, label: "", color: "#D9DDE7" };
@@ -110,9 +112,8 @@ export default function RegisterFormIFMA() {
   const emailHint = useMemo(() => {
     const clean = email.trim().toLowerCase();
     if (!clean) return null;
-    if (clean.endsWith(IFMA_DOMAIN)) return null;
-    if (clean.includes("@")) return `Use seu e-mail ${IFMA_DOMAIN}`;
-    return `Seu e-mail deve terminar em ${IFMA_DOMAIN}`;
+    if (IFMA_DOMAINS.some((domain) => clean.endsWith(domain))) return null;
+    return `Use seu e-mail @acad.ifma.edu.br ou @ifma.edu.br`;
   }, [email]);
 
   const IFMA_MATRICULA_REGEX = /^\d{5}[A-Z0-9.]+\.TMN\d+$/;
@@ -149,7 +150,7 @@ export default function RegisterFormIFMA() {
       return showAlert(
         "info",
         "E-mail inválido",
-        `Apenas e-mails ${IFMA_DOMAIN} são aceitos.`,
+        "Apenas e-mails institucionais são aceitos (@acad.ifma.edu.br ou @ifma.edu.br).",
       );
     }
 
@@ -314,7 +315,7 @@ export default function RegisterFormIFMA() {
             emailHint ? local.inputWarn : null,
             isGoogleFlow ? { backgroundColor: "#E8EAF6", color: "#666" } : null,
           ]}
-          placeholder={`seu.nome${IFMA_DOMAIN}`}
+          placeholder="seu.nome@acad.ifma.edu.br"
           placeholderTextColor="#999"
           value={email}
           onChangeText={setEmail}
