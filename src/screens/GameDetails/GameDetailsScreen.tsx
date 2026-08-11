@@ -292,57 +292,70 @@ export default function GameDetailsScreen() {
           endDateIso,
         });
 
-        showAlert(
-          "success",
-          "Reserva Confirmada! 🎲",
-          "Retire o seu jogo na Biblioteca IFMA - Campus Timon no horário agendado.",
-        );
+        // Sucesso: Fecha o calendário primeiro
         setRentOpen(false);
-        await fetchDetails();
+        
+        // Aguarda a animação do iOS fechar e mostra o alerta
+        setTimeout(async () => {
+          showAlert(
+            "success",
+            "Reserva Confirmada! 🎲",
+            "Retire o seu jogo na Biblioteca IFMA - Campus Timon no horário agendado.",
+          );
+          await fetchDetails();
+        }, 400);
+
       } catch (e: any) {
-        if (isTermsBlocked(e)) {
-          pendingRentRef.current = { startDateIso, endDateIso };
-          setTermsOpen(true);
-          return;
-        }
+       
+        setRentOpen(false);
 
-        const code = e?.response?.data?.code;
-        const msg = e?.response?.data?.error;
+        
+        setTimeout(() => {
+          if (isTermsBlocked(e)) {
+            pendingRentRef.current = { startDateIso, endDateIso };
+            setTermsOpen(true);
+            return;
+          }
 
-        if (code === "RENTAL_LIMIT_REACHED") {
-          showAlert(
-            "info",
-            "Limite atingido",
-            "Você já possui 2 aluguéis em aberto. Finalize um para agendar outro.",
-          );
-          return;
-        }
+          const code = e?.response?.data?.code;
+          const msg = e?.response?.data?.error;
 
-        if (code === "TIER_ACCESS_DENIED") {
+          if (code === "RENTAL_LIMIT_REACHED") {
+            showAlert(
+              "info",
+              "Limite atingido",
+              "Você já possui 2 aluguéis em aberto. Finalize um para agendar outro.",
+            );
+            return;
+          }
+
+          if (code === "TIER_ACCESS_DENIED") {
+            showAlert(
+              "error",
+              "Acesso restrito",
+              msg || "Sua categoria de cliente não permite alugar este jogo.",
+            );
+            return;
+          }
+
+          if (code === "TIME_SLOT_TAKEN") {
+            showAlert(
+              "error",
+              "Horário Ocupado",
+              msg ||
+                "Todos os exemplares deste jogo já estão reservados para este horário.",
+            );
+            return;
+          }
+
           showAlert(
             "error",
-            "Acesso restrito",
-            msg || "Sua categoria de cliente não permite alugar este jogo.",
-          );
-          return;
-        }
-
-        if (code === "TIME_SLOT_TAKEN") {
-          showAlert(
-            "error",
-            "Horário Ocupado",
+            "Erro ao reservar",
             msg ||
-              "Todos os exemplares deste jogo já estão reservados para este horário.",
+              "Não foi possível processar o seu agendamento. Tente novamente.",
           );
-          return;
-        }
+        }, 400); 
 
-        showAlert(
-          "error",
-          "Erro ao reservar",
-          msg ||
-            "Não foi possível processar o seu agendamento. Tente novamente.",
-        );
       } finally {
         setRentLoading(false);
       }
