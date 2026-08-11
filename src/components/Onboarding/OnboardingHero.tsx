@@ -1,18 +1,25 @@
 import { api } from "@/src/services/api";
 import { getOnboardingGames } from "@/src/services/ludopedia";
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View, useWindowDimensions } from "react-native";
 
 export function OnboardingHero() {
   const [game, setGame] = useState<any>(null);
+  const { height } = useWindowDimensions();
+  
+  
+  const CIRCLE_SIZE = height < 700 ? 285 : 365;
+  
+  
+  const MARGIN_TOP = height < 700 ? 60 : 130; 
 
   const PLACEHODER_IMAGE = "https://image.api.playstation.com/vulcan/ap/rnd/202209/2812/jm8wDLnosb3D8W6TUuLGa4jz.jpg"
+
   useEffect(() => {
     async function loadRandomGame() {
       try {
         const response = await api.get("/games")
         const games = response.data
-
         if(games.length > 0) {
           const randomIndex = Math.floor(Math.random() * games.length);
           setGame(games[randomIndex])
@@ -20,22 +27,20 @@ export function OnboardingHero() {
       } catch (error) {
         console.error(error);
       }
-
+      
       const games = await getOnboardingGames();
       const randomIndex = Math.floor(Math.random() * games.length);
       setGame(games[randomIndex]);
     }
-
     loadRandomGame();
   }, []);
 
-  if (!game) return null; // evita piscar layout
-
+  if (!game) return null; 
 
   return (
-    <View style={styles.container}>
-      <View style={styles.circle}>
-        <Image source={{ uri: game.image || PLACEHODER_IMAGE}} style={styles.image} />
+    <View style={[styles.container, { marginTop: MARGIN_TOP }]}>
+      <View style={[styles.circle, { width: CIRCLE_SIZE, height: CIRCLE_SIZE, borderRadius: CIRCLE_SIZE / 2 }]}>
+        <Image source={{ uri: game.image || PLACEHODER_IMAGE }} style={styles.image} />
       </View>
     </View>
   );
@@ -43,14 +48,9 @@ export function OnboardingHero() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 140,
     alignItems: "center",
   },
-
   circle: {
-    width: 300,
-    height: 300,
-    borderRadius: 150,
     backgroundColor: "#fff",
     elevation: 10,
     shadowColor: "#000",
@@ -59,7 +59,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 20 },
     overflow: "hidden",
   },
-
   image: {
     width: "100%",
     height: "100%",
