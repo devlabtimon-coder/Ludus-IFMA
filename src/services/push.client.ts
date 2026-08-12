@@ -9,7 +9,7 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
-    shouldShowBanner: true, 
+    shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
@@ -18,20 +18,18 @@ export async function registerForPush(userId?: string) {
   if (!userId) return;
 
   if (Platform.OS === "android") {
-    
     await Notifications.setNotificationChannelAsync("rentals", {
       name: "Aluguéis",
-      importance: Notifications.AndroidImportance.MAX, 
+      importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#FF231F7C",
     });
-    
+
     await Notifications.setNotificationChannelAsync("system", {
       name: "Sistema",
       importance: Notifications.AndroidImportance.DEFAULT,
     });
 
-    // 👇 O CANAL QUE FALTAVA PARA AS NOTIFICAÇÕES PADRÃO DO BACKEND
     await Notifications.setNotificationChannelAsync("default", {
       name: "Geral",
       importance: Notifications.AndroidImportance.DEFAULT,
