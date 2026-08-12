@@ -1,4 +1,3 @@
-
 import { api } from "@/src/services/api";
 import { goToRoute } from "@/src/services/navigation";
 import Constants from "expo-constants";
@@ -10,11 +9,9 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
-   
-    shouldShowBanner: true,
-    shouldShowList: true,
   }),
 });
+
 export async function registerForPush(userId?: string) {
   if (!userId) return;
 
@@ -30,6 +27,14 @@ export async function registerForPush(userId?: string) {
     await Notifications.setNotificationChannelAsync("system", {
       name: "Sistema",
       importance: Notifications.AndroidImportance.DEFAULT,
+    });
+
+    // 👇 O CANAL QUE FALTAVA PARA AS NOTIFICAÇÕES PADRÃO DO BACKEND
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "Geral",
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
     });
   }
 
@@ -52,7 +57,6 @@ export async function registerForPush(userId?: string) {
 
   const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
 
-  
   await api.post("/users/me/push-token", { expoPushToken: token });
 
   return token;
