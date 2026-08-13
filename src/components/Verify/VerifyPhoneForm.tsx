@@ -1,5 +1,6 @@
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
+// @ts-ignore
 import auth from "@react-native-firebase/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
