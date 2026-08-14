@@ -3,12 +3,10 @@ import { StyleSheet, View } from "react-native";
 export default function HomeBackground() {
   return (
     <View style={styles.container}>
-      
       <View style={styles.circleLightTop} />
       <View style={styles.circleGradientTop} />
       <View style={styles.circleDashed} />
 
-      
       <View style={styles.circleSideLight} />
       <View style={styles.circleSideGradient} />
     </View>
@@ -21,7 +19,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#31358B",
   },
 
-  /* ===== TOPO ===== */
   circleLightTop: {
     position: "absolute",
     width: 230,
@@ -55,7 +52,6 @@ const styles = StyleSheet.create({
     right: -90,
   },
 
-  /* ===== LATERAL ===== */
   circleSideLight: {
     position: "absolute",
     width: 280,

@@ -8,6 +8,7 @@ interface GameCardHorizontalProps {
   price: number;
   rating: number;
   image?: string | null;
+  isAvailableNow?: boolean;
 }
 
 function formatBRL(value: number) {
@@ -20,7 +21,6 @@ function formatRating(value: number) {
 
 function getHighResImage(url?: string | null) {
   if (!url) return null;
-
   return url
     .replace("_t.jpg", ".jpg")
     .replace("_t.jpeg", ".jpeg")
@@ -33,9 +33,9 @@ export default function GameCardHorizontal({
   price,
   rating,
   image,
+  isAvailableNow,
 }: GameCardHorizontalProps) {
   const router = useRouter();
-
   const img = getHighResImage(image) ?? image ?? null;
 
   return (
@@ -49,7 +49,6 @@ export default function GameCardHorizontal({
           style={styles.image}
           resizeMode="cover"
           fadeDuration={200}
-          progressiveRenderingEnabled
         />
       ) : (
         <View style={[styles.image, styles.imageFallback]} />
@@ -65,6 +64,26 @@ export default function GameCardHorizontal({
           {title}
         </Text>
         <Text style={styles.price}>{formatBRL(price)} / dia</Text>
+
+        {isAvailableNow !== undefined && (
+          <View style={styles.availabilityRow}>
+            <View
+              style={[
+                styles.dot,
+                { backgroundColor: isAvailableNow ? "#31358B" : "#E53935" },
+              ]}
+            />
+            <Text
+              style={
+                isAvailableNow
+                  ? styles.availabilityText
+                  : styles.availabilityTextInactive
+              }
+            >
+              {isAvailableNow ? "Disponível" : "Indisponível"}
+            </Text>
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -72,54 +91,77 @@ export default function GameCardHorizontal({
 
 const styles = StyleSheet.create({
   card: {
-    width: 180,
+    width: 160,
     marginRight: 16,
     marginBottom: 6,
     borderRadius: 20,
     backgroundColor: "#fff",
     elevation: 3,
-    overflow: "hidden", 
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
   },
-
   image: {
     width: "100%",
-    aspectRatio: 3 / 4,
+    aspectRatio: 1,
     backgroundColor: "#EEE",
   },
-
   imageFallback: {},
-
   rating: {
     position: "absolute",
     top: 10,
     right: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     paddingHorizontal: 8,
-    height: 28,
+    height: 26,
     borderRadius: 12,
     flexDirection: "row",
     gap: 4,
     alignItems: "center",
   },
-
   ratingText: {
     fontWeight: "800",
     color: "#333",
+    fontSize: 12,
   },
-
   footer: {
     padding: 12,
   },
-
   title: {
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 14,
     color: "#333",
+    minHeight: 38,
   },
-
   price: {
-    color: "#2FA84F",
+    color: "#08b73f",
     fontWeight: "800",
-    marginTop: 4,
+    marginTop: 6,
+    fontSize: 14,
+  },
+  availabilityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 6,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  availabilityText: {
+    fontSize: 12,
+    color: "#31358B",
+    fontWeight: "600",
+  },
+  availabilityTextInactive: {
+    fontSize: 12,
+    color: "#E53935",
+    fontWeight: "600",
   },
 });

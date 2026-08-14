@@ -19,7 +19,6 @@ import {
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import HomeBackground from "../../components/Home/HomeBackground";
 
 export type HomeGame = {
@@ -27,22 +26,27 @@ export type HomeGame = {
   title: string;
   cover?: string | null;
   price: number;
-
   rating?: number | null;
   ratingsCount?: number | null;
-
   available?: boolean;
   allowOriginalRental?: boolean;
-
   copiesCount?: number;
   availableCopiesCount?: number;
-
   isAvailableNow?: boolean;
+};
+
+// NOVA TIPAGEM PARA AS COLEÇÕES
+export type GameCollection = {
+  id: string;
+  title: string;
+  subtitle: string;
+  games: HomeGame[];
 };
 
 type HomePayload = {
   forYou: HomeGame[];
   mostRented: HomeGame[];
+  collections?: GameCollection[]; // <-- Novo
 };
 
 export default function HomeScreen() {
@@ -56,6 +60,7 @@ export default function HomeScreen() {
 
   const [forYou, setForYou] = useState<HomeGame[]>([]);
   const [mostRented, setMostRented] = useState<HomeGame[]>([]);
+  const [collections, setCollections] = useState<GameCollection[]>([]); // <-- Novo Estado
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,11 +81,13 @@ export default function HomeScreen() {
       const res = await api.get<HomePayload>("/games/home");
       setForYou(res.data?.forYou || []);
       setMostRented(res.data?.mostRented || []);
+      setCollections(res.data?.collections || []); // <-- Salvando as coleções
     } catch (e) {
       console.error("Erro ao carregar home:", e);
       setErrMsg("Não foi possível carregar os jogos.");
       setForYou([]);
       setMostRented([]);
+      setCollections([]);
     }
   }, []);
 
@@ -157,6 +164,7 @@ export default function HomeScreen() {
           <HomeCard
             forYou={forYou}
             mostRented={mostRented}
+            collections={collections}
             onSeeAll={() => router.push("/search")}
             footerSpace={footerSpace}
           />
@@ -169,34 +177,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  topBlock: {
-    paddingBottom: 6,
-  },
-
-  searchWrap: {
-    backgroundColor: "transparent",
-    paddingBottom: 6,
-  },
-
-  center: {
-    paddingTop: 30,
-    alignItems: "center",
-  },
-
-  loadingText: {
-    marginTop: 10,
-    color: "#E0E0E0",
-    fontWeight: "700",
-  },
-
-  errorText: {
-    color: "#E0E0E0",
-    fontWeight: "800",
-  },
-
-  retry: {
-    marginTop: 10,
-    color: "#FFFFFF",
-    fontWeight: "900",
-  },
+  topBlock: { paddingBottom: 6 },
+  searchWrap: { backgroundColor: "transparent", paddingBottom: 6 },
+  center: { paddingTop: 30, alignItems: "center" },
+  loadingText: { marginTop: 10, color: "#E0E0E0", fontWeight: "700" },
+  errorText: { color: "#E0E0E0", fontWeight: "800" },
+  retry: { marginTop: 10, color: "#FFFFFF", fontWeight: "900" },
 });

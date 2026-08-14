@@ -1,4 +1,4 @@
-import type { HomeGame } from "@/src/screens/Home/HomeScreen";
+import type { GameCollection, HomeGame } from "@/src/screens/Home/HomeScreen";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import GameCardVertical from "./GameCardVertical";
 import GameCarousel from "./GameCarousel";
@@ -6,16 +6,17 @@ import GameCarousel from "./GameCarousel";
 export function HomeCard({
   forYou,
   mostRented,
+  collections = [],
   onSeeAll,
   footerSpace,
 }: {
   forYou: HomeGame[];
   mostRented: HomeGame[];
+  collections?: GameCollection[];
   onSeeAll: () => void;
   footerSpace: number;
 }) {
   const forYouGames = forYou.slice(0, 8);
-
   const mostRentedGames = mostRented.slice(0, 3);
 
   return (
@@ -26,10 +27,21 @@ export function HomeCard({
           <Text style={styles.seeAll}>Ver tudo</Text>
         </Pressable>
       </View>
-
       <GameCarousel data={forYouGames} />
 
-      <View style={[styles.sectionHeader, { marginTop: 18 }]}>
+      {collections.map((collection) => (
+        <View key={collection.id} style={styles.collectionContainer}>
+          <View style={styles.collectionHeader}>
+            <Text style={styles.sectionTitle}>{collection.title}</Text>
+            {collection.subtitle ? (
+              <Text style={styles.sectionSubtitle}>{collection.subtitle}</Text>
+            ) : null}
+          </View>
+          <GameCarousel data={collection.games} />
+        </View>
+      ))}
+
+      <View style={[styles.sectionHeader, { marginTop: 24 }]}>
         <Text style={styles.sectionTitle}>Mais Alugados</Text>
         <View style={styles.top3Badge}>
           <Text style={styles.top3Text}>TOP 3</Text>
@@ -73,10 +85,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
+  collectionContainer: {
+    marginTop: 24,
+  },
+  collectionHeader: {
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#333",
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: "#777",
+    fontWeight: "500",
+    marginTop: 2,
   },
   top3Badge: {
     backgroundColor: "rgba(49, 53, 139, 0.10)",
