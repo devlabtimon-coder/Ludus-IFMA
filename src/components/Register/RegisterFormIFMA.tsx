@@ -116,16 +116,11 @@ export default function RegisterFormIFMA() {
     return `Use seu e-mail @acad.ifma.edu.br ou @ifma.edu.br`;
   }, [email]);
 
-  const IFMA_MATRICULA_REGEX = /^\d{5}[A-Z0-9.]+\.TMN\d+$/;
+  const IFMA_MATRICULA_REGEX = /^(\d{5}[A-Z0-9.]+\.TMN\d+|\d{7})$/;
 
   const isValidMatricula = (matricula: string) => {
     const clean = matricula.trim().toUpperCase();
-
-    if (!IFMA_MATRICULA_REGEX.test(clean)) return false;
-
-    if (!clean.includes(".TMN")) return false;
-
-    return true;
+    return IFMA_MATRICULA_REGEX.test(clean);
   };
 
   async function handleRegister() {
@@ -158,7 +153,7 @@ export default function RegisterFormIFMA() {
       return showAlert(
         "error",
         "Matrícula inválida",
-        "A matrícula deve seguir o padrão institucional do Campus Timon (ex: 20241INF.TMN0021).",
+        "Use o padrão de aluno (ex: 20241INF.TMN0021) ou o seu SIAPE (7 dígitos).",
       );
     }
 
@@ -340,7 +335,7 @@ export default function RegisterFormIFMA() {
           <TextInput
             ref={matriculaRef}
             style={local.matriculaInput}
-            placeholder="Ex: 20241INF.TMN0001"
+            placeholder="20241INF.TMN0001 ou SIAPE"
             placeholderTextColor="#999"
             value={matricula}
             onChangeText={(t) => setMatricula(t.toUpperCase())}

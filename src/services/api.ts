@@ -6,7 +6,7 @@ import { goToVerify } from "./navigation";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
-  timeout: 25000,
+  timeout: 30000,
 });
 
 axiosRetry(api, {
