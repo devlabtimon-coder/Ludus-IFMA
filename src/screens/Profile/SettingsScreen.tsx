@@ -1,18 +1,14 @@
 import BackButton from "@/src/components/common/BackButton";
 import HomeBackground from "@/src/components/Home/HomeBackground";
-import { useAuth } from "@/src/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import {
-    Linking,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const BLUE = "#31358B";
@@ -39,7 +35,11 @@ function SettingsItem({
     accent === "red" ? RED : accent === "yellow" ? "#9A6B00" : BLUE;
 
   return (
-    <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity
+      style={styles.item}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
       <View style={[styles.itemIconWrap, { backgroundColor: iconBg }]}>
         <Ionicons name={icon} size={20} color={iconColor} />
       </View>
@@ -56,26 +56,11 @@ function SettingsItem({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { logout } = useAuth();
-
-  const [logoutOpen, setLogoutOpen] = useState(false);
-  const [leaving, setLeaving] = useState(false);
 
   async function handleOpenNotificationSettings() {
     try {
       await Linking.openSettings();
     } catch {}
-  }
-
-  async function handleConfirmLogout() {
-    try {
-      setLeaving(true);
-      await logout();
-      setLogoutOpen(false);
-      router.replace("/onboarding");
-    } finally {
-      setLeaving(false);
-    }
   }
 
   return (
@@ -118,57 +103,8 @@ export default function SettingsScreen() {
               accent="blue"
             />
           </View>
-
-          <TouchableOpacity
-            style={styles.logoutBtn}
-            activeOpacity={0.9}
-            onPress={() => setLogoutOpen(true)}
-          >
-            <Ionicons name="log-out-outline" size={20} color="#fff" />
-            <Text style={styles.logoutText}>Sair da conta</Text>
-          </TouchableOpacity>
         </ScrollView>
       </View>
-
-      <Modal
-        visible={logoutOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLogoutOpen(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalIcon}>
-              <Ionicons name="log-out-outline" size={24} color={RED} />
-            </View>
-
-            <Text style={styles.modalTitle}>Sair da conta?</Text>
-            <Text style={styles.modalMessage}>
-              Você realmente deseja encerrar sua sessão no Ludus?
-            </Text>
-
-            <View style={styles.modalActions}>
-              <Pressable
-                style={styles.cancelBtn}
-                onPress={() => setLogoutOpen(false)}
-                disabled={leaving}
-              >
-                <Text style={styles.cancelText}>Cancelar</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.confirmBtn, leaving && { opacity: 0.7 }]}
-                onPress={handleConfirmLogout}
-                disabled={leaving}
-              >
-                <Text style={styles.confirmText}>
-                  {leaving ? "Saindo..." : "Sair"}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -243,93 +179,5 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: "#666D7E",
     fontWeight: "700",
-  },
-
-  logoutBtn: {
-    marginTop: 22,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: RED,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 8,
-  },
-
-  logoutText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "900",
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.42)",
-    justifyContent: "center",
-    paddingHorizontal: 22,
-  },
-
-  modalCard: {
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    padding: 20,
-  },
-
-  modalIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: "#FFE9EA",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: BLUE,
-  },
-
-  modalMessage: {
-    marginTop: 8,
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#666D7E",
-    fontWeight: "700",
-  },
-
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 20,
-  },
-
-  cancelBtn: {
-    flex: 1,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: "#EEF0FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  cancelText: {
-    color: BLUE,
-    fontWeight: "900",
-  },
-
-  confirmBtn: {
-    flex: 1,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: RED,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  confirmText: {
-    color: "#fff",
-    fontWeight: "900",
   },
 });

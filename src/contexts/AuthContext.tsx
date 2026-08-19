@@ -1,3 +1,4 @@
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as SecureStore from "expo-secure-store";
 import React, {
   createContext,
@@ -68,7 +69,7 @@ type AuthContextValue = {
     acceptedPrivacy: boolean,
     cpf: string,
     address: string,
-    matricula: string, // 👇 ADICIONADO AQUI
+    matricula: string,
   ) => Promise<AuthResult>;
   logout: () => Promise<void>;
   signInWithToken: (
@@ -244,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     acceptedPrivacy: boolean,
     cpf: string,
     address: string,
-    matricula: string, // 👇 RECEBE A MATRÍCULA AQUI
+    matricula: string,
   ): Promise<AuthResult> {
     try {
       await api.post("/auth/register", {
@@ -256,7 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         acceptedPrivacy,
         cpf,
         address,
-        matricula, // 👇 ENVIA A MATRÍCULA PARA O BACKEND AQUI
+        matricula,
       });
 
       return { success: true };
@@ -299,6 +300,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout() {
+    try {
+      await GoogleSignin.signOut();
+    } catch (error) {
+      console.log("Sessão do Google já estava limpa ou inativa.");
+    }
+
     await SecureStore.deleteItemAsync("token");
     await SecureStore.deleteItemAsync("user");
 

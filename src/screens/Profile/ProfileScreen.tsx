@@ -4,26 +4,36 @@ import { ProfileHeader } from "@/src/components/Profie/ProfileHeader";
 import { ProfileMenuItem } from "@/src/components/Profie/ProfileMenuItem";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import HomeBackground from "../../components/Home/HomeBackground";
 import { RegistrationBanner } from "./RegistrationBanner";
 
+const BLUE = "#31358B";
+const RED = "#E62325";
+
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
 
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   function handleChangePhoto() {
     setAvatarModalVisible(true);
@@ -145,6 +155,17 @@ export default function ProfileScreen() {
     }
   }
 
+  async function handleConfirmLogout() {
+    try {
+      setLeaving(true);
+      await logout();
+      setLogoutOpen(false);
+      router.replace("/onboarding");
+    } finally {
+      setLeaving(false);
+    }
+  }
+
   return (
     <View style={styles.root}>
       <HomeBackground />
@@ -163,7 +184,6 @@ export default function ProfileScreen() {
             </View>
           ) : null}
 
-          {/* O BANNER ENTRA AQUI, BEM VISÍVEL ASSIM QUE A TELA CARREGA */}
           <View style={{ marginHorizontal: -20, marginBottom: 16 }}>
             <RegistrationBanner />
           </View>
@@ -189,13 +209,22 @@ export default function ProfileScreen() {
               title="Sobre nós"
               onPress={() => router.push("/profile/about")}
             />
+
+            <ProfileMenuItem
+              icon="settings-outline"
+              title="Configurações"
+              onPress={() => router.push("/profile/settings")}
+            />
           </View>
 
-          <ProfileMenuItem
-            icon="settings-outline"
-            title="Configurações"
-            onPress={() => router.push("/profile/settings")}
-          />
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            activeOpacity={0.9}
+            onPress={() => setLogoutOpen(true)}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#fff" />
+            <Text style={styles.logoutText}>Sair da conta</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
 
@@ -208,6 +237,46 @@ export default function ProfileScreen() {
         onRemove={removeProfilePhoto}
       />
 
+      <Modal
+        visible={logoutOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLogoutOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalIcon}>
+              <Ionicons name="log-out-outline" size={24} color={RED} />
+            </View>
+
+            <Text style={styles.modalTitle}>Sair da conta?</Text>
+            <Text style={styles.modalMessage}>
+              Você realmente deseja encerrar sua sessão no Ludus?
+            </Text>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.cancelBtn}
+                onPress={() => setLogoutOpen(false)}
+                disabled={leaving}
+              >
+                <Text style={styles.cancelText}>Cancelar</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.confirmBtn, leaving && { opacity: 0.7 }]}
+                onPress={handleConfirmLogout}
+                disabled={leaving}
+              >
+                <Text style={styles.confirmText}>
+                  {leaving ? "Saindo..." : "Sair"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <NavFooter />
     </View>
   );
@@ -216,7 +285,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#31358B",
+    backgroundColor: BLUE,
   },
 
   sheet: {
@@ -241,7 +310,7 @@ const styles = StyleSheet.create({
 
   uploadingText: {
     marginTop: 10,
-    color: "#31358B",
+    color: BLUE,
     fontWeight: "800",
     fontSize: 14,
   },
@@ -249,7 +318,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "900",
-    color: "#31358B",
+    color: BLUE,
   },
 
   sectionLine: {
@@ -260,9 +329,91 @@ const styles = StyleSheet.create({
     backgroundColor: "#FBBC04",
   },
 
+  logoutBtn: {
+    marginTop: 22,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: RED,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+
   logoutText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "900",
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.42)",
+    justifyContent: "center",
+    paddingHorizontal: 22,
+  },
+
+  modalCard: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 20,
+  },
+
+  modalIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: "#FFE9EA",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: BLUE,
+  },
+
+  modalMessage: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#666D7E",
+    fontWeight: "700",
+  },
+
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 20,
+  },
+
+  cancelBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: 16,
+    backgroundColor: "#EEF0FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cancelText: {
+    color: BLUE,
+    fontWeight: "900",
+  },
+
+  confirmBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: 16,
+    backgroundColor: RED,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  confirmText: {
+    color: "#fff",
     fontWeight: "900",
   },
 });
