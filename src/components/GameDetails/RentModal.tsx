@@ -20,7 +20,6 @@ interface RentModalProps {
   loading?: boolean;
 }
 
-// Helpers Matemáticos para lidar com os blocos de 30 minutos
 const timeToMins = (time: string) => {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
@@ -41,26 +40,21 @@ export function RentModal({
 }: RentModalProps) {
   const today = new Date();
 
-  // Estados do Calendário
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  // Controle de Turno (Manhã / Tarde)
   const [activePeriod, setActivePeriod] = useState<"morning" | "afternoon">(
     "morning",
   );
 
-  // Estados da API e Lista
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Controle da Seleção Contínua (Primeiro bloco e Último bloco clicados)
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
   const [selectionEnd, setSelectionEnd] = useState<string | null>(null);
 
-  // Limpa tudo ao abrir/fechar o modal
   useEffect(() => {
     if (visible) {
       setErrorMsg(null);
@@ -72,7 +66,6 @@ export function RentModal({
     }
   }, [visible]);
 
-  // Busca a disponibilidade do dia na API
   const fetchSlotsForDate = useCallback(
     async (date: Date) => {
       if (!gameId) return;
@@ -100,12 +93,11 @@ export function RentModal({
 
   useEffect(() => {
     if (selectedDate) {
-      setActivePeriod("morning"); // Reseta para a manhã ao trocar de dia
+      setActivePeriod("morning");
       fetchSlotsForDate(selectedDate);
     }
   }, [selectedDate, fetchSlotsForDate]);
 
-  // LÓGICA DE SELEÇÃO E AGRUPAMENTO SEPARADO POR TURNOS
   const groupedSlots = useMemo(() => {
     const buildGroup = (startH: number, endH: number) => {
       const result = [];
@@ -157,12 +149,11 @@ export function RentModal({
     };
 
     return {
-      morning: buildGroup(8, 11), // 08:00 às 11:30 (Fim 12:00)
-      afternoon: buildGroup(12, 18), // 12:00 às 18:00 (Fim 19:00)
+      morning: buildGroup(8, 11),
+      afternoon: buildGroup(12, 18),
     };
   }, [availableSlots]);
 
-  // A Mágica do Clique: Permite arrastar e selecionar vários blocos
   const handleSlotPress = (slotStart: string) => {
     const cMins = timeToMins(slotStart);
 
@@ -245,6 +236,8 @@ export function RentModal({
   };
 
   const validateAndSubmit = async () => {
+    if (loading) return;
+
     setErrorMsg(null);
     if (!selectedDate || !selectionStart || !selectionEnd) return;
 
@@ -322,7 +315,6 @@ export function RentModal({
               </View>
             ) : (
               <View style={styles.listContainer}>
-                {/* TABS DE TURNO (MANHÃ / TARDE) - CORES LUDUS */}
                 <View style={styles.periodTabs}>
                   <Pressable
                     style={[
@@ -360,7 +352,6 @@ export function RentModal({
                   </Pressable>
                 </View>
 
-                {/* LISTA DE HORÁRIOS DO TURNO SELECIONADO */}
                 {currentListToRender.map((item, index) => {
                   if (item.status === "OCCUPIED") {
                     return (
@@ -413,7 +404,6 @@ export function RentModal({
             {errorMsg && <Text style={styles.errorText}>{errorMsg}</Text>}
           </ScrollView>
 
-          {/* BARRA FLUTUANTE INFERIOR DE CONFIRMAÇÃO */}
           {hasSelection && (
             <View style={styles.bottomFloatingBarWrap}>
               <Pressable
@@ -476,7 +466,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "900",
-    color: "#0A1F5C", // Ludus Blue
+    color: "#0A1F5C",
   },
   closeBtn: {
     padding: 4,
@@ -506,10 +496,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  // --- Estilos das Abas Manhã / Tarde (Estilo Ludus) ---
   periodTabs: {
     flexDirection: "row",
-    backgroundColor: "#F1F3F7", // Cinza/Azulado muito suave
+    backgroundColor: "#F1F3F7",
     borderRadius: 14,
     padding: 4,
     marginBottom: 16,
@@ -521,7 +510,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   periodTabActive: {
-    backgroundColor: "#0A1F5C", // Ludus Blue
+    backgroundColor: "#0A1F5C",
     shadowColor: "#0A1F5C",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -534,10 +523,9 @@ const styles = StyleSheet.create({
     color: "#7A8194",
   },
   periodTabTextActive: {
-    color: "#FBBC04", // Ludus Yellow
+    color: "#FBBC04",
   },
 
-  // --- Estilos da Lista de Horários ---
   slotRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -556,8 +544,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   slotRowSelected: {
-    borderColor: "#0A1F5C", // Ludus Blue na borda
-    backgroundColor: "#F4F6FF", // Azul bem clarinho no fundo
+    borderColor: "#0A1F5C",
+    backgroundColor: "#F4F6FF",
   },
   slotLeft: {
     flexDirection: "row",
@@ -567,7 +555,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#0A1F5C", // Ludus Blue no círculo do check
+    backgroundColor: "#0A1F5C",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -585,9 +573,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111",
   },
-  slotTextSelected: {
-    color: "#0A1F5C", // Texto fica Azul Ludus forte
-  },
+  slotTextSelected: {},
   slotRowOccupied: {
     flexDirection: "row",
     alignItems: "center",
@@ -609,12 +595,12 @@ const styles = StyleSheet.create({
   occupiedBadge: {
     fontSize: 12,
     fontWeight: "900",
-    color: "#E62325", // Ludus Red alertando "OCUPADO"
+    color: "#E62325",
     letterSpacing: 0.5,
   },
 
   errorText: {
-    color: "#E62325", // Ludus Red
+    color: "#E62325",
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
@@ -625,7 +611,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 
-  // --- Barra Flutuante de Confirmação ---
   bottomFloatingBarWrap: {
     position: "absolute",
     bottom: 24,
@@ -633,7 +618,7 @@ const styles = StyleSheet.create({
     right: 20,
   },
   bottomFloatingBar: {
-    backgroundColor: "#0A1F5C", // Ludus Blue
+    backgroundColor: "#0A1F5C",
     borderRadius: 20,
     paddingVertical: 16,
     paddingHorizontal: 20,
@@ -670,7 +655,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   bottomFloatingActionText: {
-    color: "#FBBC04", // Ludus Yellow no texto "Confirmar"
+    color: "#FBBC04",
     fontWeight: "900",
     fontSize: 14,
     marginRight: 4,
