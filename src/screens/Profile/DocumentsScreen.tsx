@@ -97,7 +97,6 @@ export default function DocumentsScreen() {
         hasChanges = true;
       }
 
-      // Comprovante (Pode ser PDF ou Imagem)
       if (enrollmentProof && typeof enrollmentProof !== "string") {
         formData.append("enrollmentProof", {
           uri: enrollmentProof.uri,
@@ -171,7 +170,6 @@ export default function DocumentsScreen() {
               liberar os aluguéis no IFMA.
             </Text>
 
-            {/* CAIXA DE INFORMAÇÃO COM TONS LUDUS (AZUL SUAVE) */}
             <View style={styles.infoBox}>
               <View style={styles.infoBoxHeader}>
                 <Ionicons name="shield-checkmark" size={18} color="#31358B" />
@@ -184,7 +182,6 @@ export default function DocumentsScreen() {
               </Text>
             </View>
 
-            {/* CAIXA DE REJEIÇÃO */}
             {user?.registrationStatus === "REJECTED" && (
               <View style={styles.rejectedBox}>
                 <View style={styles.rejectedHeader}>
@@ -200,9 +197,10 @@ export default function DocumentsScreen() {
               </View>
             )}
 
-            {/* SELETOR DE COMPROVANTE (PDF/FOTO) */}
             <View style={styles.enrollmentBox}>
-              <Text style={styles.inputLabel}>Comprovante de Matrícula</Text>
+              <Text style={styles.inputLabel}>
+                Comprovante de Matrícula/Declaração de vínculo
+              </Text>
               <Text style={styles.enrollmentDesc}>
                 Baixe o PDF do comprovante no SUAP ou tire um print legível da
                 tela onde aparece seu nome e status.

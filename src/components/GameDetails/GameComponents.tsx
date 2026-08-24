@@ -53,33 +53,32 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 10,
   },
-
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "#F6F6F6",
     padding: 12,
     borderRadius: 10,
   },
-
   name: {
+    flex: 1,
     fontSize: 14,
     fontWeight: "600",
     color: "#333",
+    marginRight: 12,
   },
-
   qty: {
     fontSize: 14,
     fontWeight: "700",
     color: "#555",
+    flexShrink: 0,
   },
-
   empty: {
     marginTop: 12,
     color: "#777",
     fontWeight: "600",
   },
-
   center: {
     paddingVertical: 20,
     alignItems: "center",
