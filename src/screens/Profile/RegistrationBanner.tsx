@@ -1,3 +1,4 @@
+import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
@@ -25,7 +26,20 @@ export function RegistrationBanner() {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
+      const res = await api.get(`/users/me?t=${Date.now()}`);
+
       await refreshUser();
+
+      const isIfma = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
+      const stillPending = isIfma
+        ? !res.data.isAcademicVerified
+        : res.data.registrationStatus !== "APPROVED";
+
+      if (stillPending) {
+        router.push("/profile/documents");
+      }
+    } catch (error) {
+      console.error("Erro ao verificar status:", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -48,7 +62,7 @@ export function RegistrationBanner() {
         user?.selfieWithId,
       );
 
-  const isAnalysis = isPending && hasAllDocs;
+  const isAnalysis = isPending || (hasAllDocs && !isRejected);
 
   if (isAnalysis) {
     return (

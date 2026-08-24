@@ -7,10 +7,11 @@ import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import * as ExpoDocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -42,6 +43,35 @@ export default function DocumentsScreen() {
   const [alertType, setAlertType] = useState<AlertType>("info");
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+
+  // 🔥 CORREÇÃO 1: Força a busca dos dados mais recentes assim que a tela abre
+  useEffect(() => {
+    refreshUser();
+  }, []);
+
+  // 🔥 CORREÇÃO 2: Sincroniza a tela automaticamente quando os dados do usuário chegarem
+  useEffect(() => {
+    // Só atualiza se o usuário ainda não tiver selecionado um arquivo novo do celular dele
+    if (
+      user?.documentFrontImage &&
+      (!docFront || docFront.startsWith("http"))
+    ) {
+      setDocFront(user.documentFrontImage);
+    }
+    if (user?.documentBackImage && (!docBack || docBack.startsWith("http"))) {
+      setDocBack(user.documentBackImage);
+    }
+    if (
+      user?.enrollmentProof &&
+      (!enrollmentProof || typeof enrollmentProof === "string")
+    ) {
+      setEnrollmentProof(user.enrollmentProof);
+    }
+  }, [
+    user?.documentFrontImage,
+    user?.documentBackImage,
+    user?.enrollmentProof,
+  ]);
 
   const showAlert = (type: AlertType, title: string, message: string) => {
     setAlertType(type);
@@ -205,35 +235,73 @@ export default function DocumentsScreen() {
                 Baixe o PDF do comprovante no SUAP ou tire um print legível da
                 tela onde aparece seu nome e status.
               </Text>
-              <Pressable
-                style={styles.uploadButton}
-                onPress={pickEnrollmentProof}
-              >
-                <Ionicons
-                  name={
-                    enrollmentProof ? "document-text" : "cloud-upload-outline"
-                  }
-                  size={28}
-                  color="#31358B"
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.uploadButtonText} numberOfLines={1}>
-                    {typeof enrollmentProof === "string"
-                      ? "Comprovante já salvo (Toque para trocar)"
-                      : enrollmentProof?.name
+
+              {typeof enrollmentProof === "string" ? (
+                <View style={styles.savedFileContainer}>
+                  <View style={styles.savedFileInfo}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={26}
+                      color="#22C55E"
+                    />
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.savedFileTitle}>
+                        Comprovante Salvo
+                      </Text>
+                      <Text style={styles.savedFileSub}>
+                        Enviado anteriormente
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={() => Linking.openURL(enrollmentProof)}
+                      style={styles.viewFileBtn}
+                    >
+                      <Ionicons name="eye-outline" size={18} color="#31358B" />
+                      <Text style={styles.viewFileBtnText}>Ver</Text>
+                    </Pressable>
+                  </View>
+                  <Pressable
+                    style={styles.replaceFileBtn}
+                    onPress={pickEnrollmentProof}
+                  >
+                    <Ionicons
+                      name="refresh-outline"
+                      size={18}
+                      color="#6B7280"
+                    />
+                    <Text style={styles.replaceFileBtnText}>
+                      Trocar documento
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.uploadButton}
+                  onPress={pickEnrollmentProof}
+                >
+                  <Ionicons
+                    name={
+                      enrollmentProof ? "document-text" : "cloud-upload-outline"
+                    }
+                    size={28}
+                    color="#31358B"
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.uploadButtonText} numberOfLines={1}>
+                      {enrollmentProof?.name
                         ? enrollmentProof.name
                         : "Selecionar Arquivo (PDF ou Imagem)"}
-                  </Text>
-                  {enrollmentProof && typeof enrollmentProof !== "string" && (
-                    <Text style={styles.uploadSubtext}>
-                      Arquivo pronto para envio
                     </Text>
-                  )}
-                </View>
-              </Pressable>
+                    {enrollmentProof && (
+                      <Text style={styles.uploadSubtext}>
+                        Arquivo pronto para envio
+                      </Text>
+                    )}
+                  </View>
+                </Pressable>
+              )}
             </View>
 
-            {/* FOTOS DOS DOCUMENTOS */}
             <View style={styles.docsContainer}>
               <DocumentPicker
                 label="Frente do Documento (RG/CNH)"
@@ -250,7 +318,6 @@ export default function DocumentsScreen() {
               />
             </View>
 
-            {/* BOTÃO PRINCIPAL (VERMELHO LUDUS) */}
             <Pressable
               style={[styles.button, loading && { opacity: 0.7 }]}
               onPress={handleSubmit}
@@ -394,6 +461,60 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "600",
   },
+
+  savedFileContainer: {
+    backgroundColor: "#F7F8FF",
+    borderWidth: 1.5,
+    borderColor: "#31358B",
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  savedFileInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#F0F2FF",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(49,53,139,0.1)",
+  },
+  savedFileTitle: {
+    color: "#0A1F5C",
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  savedFileSub: {
+    color: "#6B7280",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  viewFileBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#DCE1FF",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+  viewFileBtnText: {
+    color: "#31358B",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  replaceFileBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 14,
+    gap: 8,
+  },
+  replaceFileBtnText: {
+    color: "#6B7280",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
   uploadButton: {
     flexDirection: "row",
     alignItems: "center",

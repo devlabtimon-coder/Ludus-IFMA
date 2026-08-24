@@ -33,12 +33,10 @@ export type AuthUser = {
   avatar?: string | null;
   picture?: string | null;
 
-  // IFMA — verificação acadêmica via SUAP
   isAcademicVerified?: boolean;
   academicVerifiedAt?: string | null;
   matricula?: string | null;
 
-  // Documentos para modo SaaS tradicional (mantidos na tipagem caso a API retorne)
   documentFrontImage?: string | null;
   documentBackImage?: string | null;
   addressProof?: string | null;
@@ -98,10 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           api.defaults.headers.common["Authorization"] =
             `Bearer ${storedToken}`;
 
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
 
           try {
-            await api.get("/users/me");
+            const res = await api.get(`/users/me?t=${Date.now()}`);
+
+            const freshUser = { ...parsedUser, ...res.data };
+            setUser(freshUser);
+            SecureStore.setItemAsync("user", JSON.stringify(freshUser)).catch(
+              () => {},
+            );
           } catch (err: any) {
             const status = err.response?.status;
             if (status === 401 || status === 403) {
@@ -125,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await api.get("/users/me");
+      const res = await api.get(`/users/me?t=${Date.now()}`);
       setUser((prev) => {
         if (!prev) return prev;
         const next: AuthUser = {

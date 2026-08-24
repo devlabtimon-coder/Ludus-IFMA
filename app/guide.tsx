@@ -1,2 +1,2 @@
-import GuideScreen from "@/src/screens/GuideScreen.tsx/GuideScreen";
+import GuideScreen from "@/src/screens/GuideScreen/GuideScreen";
 export default GuideScreen;

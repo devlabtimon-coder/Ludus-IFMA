@@ -596,10 +596,8 @@ export default function GameDetailsScreen() {
 
               if (locallyBlocked) {
                 try {
-                  const res = await api.get("/users/me");
-
+                  const res = await api.get(`/users/me?t=${Date.now()}`);
                   latestUser = { ...latestUser, ...res.data };
-
                   refreshUser();
                 } catch (e) {
                   console.log("Falha ao checar status silenciosamente");
@@ -696,7 +694,6 @@ export default function GameDetailsScreen() {
               setBlockModalVisible(false);
 
               if (blockType === "DOCS_PENDING") {
-                // Apenas fecha o modal
               } else {
                 router.push("/profile/documents");
               }
