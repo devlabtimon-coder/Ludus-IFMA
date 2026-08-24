@@ -461,19 +461,19 @@ export default function GuideScreen() {
                   name: "Family",
                   color: "#F59E0B",
                   icon: "home",
-                  desc: "Conclua 5 aluguéis sem atraso. Acesso estendido ao Prata.",
+                  desc: "Conclua 10 aluguéis sem atraso. Acesso estendido ao Prata.",
                 },
                 {
                   name: "Expert",
                   color: "#7C3AED",
                   icon: "medal",
-                  desc: "15+ aluguéis e avaliações. Acesso a Ouro liberado.",
+                  desc: "10+ aluguéis e avaliações. Acesso a Ouro liberado.",
                 },
                 {
                   name: "Ultragamer",
                   color: "#31358B",
                   icon: "trophy",
-                  desc: "O auge do engajamento. Acesso VIP aos jogos Diamante.",
+                  desc: "Com mais +10 aluguéis, você atinge o auge do engajamento. Acesso VIP aos jogos Diamante.",
                 },
               ].map((lvl) => (
                 <View key={lvl.name} style={styles.levelCard}>
