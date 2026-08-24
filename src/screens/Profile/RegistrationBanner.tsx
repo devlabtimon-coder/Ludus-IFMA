@@ -1,18 +1,35 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 
 export function RegistrationBanner() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       refreshUser();
     }, []),
   );
+
+  const handleCheckStatus = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await refreshUser();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
@@ -35,19 +52,23 @@ export function RegistrationBanner() {
 
   if (isAnalysis) {
     return (
-      <View style={styles.containerInfo}>
+      <Pressable style={styles.containerInfo} onPress={handleCheckStatus}>
         <View style={styles.iconWrapInfo}>
-          <Ionicons name="time" size={24} color="#1D4ED8" />
+          {isRefreshing ? (
+            <ActivityIndicator color="#1D4ED8" />
+          ) : (
+            <Ionicons name="time" size={24} color="#1D4ED8" />
+          )}
         </View>
         <View style={styles.textWrap}>
           <Text style={styles.titleInfo}>Em Análise</Text>
           <Text style={styles.subtitleInfo}>
             {isIfmaMode
-              ? "Seu comprovante de vínculo está sendo avaliado. Aguarde a liberação!"
-              : "Seus documentos estão sendo avaliados pela nossa equipe. Aguarde a aprovação!"}
+              ? "Seu comprovante de vínculo está sendo avaliado. Toque aqui para atualizar."
+              : "Seus documentos estão sendo avaliados. Toque aqui para atualizar o status."}
           </Text>
         </View>
-      </View>
+      </Pressable>
     );
   }
 
