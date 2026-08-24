@@ -54,10 +54,7 @@ type GameDetails = {
   isAvailableNow?: boolean;
   rentedByMe?: boolean;
 
-  // RF017
   tier?: string | null;
-
-  // MECÂNICAS
   mechanics?: string[];
 };
 
@@ -105,7 +102,6 @@ export default function GameDetailsScreen() {
   const [termsOpen, setTermsOpen] = useState(false);
   const [termsLoading, setTermsLoading] = useState(false);
 
-  // Guardamos as datas selecionadas caso os termos precisem ser aceitos antes de concluir
   const pendingRentRef = useRef<null | {
     startDateIso: string;
     endDateIso: string;
@@ -155,30 +151,6 @@ export default function GameDetailsScreen() {
   }, [fetchDetails]);
 
   const avgRating = Number(game?.rating ?? 0);
-
-  const playersText =
-    game?.minPlayers && game?.maxPlayers
-      ? `${game.minPlayers}-${game.maxPlayers} jogadores`
-      : game?.minPlayers
-        ? `${game.minPlayers}+ jogadores`
-        : "—";
-
-  const timeText =
-    game?.minTime && game?.maxTime
-      ? `${game.minTime}-${game.maxTime} min`
-      : game?.maxTime
-        ? `${game.maxTime} min`
-        : game?.minTime
-          ? `${game.minTime} min`
-          : "—";
-
-  const ageText = game?.minAge ? `${game.minAge}+ anos` : "—";
-
-  function isTermsBlocked(e: any) {
-    const status = e?.response?.status;
-    const code = e?.response?.data?.code;
-    return status === 403 && code === "TERMS_NOT_ACCEPTED";
-  }
 
   const handleSaveRating = async (value: number) => {
     if (!game) return;
@@ -292,10 +264,8 @@ export default function GameDetailsScreen() {
           endDateIso,
         });
 
-        // Sucesso: Fecha o calendário primeiro
         setRentOpen(false);
-        
-        // Aguarda a animação do iOS fechar e mostra o alerta
+
         setTimeout(async () => {
           showAlert(
             "success",
@@ -304,20 +274,19 @@ export default function GameDetailsScreen() {
           );
           await fetchDetails();
         }, 400);
-
       } catch (e: any) {
-       
         setRentOpen(false);
 
-        
         setTimeout(() => {
-          if (isTermsBlocked(e)) {
+          const status = e?.response?.status;
+          const code = e?.response?.data?.code;
+
+          if (status === 403 && code === "TERMS_NOT_ACCEPTED") {
             pendingRentRef.current = { startDateIso, endDateIso };
             setTermsOpen(true);
             return;
           }
 
-          const code = e?.response?.data?.code;
           const msg = e?.response?.data?.error;
 
           if (code === "RENTAL_LIMIT_REACHED") {
@@ -354,8 +323,7 @@ export default function GameDetailsScreen() {
             msg ||
               "Não foi possível processar o seu agendamento. Tente novamente.",
           );
-        }, 400); 
-
+        }, 400);
       } finally {
         setRentLoading(false);
       }
@@ -608,7 +576,7 @@ export default function GameDetailsScreen() {
             watching={watching}
             loadingWatch={loadingWatch}
             onToggleWatch={toggleWatch}
-            onPressRent={() => {
+            onPressRent={async () => {
               if (isAdmin) {
                 showAlert(
                   "info",
@@ -620,25 +588,44 @@ export default function GameDetailsScreen() {
 
               const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
+              let latestUser = user;
+
+              const locallyBlocked = isIfmaMode
+                ? !latestUser?.isAcademicVerified
+                : latestUser?.registrationStatus !== "APPROVED";
+
+              if (locallyBlocked) {
+                try {
+                  const res = await api.get("/users/me");
+
+                  latestUser = { ...latestUser, ...res.data };
+
+                  refreshUser();
+                } catch (e) {
+                  console.log("Falha ao checar status silenciosamente");
+                }
+              }
+
               if (isIfmaMode) {
-                if (!user?.isAcademicVerified) {
+                if (!latestUser?.isAcademicVerified) {
                   setBlockType("IFMA_UNVERIFIED");
                   setBlockModalVisible(true);
                   return;
                 }
               } else {
-                if (user?.registrationStatus !== "APPROVED") {
-                  const isRejected = user?.registrationStatus === "REJECTED";
+                if (latestUser?.registrationStatus !== "APPROVED") {
+                  const isRejected =
+                    latestUser?.registrationStatus === "REJECTED";
 
                   const hasSentDocs = Boolean(
-                    (user as any)?.documentFrontImage &&
-                    (user as any)?.documentBackImage &&
-                    (user as any)?.addressProof &&
-                    (user as any)?.selfieWithId,
+                    (latestUser as any)?.documentFrontImage &&
+                    (latestUser as any)?.documentBackImage &&
+                    (latestUser as any)?.addressProof &&
+                    (latestUser as any)?.selfieWithId,
                   );
 
                   const isAnalysis =
-                    user?.registrationStatus === "PENDING" && hasSentDocs;
+                    latestUser?.registrationStatus === "PENDING" && hasSentDocs;
 
                   if (isAnalysis) setBlockType("DOCS_PENDING");
                   else if (isRejected) setBlockType("DOCS_REJECTED");
@@ -711,7 +698,6 @@ export default function GameDetailsScreen() {
               if (blockType === "DOCS_PENDING") {
                 // Apenas fecha o modal
               } else {
-                // 👇 Qualquer outro bloqueio agora envia para os documentos
                 router.push("/profile/documents");
               }
             }}

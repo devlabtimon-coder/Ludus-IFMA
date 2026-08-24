@@ -16,16 +16,14 @@ export function RegistrationBanner() {
 
   const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
-  // 1. Se já está totalmente aprovado, esconde o banner
   if (isIfmaMode && user?.isAcademicVerified) return null;
   if (!isIfmaMode && user?.registrationStatus === "APPROVED") return null;
 
   const isRejected = user?.registrationStatus === "REJECTED";
   const isPending = user?.registrationStatus === "PENDING";
 
-  // 2. Verifica os documentos consoante o modo
   const hasAllDocs = isIfmaMode
-    ? Boolean(user?.enrollmentProof) // No IFMA, basta o comprovativo
+    ? Boolean(user?.enrollmentProof)
     : Boolean(
         user?.documentFrontImage &&
         user?.documentBackImage &&
@@ -35,7 +33,6 @@ export function RegistrationBanner() {
 
   const isAnalysis = isPending && hasAllDocs;
 
-  // 3. Estado: EM ANÁLISE
   if (isAnalysis) {
     return (
       <View style={styles.containerInfo}>
@@ -54,7 +51,6 @@ export function RegistrationBanner() {
     );
   }
 
-  // 4. Estado: REJEITADO (Leva para DocumentsScreen)
   if (isRejected) {
     return (
       <Pressable
@@ -75,7 +71,6 @@ export function RegistrationBanner() {
     );
   }
 
-  // 5. Estado: PENDENTE DE ENVIO (Leva para DocumentsScreen)
   return (
     <Pressable
       style={styles.containerWarning}
