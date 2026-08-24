@@ -19,42 +19,19 @@ type GuideTab = "mechanics" | "users" | "games";
 
 interface Mecanica {
   id: string | number;
-  letter: string;
+  letter?: string;
   namePt: string;
   nameEn: string;
   definition: string;
   games: string[];
   chip: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
 }
 
 const BRAND_THEMES = [
   { main: "#31358B", contrast: "#FFFFFF", light: "#EEF0FF" },
   { main: "#E62325", contrast: "#FFFFFF", light: "#FFE9EA" },
   { main: "#FBBC04", contrast: "#31358B", light: "#FFF9E6" },
-];
-
-const LETTERS_WITH_TERMS = [
-  "A",
-  "B",
-  "C",
-  "D",
-  "E",
-  "F",
-  "H",
-  "I",
-  "J",
-  "K",
-  "L",
-  "M",
-  "N",
-  "O",
-  "P",
-  "R",
-  "S",
-  "T",
-  "V",
-  "Z",
 ];
 
 const ALL_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -74,6 +51,55 @@ const CHIPS = [
   { label: "Narrativo", icon: "book-outline" },
   { label: "Lógica", icon: "search-outline" },
 ] as const;
+
+function getValidIcon(
+  iconName: string | undefined,
+): keyof typeof Ionicons.glyphMap {
+  if (!iconName) return "extension-puzzle-outline";
+
+  const name = iconName.toLowerCase();
+
+  if (name.includes("-outline") || name.includes("-sharp")) {
+    return name as keyof typeof Ionicons.glyphMap;
+  }
+
+  const lucideToIonicons: Record<string, keyof typeof Ionicons.glyphMap> = {
+    users: "people-outline",
+    user: "person-outline",
+    zap: "flash-outline",
+    activity: "pulse-outline",
+    star: "star-outline",
+    settings: "settings-outline",
+    clock: "time-outline",
+    box: "cube-outline",
+    flag: "flag-outline",
+    layers: "layers-outline",
+    "eye-off": "eye-off-outline",
+    "bar-chart": "bar-chart-outline",
+    timer: "timer-outline",
+    grid: "grid-outline",
+    trophy: "trophy-outline",
+    book: "book-outline",
+    shield: "shield-checkmark-outline",
+    palette: "color-palette-outline",
+    banknote: "cash-outline",
+    search: "search-outline",
+    hand: "hand-left-outline",
+    heart: "heart-outline",
+    map: "map-outline",
+    compass: "navigate-outline",
+    puzzle: "extension-puzzle-outline",
+    "dice-1": "cube-outline",
+  };
+
+  return lucideToIonicons[name] || "extension-puzzle-outline";
+}
+
+function getLetter(m: Mecanica): string {
+  if (m.letter) return m.letter.toUpperCase();
+  if (m.namePt) return m.namePt.charAt(0).toUpperCase();
+  return "";
+}
 
 export default function GuideScreen() {
   const insets = useSafeAreaInsets();
@@ -99,20 +125,25 @@ export default function GuideScreen() {
         setIsLoading(false);
       }
     }
-
     fetchMechanics();
   }, []);
+
+  const availableLetters = useMemo(() => {
+    const letters = new Set(mechanicsData.map(getLetter));
+    return Array.from(letters).filter(Boolean);
+  }, [mechanicsData]);
 
   const filteredMechanics = useMemo(() => {
     return mechanicsData.filter((m) => {
       const matchChip = selectedChip === "Todos" || m.chip === selectedChip;
-      const matchLetter = !selectedLetter || m.letter === selectedLetter;
+      const matchLetter = !selectedLetter || getLetter(m) === selectedLetter;
       const q = searchQuery.trim().toLowerCase();
       const matchQuery =
         !q ||
-        m.namePt.toLowerCase().includes(q) ||
-        m.nameEn.toLowerCase().includes(q) ||
-        m.definition.toLowerCase().includes(q);
+        m.namePt?.toLowerCase().includes(q) ||
+        m.nameEn?.toLowerCase().includes(q) ||
+        m.definition?.toLowerCase().includes(q);
+
       return matchChip && matchLetter && matchQuery;
     });
   }, [mechanicsData, selectedChip, selectedLetter, searchQuery]);
@@ -198,7 +229,7 @@ export default function GuideScreen() {
                 contentContainerStyle={styles.letterScroll}
               >
                 {ALL_LETTERS.map((letter, index) => {
-                  const hasTerms = LETTERS_WITH_TERMS.includes(letter);
+                  const hasTerms = availableLetters.includes(letter);
                   const isActive = selectedLetter === letter;
                   const theme = BRAND_THEMES[index % 3];
 
@@ -294,7 +325,6 @@ export default function GuideScreen() {
                 )}
               </View>
 
-              {/* RENDERIZAÇÃO CONDICIONAL DE CARREGAMENTO */}
               {isLoading ? (
                 <View style={styles.emptyWrap}>
                   <ActivityIndicator size="large" color="#31358B" />
@@ -321,6 +351,8 @@ export default function GuideScreen() {
                       const isExpanded = expandedId === m.id;
                       const theme = BRAND_THEMES[index % 3];
 
+                      const validIcon = getValidIcon(m.icon);
+
                       return (
                         <View key={m.id} style={styles.accordionCard}>
                           <Pressable
@@ -336,7 +368,7 @@ export default function GuideScreen() {
                               ]}
                             >
                               <Ionicons
-                                name={m.icon}
+                                name={validIcon}
                                 size={20}
                                 color={theme.main}
                               />
@@ -467,7 +499,6 @@ export default function GuideScreen() {
           )}
 
           {tab === "games" && (
-            /* CONTEÚDO DE JOGOS (mantido original) */
             <View style={styles.staticContainer}>
               <View style={styles.staticHero}>
                 <Text style={styles.staticHeroIcon}>🎲</Text>
