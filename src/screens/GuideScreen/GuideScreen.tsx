@@ -2,10 +2,11 @@ import { NavFooter } from "@/src/components/common/NavFooter";
 import HomeBackground from "@/src/components/Home/HomeBackground";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import logoLudusDice from "../../../assets/logo-dice.png";
 
 type GuideTab = "mechanics" | "users" | "games";
 
@@ -56,13 +58,10 @@ function getValidIcon(
   iconName: string | undefined,
 ): keyof typeof Ionicons.glyphMap {
   if (!iconName) return "extension-puzzle-outline";
-
   const name = iconName.toLowerCase();
-
   if (name.includes("-outline") || name.includes("-sharp")) {
     return name as keyof typeof Ionicons.glyphMap;
   }
-
   const lucideToIonicons: Record<string, keyof typeof Ionicons.glyphMap> = {
     users: "people-outline",
     user: "person-outline",
@@ -91,7 +90,6 @@ function getValidIcon(
     puzzle: "extension-puzzle-outline",
     "dice-1": "cube-outline",
   };
-
   return lucideToIonicons[name] || "extension-puzzle-outline";
 }
 
@@ -104,8 +102,9 @@ function getLetter(m: Mecanica): string {
 export default function GuideScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [tab, setTab] = useState<GuideTab>("mechanics");
+  const params = useLocalSearchParams();
 
+  const [tab, setTab] = useState<GuideTab>("mechanics");
   const [mechanicsData, setMechanicsData] = useState<Mecanica[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -128,6 +127,13 @@ export default function GuideScreen() {
     fetchMechanics();
   }, []);
 
+  useEffect(() => {
+    if (params.name) {
+      setTab("mechanics");
+      setSearchQuery(String(params.name));
+    }
+  }, [params.name]);
+
   const availableLetters = useMemo(() => {
     const letters = new Set(mechanicsData.map(getLetter));
     return Array.from(letters).filter(Boolean);
@@ -143,7 +149,6 @@ export default function GuideScreen() {
         m.namePt?.toLowerCase().includes(q) ||
         m.nameEn?.toLowerCase().includes(q) ||
         m.definition?.toLowerCase().includes(q);
-
       return matchChip && matchLetter && matchQuery;
     });
   }, [mechanicsData, selectedChip, selectedLetter, searchQuery]);
@@ -223,6 +228,30 @@ export default function GuideScreen() {
         >
           {tab === "mechanics" && (
             <View>
+              <View style={styles.mechanicsBanner}>
+                <View style={styles.mechanicsBannerIconWrap}>
+                  <Image
+                    source={logoLudusDice}
+                    style={styles.mechanicsBannerLogo}
+                    resizeMode="cover"
+                  />
+                </View>
+                <View style={styles.mechanicsBannerTextWrap}>
+                  <Text style={styles.mechanicsBannerTitle}>
+                    Mecânicas de Jogo
+                  </Text>
+                  <Text style={styles.mechanicsBannerDesc}>
+                    Descubra as regras e sistemas por trás dos seus jogos
+                    favoritos
+                  </Text>
+                  <View style={styles.mechanicsBannerBadge}>
+                    <Text style={styles.mechanicsBannerBadgeText}>
+                      {mechanicsData.length} mecânicas catalogadas
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -268,7 +297,6 @@ export default function GuideScreen() {
                 {CHIPS.map((chip, index) => {
                   const isActive = selectedChip === chip.label;
                   const theme = BRAND_THEMES[index % 3];
-
                   return (
                     <Pressable
                       key={chip.label}
@@ -318,6 +346,7 @@ export default function GuideScreen() {
                     </Pressable>
                   )}
                 </View>
+
                 {hasActiveFilters && !isLoading && (
                   <Text style={styles.resultsCount}>
                     {filteredMechanics.length} resultado(s)
@@ -350,7 +379,6 @@ export default function GuideScreen() {
                     filteredMechanics.map((m, index) => {
                       const isExpanded = expandedId === m.id;
                       const theme = BRAND_THEMES[index % 3];
-
                       const validIcon = getValidIcon(m.icon);
 
                       return (
@@ -373,6 +401,7 @@ export default function GuideScreen() {
                                 color={theme.main}
                               />
                             </View>
+
                             <View style={styles.accordionTitleWrap}>
                               <Text style={styles.accordionTitle}>
                                 {m.namePt}
@@ -381,23 +410,27 @@ export default function GuideScreen() {
                                 {m.nameEn}
                               </Text>
                             </View>
+
                             <Ionicons
                               name={isExpanded ? "chevron-up" : "chevron-down"}
                               size={20}
                               color="#9CA3AF"
                             />
                           </Pressable>
+
                           {isExpanded && (
                             <View style={styles.accordionBody}>
                               <Text style={styles.accordionDesc}>
                                 {m.definition}
                               </Text>
+
                               <Text style={styles.gamesLabel}>No acervo:</Text>
                               <View style={styles.gamesList}>
                                 {m.games && m.games.length > 0 ? (
                                   m.games.map((g, gIndex) => {
                                     const tagTheme =
                                       BRAND_THEMES[(gIndex + 1) % 3];
+
                                     return (
                                       <Pressable
                                         key={g}
@@ -450,6 +483,7 @@ export default function GuideScreen() {
                   jogos exclusivos do Ludus.
                 </Text>
               </View>
+
               {[
                 {
                   name: "Starter",
@@ -510,6 +544,7 @@ export default function GuideScreen() {
                   complexidade, tempo de jogo e exclusividade de acesso.
                 </Text>
               </View>
+
               {[
                 {
                   name: "Latão",
@@ -607,6 +642,59 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tabText: { fontSize: 12, fontWeight: "800", color: "#6B7280" },
+
+  mechanicsBanner: {
+    backgroundColor: "#31358B",
+    borderRadius: 20,
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  mechanicsBannerIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: "rgba(251, 188, 4, 0.20)",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  mechanicsBannerLogo: {
+    width: "100%",
+    height: "100%",
+  },
+  mechanicsBannerTextWrap: {
+    flex: 1,
+  },
+  mechanicsBannerTitle: {
+    fontSize: 17,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    lineHeight: 22,
+  },
+  mechanicsBannerDesc: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.7)",
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  mechanicsBannerBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(251, 188, 4, 0.25)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginTop: 8,
+  },
+  mechanicsBannerBadgeText: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#FBBC04",
+  },
+
   letterScroll: {
     paddingHorizontal: 20,
     paddingTop: 16,

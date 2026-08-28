@@ -488,9 +488,26 @@ export default function GameDetailsScreen() {
                 {game.mechanics && game.mechanics.length > 0 && (
                   <View style={styles.mechanicsContainer}>
                     {game.mechanics.map((mechanic, index) => (
-                      <View key={index} style={styles.mechanicPill}>
+                      <Pressable
+                        key={index}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/guide",
+                            params: { name: mechanic },
+                          })
+                        }
+                        style={({ pressed }) => [
+                          styles.mechanicPill,
+                          pressed && { opacity: 0.75 },
+                        ]}
+                      >
+                        <Ionicons
+                          name="information-circle-outline"
+                          size={13}
+                          color="#31358B"
+                        />
                         <Text style={styles.mechanicText}>{mechanic}</Text>
-                      </View>
+                      </Pressable>
                     ))}
                   </View>
                 )}
@@ -778,8 +795,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(49,53,139,0.1)",
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   mechanicText: {
     fontSize: 11,
