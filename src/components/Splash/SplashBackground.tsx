@@ -3,25 +3,16 @@ import { StyleSheet, View } from "react-native";
 export default function SplashBackground() {
   return (
     <View style={StyleSheet.absoluteFill}>
-
-      {/* ===== TOPO DIREITO ===== */}
-      {/* Amarelo opaco (fundo) */}
       <View style={[styles.circle, styles.yellowSoft]} />
 
-      {/* Amarelo sólido (frente) */}
       <View style={[styles.circle, styles.yellowStrong]} />
 
-      {/* ===== BAIXO ESQUERDO ===== */}
-      {/* Vermelho opaco (fundo) */}
       <View style={[styles.circle, styles.redSoft]} />
 
-      {/* Vermelho sólido (frente) */}
       <View style={[styles.circle, styles.redStrong]} />
 
-      {/* ===== TRACEJADOS (SEPARADOS) ===== */}
       <View style={[styles.dashed, styles.dashedTop]} />
       <View style={[styles.dashed, styles.dashedBottom]} />
-
     </View>
   );
 }
@@ -32,7 +23,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 
-  /* ===== AMARELOS ===== */
   yellowSoft: {
     width: 340,
     height: 340,
@@ -48,7 +38,6 @@ const styles = StyleSheet.create({
     right: -90,
   },
 
-  /* ===== VERMELHOS ===== */
   redSoft: {
     width: 420,
     height: 420,
@@ -64,7 +53,6 @@ const styles = StyleSheet.create({
     left: -120,
   },
 
-  /* ===== TRACEJADOS ===== */
   dashed: {
     position: "absolute",
     width: 260,

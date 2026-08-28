@@ -5,11 +5,12 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
 import { BottomBar } from "@/src/components/GameDetails/BottomBar";
@@ -62,6 +63,7 @@ type AlertType = "error" | "success" | "info";
 
 export default function GameDetailsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, refreshUser } = useAuth();
   const isAdmin = user?.role === "ADMIN";
 
@@ -398,328 +400,336 @@ export default function GameDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root} edges={["bottom"]}>
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator />
-        </View>
-      ) : errMsg ? (
-        <View style={styles.center}>
-          <Text style={{ color: "#666", fontWeight: "700" }}>{errMsg}</Text>
-          <Text
-            onPress={fetchDetails}
-            style={{ marginTop: 10, color: "#0A1F5C", fontWeight: "900" }}
-          >
-            Tentar novamente
-          </Text>
-        </View>
-      ) : !game ? (
-        <View style={styles.center}>
-          <Text style={{ color: "#666", fontWeight: "700" }}>
-            Jogo não encontrado.
-          </Text>
-        </View>
-      ) : (
-        <>
-          <GameHero
-            gameId={game.id}
-            coverUrl={game.cover}
-            isFavorite={isFavorite}
-            onToggleFavorite={() => {
-              if (isAdmin) {
-                showAlert(
-                  "info",
-                  "Ação bloqueada",
-                  "Administrador não pode favoritar jogos",
-                );
-                return;
-              }
-              handleToggleFavorite();
-            }}
-          />
-
-          <View style={styles.sheet}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="light-content" backgroundColor="#31358B" />
+      <View style={styles.mainContainer}>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator />
+          </View>
+        ) : errMsg ? (
+          <View style={styles.center}>
+            <Text style={{ color: "#666", fontWeight: "700" }}>{errMsg}</Text>
+            <Text
+              onPress={fetchDetails}
+              style={{ marginTop: 10, color: "#0A1F5C", fontWeight: "900" }}
+            >
+              Tentar novamente
+            </Text>
+          </View>
+        ) : !game ? (
+          <View style={styles.center}>
+            <Text style={{ color: "#666", fontWeight: "700" }}>
+              Jogo não encontrado.
+            </Text>
+          </View>
+        ) : (
+          <>
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 120 }}
+              bounces={false}
+              contentContainerStyle={{ paddingBottom: 140 }}
             >
-              <GameMeta
-                title={game.title}
-                avgRating={avgRating}
-                ratingsCount={game.ratingsCount}
-                onPressRate={() => {
+              <GameHero
+                gameId={game.id}
+                coverUrl={game.cover}
+                isFavorite={isFavorite}
+                onToggleFavorite={() => {
                   if (isAdmin) {
                     showAlert(
                       "info",
                       "Ação bloqueada",
-                      "Conta ADMIN não pode avaliar jogos.",
+                      "Administrador não pode favoritar jogos",
                     );
                     return;
                   }
-                  if (!canRate) {
-                    showAlert(
-                      "info",
-                      "Avaliação bloqueada",
-                      "Você só pode avaliar este jogo após alugar e devolver.",
-                    );
-                    return;
-                  }
-                  setRateOpen(true);
+                  handleToggleFavorite();
                 }}
-                available={!!game.available}
-                rentalDaysText="Por agendamento"
-                availabilityForecast={null}
-                tier={game.tier}
               />
 
-              <GameFactsRow
-                minPlayers={game.minPlayers}
-                maxPlayers={game.maxPlayers}
-                minTime={game.minTime}
-                maxTime={game.maxTime}
-                minAge={game.minAge}
-              />
+              <View style={styles.sheet}>
+                <GameMeta
+                  title={game.title}
+                  avgRating={avgRating}
+                  ratingsCount={game.ratingsCount}
+                  onPressRate={() => {
+                    if (isAdmin) {
+                      showAlert(
+                        "info",
+                        "Ação bloqueada",
+                        "Conta ADMIN não pode avaliar jogos.",
+                      );
+                      return;
+                    }
+                    if (!canRate) {
+                      showAlert(
+                        "info",
+                        "Avaliação bloqueada",
+                        "Você só pode avaliar este jogo após alugar e devolver.",
+                      );
+                      return;
+                    }
+                    setRateOpen(true);
+                  }}
+                  available={!!game.available}
+                  rentalDaysText="Por agendamento"
+                  availabilityForecast={null}
+                  tier={game.tier}
+                />
 
-              {game.mechanics && game.mechanics.length > 0 && (
-                <View style={styles.mechanicsContainer}>
-                  {game.mechanics.map((mechanic, index) => (
-                    <View key={index} style={styles.mechanicPill}>
-                      <Text style={styles.mechanicText}>{mechanic}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
+                <GameFactsRow
+                  minPlayers={game.minPlayers}
+                  maxPlayers={game.maxPlayers}
+                  minTime={game.minTime}
+                  maxTime={game.maxTime}
+                  minAge={game.minAge}
+                />
 
-              <View style={styles.tabs}>
-                <Pressable
-                  onPress={() => setTab("description")}
-                  style={[
-                    styles.tab,
-                    tab === "description" && styles.tabYellow,
-                  ]}
-                >
-                  <Ionicons
-                    name="document-text-outline"
-                    size={16}
-                    color={tab === "description" ? "#fff" : "#7A8194"}
-                  />
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.tabText,
-                      tab === "description" && styles.tabTextActive,
-                    ]}
-                  >
-                    Descrição
-                  </Text>
-                </Pressable>
+                {game.mechanics && game.mechanics.length > 0 && (
+                  <View style={styles.mechanicsContainer}>
+                    {game.mechanics.map((mechanic, index) => (
+                      <View key={index} style={styles.mechanicPill}>
+                        <Text style={styles.mechanicText}>{mechanic}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
 
-                <Pressable
-                  onPress={() => setTab("components")}
-                  style={[styles.tab, tab === "components" && styles.tabBlue]}
-                >
-                  <Ionicons
-                    name="cube-outline"
-                    size={16}
-                    color={tab === "components" ? "#fff" : "#7A8194"}
-                  />
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.tabText,
-                      tab === "components" && styles.tabTextActive,
-                    ]}
-                  >
-                    Componentes
-                  </Text>
-                </Pressable>
-
-                {hasHowToPlay && (
+                <View style={styles.tabs}>
                   <Pressable
-                    onPress={() => setTab("howtoplay")}
-                    style={[styles.tab, tab === "howtoplay" && styles.tabRed]}
+                    onPress={() => setTab("description")}
+                    style={[
+                      styles.tab,
+                      tab === "description" && styles.tabYellow,
+                    ]}
                   >
                     <Ionicons
-                      name="play-circle-outline"
+                      name="document-text-outline"
                       size={16}
-                      color={tab === "howtoplay" ? "#fff" : "#7A8194"}
+                      color={tab === "description" ? "#fff" : "#7A8194"}
                     />
                     <Text
                       numberOfLines={1}
                       style={[
                         styles.tabText,
-                        tab === "howtoplay" && styles.tabTextActive,
+                        tab === "description" && styles.tabTextActive,
                       ]}
                     >
-                      Como jogar
+                      Descrição
                     </Text>
                   </Pressable>
+
+                  <Pressable
+                    onPress={() => setTab("components")}
+                    style={[styles.tab, tab === "components" && styles.tabBlue]}
+                  >
+                    <Ionicons
+                      name="cube-outline"
+                      size={16}
+                      color={tab === "components" ? "#fff" : "#7A8194"}
+                    />
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        styles.tabText,
+                        tab === "components" && styles.tabTextActive,
+                      ]}
+                    >
+                      Componentes
+                    </Text>
+                  </Pressable>
+
+                  {hasHowToPlay && (
+                    <Pressable
+                      onPress={() => setTab("howtoplay")}
+                      style={[styles.tab, tab === "howtoplay" && styles.tabRed]}
+                    >
+                      <Ionicons
+                        name="play-circle-outline"
+                        size={16}
+                        color={tab === "howtoplay" ? "#fff" : "#7A8194"}
+                      />
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.tabText,
+                          tab === "howtoplay" && styles.tabTextActive,
+                        ]}
+                      >
+                        Como jogar
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+
+                {tab === "description" && (
+                  <GameDescription description={game.description} />
+                )}
+
+                {tab === "components" && <GameComponents gameId={game.id} />}
+
+                {tab === "howtoplay" && hasHowToPlay && (
+                  <GameHowToPlay url={game.howToPlayUrl} title={game.title} />
                 )}
               </View>
-
-              {tab === "description" && (
-                <GameDescription description={game.description} />
-              )}
-
-              {tab === "components" && <GameComponents gameId={game.id} />}
-
-              {tab === "howtoplay" && hasHowToPlay && (
-                <GameHowToPlay url={game.howToPlayUrl} title={game.title} />
-              )}
             </ScrollView>
-          </View>
 
-          <BottomBar
-            price={game.price}
-            unavailable={!game.isAvailableNow}
-            rentedByMe={game.rentedByMe}
-            watching={watching}
-            loadingWatch={loadingWatch}
-            onToggleWatch={toggleWatch}
-            onPressRent={async () => {
-              if (isAdmin) {
-                showAlert(
-                  "info",
-                  "Ação bloqueada",
-                  "Administrador não pode alugar jogos.",
-                );
-                return;
-              }
-
-              const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
-
-              let latestUser = user;
-
-              const locallyBlocked = isIfmaMode
-                ? !latestUser?.isAcademicVerified
-                : latestUser?.registrationStatus !== "APPROVED";
-
-              if (locallyBlocked) {
-                try {
-                  const res = await api.get(`/users/me?t=${Date.now()}`);
-                  latestUser = { ...latestUser, ...res.data };
-                  refreshUser();
-                } catch (e) {
-                  console.log("Falha ao checar status silenciosamente");
-                }
-              }
-
-              if (isIfmaMode) {
-                if (!latestUser?.isAcademicVerified) {
-                  setBlockType("IFMA_UNVERIFIED");
-                  setBlockModalVisible(true);
-                  return;
-                }
-              } else {
-                if (latestUser?.registrationStatus !== "APPROVED") {
-                  const isRejected =
-                    latestUser?.registrationStatus === "REJECTED";
-
-                  const hasSentDocs = Boolean(
-                    (latestUser as any)?.documentFrontImage &&
-                    (latestUser as any)?.documentBackImage &&
-                    (latestUser as any)?.addressProof &&
-                    (latestUser as any)?.selfieWithId,
+            <BottomBar
+              price={game.price}
+              unavailable={!game.isAvailableNow}
+              rentedByMe={game.rentedByMe}
+              watching={watching}
+              loadingWatch={loadingWatch}
+              onToggleWatch={toggleWatch}
+              onPressRent={async () => {
+                if (isAdmin) {
+                  showAlert(
+                    "info",
+                    "Ação bloqueada",
+                    "Administrador não pode alugar jogos.",
                   );
-
-                  const isAnalysis =
-                    latestUser?.registrationStatus === "PENDING" && hasSentDocs;
-
-                  if (isAnalysis) setBlockType("DOCS_PENDING");
-                  else if (isRejected) setBlockType("DOCS_REJECTED");
-                  else setBlockType("DOCS_UNVERIFIED");
-
-                  setBlockModalVisible(true);
                   return;
                 }
-              }
 
-              openRentFlow();
-            }}
-          />
+                const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
-          <RateModal
-            visible={rateOpen}
-            currentValue={game.myRating ?? null}
-            saving={savingRate}
-            onClose={() => setRateOpen(false)}
-            onSave={handleSaveRating}
-          />
+                let latestUser = user;
 
-          <RentModal
-            visible={rentOpen}
-            gameId={game.id}
-            loading={rentLoading}
-            onClose={() => setRentOpen(false)}
-            onConfirm={handleConfirmRental}
-          />
+                const locallyBlocked = isIfmaMode
+                  ? !latestUser?.isAcademicVerified
+                  : latestUser?.registrationStatus !== "APPROVED";
 
-          <TermsRentModal
-            visible={termsOpen}
-            loading={termsLoading}
-            onClose={() => {
-              setTermsOpen(false);
-              pendingRentRef.current = null;
-            }}
-            onAccept={acceptTermsAndContinue}
-          />
+                if (locallyBlocked) {
+                  try {
+                    const res = await api.get(`/users/me?t=${Date.now()}`);
+                    latestUser = { ...latestUser, ...res.data };
+                    refreshUser();
+                  } catch (e) {
+                    console.log("Falha ao checar status silenciosamente");
+                  }
+                }
 
-          {favToastVisible && (
-            <View style={styles.toast}>
-              <Text style={styles.toastText}>{favToastMessage}</Text>
-              <Pressable
-                onPress={() => {
-                  setFavToastVisible(false);
-                  router.push("/favorites");
-                }}
-              >
-                <Text style={styles.toastAction}>Ver favoritos</Text>
-              </Pressable>
-            </View>
-          )}
+                if (isIfmaMode) {
+                  if (!latestUser?.isAcademicVerified) {
+                    setBlockType("IFMA_UNVERIFIED");
+                    setBlockModalVisible(true);
+                    return;
+                  }
+                } else {
+                  if (latestUser?.registrationStatus !== "APPROVED") {
+                    const isRejected =
+                      latestUser?.registrationStatus === "REJECTED";
 
-          <LudusAlert
-            visible={alertVisible}
-            type={alertType}
-            title={alertTitle}
-            message={alertMessage}
-            onClose={() => setAlertVisible(false)}
-          />
+                    const hasSentDocs = Boolean(
+                      (latestUser as any)?.documentFrontImage &&
+                      (latestUser as any)?.documentBackImage &&
+                      (latestUser as any)?.addressProof &&
+                      (latestUser as any)?.selfieWithId,
+                    );
 
-          <VerificationBlockModal
-            visible={blockModalVisible}
-            type={blockType}
-            onClose={() => setBlockModalVisible(false)}
-            onAction={() => {
-              setBlockModalVisible(false);
+                    const isAnalysis =
+                      latestUser?.registrationStatus === "PENDING" &&
+                      hasSentDocs;
 
-              if (blockType === "DOCS_PENDING") {
-              } else {
-                router.push("/profile/documents");
-              }
-            }}
-          />
-        </>
-      )}
-    </SafeAreaView>
+                    if (isAnalysis) setBlockType("DOCS_PENDING");
+                    else if (isRejected) setBlockType("DOCS_REJECTED");
+                    else setBlockType("DOCS_UNVERIFIED");
+
+                    setBlockModalVisible(true);
+                    return;
+                  }
+                }
+
+                openRentFlow();
+              }}
+            />
+
+            <RateModal
+              visible={rateOpen}
+              currentValue={game.myRating ?? null}
+              saving={savingRate}
+              onClose={() => setRateOpen(false)}
+              onSave={handleSaveRating}
+            />
+
+            <RentModal
+              visible={rentOpen}
+              gameId={game.id}
+              loading={rentLoading}
+              onClose={() => setRentOpen(false)}
+              onConfirm={handleConfirmRental}
+            />
+
+            <TermsRentModal
+              visible={termsOpen}
+              loading={termsLoading}
+              onClose={() => {
+                setTermsOpen(false);
+                pendingRentRef.current = null;
+              }}
+              onAccept={acceptTermsAndContinue}
+            />
+
+            {favToastVisible && (
+              <View style={styles.toast}>
+                <Text style={styles.toastText}>{favToastMessage}</Text>
+                <Pressable
+                  onPress={() => {
+                    setFavToastVisible(false);
+                    router.push("/favorites");
+                  }}
+                >
+                  <Text style={styles.toastAction}>Ver favoritos</Text>
+                </Pressable>
+              </View>
+            )}
+
+            <LudusAlert
+              visible={alertVisible}
+              type={alertType}
+              title={alertTitle}
+              message={alertMessage}
+              onClose={() => setAlertVisible(false)}
+            />
+
+            <VerificationBlockModal
+              visible={blockModalVisible}
+              type={blockType}
+              onClose={() => setBlockModalVisible(false)}
+              onAction={() => {
+                setBlockModalVisible(false);
+
+                if (blockType === "DOCS_PENDING") {
+                } else {
+                  router.push("/profile/documents");
+                }
+              }}
+            />
+          </>
+        )}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: "#31358B",
+  },
+
+  mainContainer: {
+    flex: 1,
     backgroundColor: "#ffffff",
   },
 
   sheet: {
-    flex: 1,
     backgroundColor: "#fff",
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
-    marginTop: -10,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    overflow: "hidden",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -30,
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
 
   center: {
@@ -731,11 +741,11 @@ const styles = StyleSheet.create({
 
   toast: {
     position: "absolute",
-    bottom: 96,
+    bottom: 110,
     left: 18,
     right: 18,
     backgroundColor: "#0A0A0A",
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 14,
     flexDirection: "row",
@@ -785,7 +795,7 @@ const styles = StyleSheet.create({
 
   tab: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 42,
     paddingVertical: 8,
     paddingHorizontal: 6,
     borderRadius: 12,

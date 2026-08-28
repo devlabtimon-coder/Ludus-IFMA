@@ -29,7 +29,7 @@ export function NavFooter() {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push("/favorites")}>
-        <Ionicons name="bookmark" size={26} color={getColor("/favorites")} />
+        <Ionicons name="heart" size={26} color={getColor("/favorites")} />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push("/guide")}>
