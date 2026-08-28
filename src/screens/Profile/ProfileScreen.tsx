@@ -14,11 +14,13 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HomeBackground from "../../components/Home/HomeBackground";
 import { RegistrationBanner } from "./RegistrationBanner";
 
@@ -27,6 +29,7 @@ const RED = "#E62325";
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, updateUser, logout } = useAuth();
 
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
@@ -167,16 +170,18 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="light-content" backgroundColor={BLUE} />
       <HomeBackground />
 
-      <ProfileHeader user={user} onPressChangePhoto={handleChangePhoto} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ProfileHeader user={user} onPressChangePhoto={handleChangePhoto} />
 
-      <View style={styles.sheet}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <View style={styles.sheet}>
           {uploadingAvatar ? (
             <View style={styles.uploadingBox}>
               <ActivityIndicator size="large" color="#E62325" />
@@ -225,8 +230,8 @@ export default function ProfileScreen() {
             <Ionicons name="log-out-outline" size={20} color="#fff" />
             <Text style={styles.logoutText}>Sair da conta</Text>
           </TouchableOpacity>
-        </ScrollView>
-      </View>
+        </View>
+      </ScrollView>
 
       <AvatarPickerModal
         visible={avatarModalVisible}
@@ -288,6 +293,10 @@ const styles = StyleSheet.create({
     backgroundColor: BLUE,
   },
 
+  scrollContent: {
+    flexGrow: 1,
+  },
+
   sheet: {
     flex: 1,
     backgroundColor: "#fff",
@@ -295,9 +304,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 34,
     borderTopRightRadius: 34,
     paddingHorizontal: 22,
-  },
-
-  scrollContent: {
     paddingTop: 26,
     paddingBottom: 140,
   },

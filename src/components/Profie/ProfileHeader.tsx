@@ -20,12 +20,10 @@ export function ProfileHeader({ user, onPressChangePhoto }: Props) {
           source={avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR}
           style={styles.avatar}
         />
-
         <Pressable onPress={onPressChangePhoto} style={styles.cameraBtn}>
           <Ionicons name="camera" size={18} color="#fff" />
         </Pressable>
       </View>
-
       <Text style={styles.name}>{displayName}</Text>
       <Text style={styles.email}>{user?.email || ""}</Text>
     </View>
@@ -34,17 +32,15 @@ export function ProfileHeader({ user, onPressChangePhoto }: Props) {
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 56,
+    paddingTop: 24,
     paddingHorizontal: 24,
     alignItems: "center",
     paddingBottom: 34,
   },
-
   avatarWrap: {
     marginTop: 18,
     position: "relative",
   },
-
   avatar: {
     width: 122,
     height: 122,
@@ -53,7 +49,6 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: "#FFFFFF",
   },
-
   cameraBtn: {
     position: "absolute",
     right: -2,
@@ -67,14 +62,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
   name: {
     marginTop: 18,
     fontSize: 22,
     fontWeight: "900",
     color: "#fff",
   },
-
   email: {
     marginTop: 6,
     fontSize: 13,
