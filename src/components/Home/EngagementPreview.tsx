@@ -1,8 +1,14 @@
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 type MeRow = {
   userId: string;
@@ -11,177 +17,227 @@ type MeRow = {
   level: number;
   levelName?: string;
   rank: number;
+  category?: string;
+  seasonName?: string;
 };
 
-const PRIMARY = "#31358B";
-const YELLOW = "#FFC107";
-const RED = "#E53935";
-
-function compactLevel(levelName?: string, level?: number) {
-  if (levelName) return levelName;
-  if (level) return `Nível ${level}`;
-  return "Nível";
-}
+const BLUE = "#04096E";
+const YELLOW = "#FBBC04";
+const RED = "#E62325";
+const MAX_SEASON_POINTS = 1500;
 
 export function EngagementPreview() {
   const router = useRouter();
   const [me, setMe] = useState<MeRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     async function load() {
-      setLoading(true);
-      setErr(false);
-
       try {
-        const meRes = await api.get<MeRow>("/engagement/me");
-        if (!mounted) return;
-
-        setMe(meRes.data ?? null);
+        const res = await api.get<MeRow>("/engagement/me");
+        if (mounted) setMe(res.data ?? null);
       } catch (e: any) {
-        if (!mounted) return;
-
-        const status = e?.response?.status;
-        const code = e?.response?.data?.code;
-
-        if (
-          status === 403 &&
-          (code === "EMAIL_NOT_VERIFIED" || code === "PHONE_NOT_VERIFIED")
-        ) {
-          setMe(null);
-          setErr(false);
-        } else {
-          setErr(true);
-          setMe(null);
-        }
+        if (mounted) setMe(null);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     }
 
     load();
-
     return () => {
       mounted = false;
     };
   }, []);
 
-  const badge = useMemo(() => {
-    const r = me?.rank ?? null;
-    if (!r) return { bg: "rgba(49,53,139,0.10)", fg: PRIMARY };
-    if (r <= 3) return { bg: "rgba(255,193,7,0.18)", fg: "#9A6B00" };
-    if (r <= 10) return { bg: "rgba(229,57,53,0.12)", fg: RED };
-    return { bg: "rgba(49,53,139,0.10)", fg: PRIMARY };
-  }, [me?.rank]);
+  const points = me?.points || 0;
+  const progressPct = Math.min(
+    100,
+    Math.max(0, (points / MAX_SEASON_POINTS) * 100),
+  );
 
   return (
-    <Pressable style={styles.wrap} onPress={() => router.push("/ranking")}>
-      <View style={styles.left}>
-        <View style={styles.icon}>
-          <Ionicons name="trophy" size={16} color={PRIMARY} />
-        </View>
-
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Ranking</Text>
-
-          {loading ? (
-            <View style={styles.inline}>
-              <ActivityIndicator size="small" />
-              <Text style={styles.subtle}>Carregando…</Text>
-            </View>
-          ) : err ? (
-            <Text style={styles.errorText} numberOfLines={1}>
-              Falha ao carregar • toque para abrir
-            </Text>
-          ) : me ? (
-            <Text style={styles.subtle} numberOfLines={1}>
-              {compactLevel(me.levelName, me.level)} • {me.points} pts
-            </Text>
-          ) : (
-            <Text style={styles.subtle} numberOfLines={1}>
-              Toque para ver
-            </Text>
-          )}
-        </View>
-      </View>
-
-      <View style={styles.right}>
-        <View style={[styles.rankBadge, { backgroundColor: badge.bg }]}>
-          <Text style={[styles.rankText, { color: badge.fg }]}>
-            {me?.rank ? `#${me.rank}` : "#—"}
+    <Pressable style={styles.card} onPress={() => router.push("/ranking")}>
+      <View style={styles.header}>
+        <View style={{ flex: 1, paddingRight: 10 }}>
+          <Text style={styles.tagText} numberOfLines={1}>
+            {loading
+              ? "CARREGANDO..."
+              : me?.seasonName?.toUpperCase() || "TEMPORADA ATUAL"}
           </Text>
+          <Text style={styles.title}>Meu Desempenho</Text>
         </View>
-
-        <View style={styles.chev}>
-          <Ionicons name="chevron-forward" size={16} color={PRIMARY} />
+        <View style={styles.arrowBox}>
+          <Text style={styles.arrowText}>Ver Ranking</Text>
+          <Ionicons name="chevron-forward" size={14} color={BLUE} />
         </View>
       </View>
+
+      {loading ? (
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="small" color={BLUE} />
+        </View>
+      ) : (
+        <>
+          <View style={styles.progressContainer}>
+            <View style={styles.progressLabels}>
+              <Text style={styles.progressLabel}>Progresso para Lenda</Text>
+              <Text style={styles.progressValue}>
+                {Math.round(progressPct)}%
+              </Text>
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.bar, { width: `${progressPct}%` }]} />
+            </View>
+          </View>
+
+          <View style={styles.badgesRow}>
+            <View
+              style={[
+                styles.badge,
+                {
+                  backgroundColor: "#F0F2FF",
+                  borderColor: "rgba(4,9,110,0.1)",
+                },
+              ]}
+            >
+              <Ionicons name="medal" size={16} color={BLUE} />
+              <Text style={[styles.badgeValue, { color: BLUE }]}>
+                {points} pts
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.badge,
+                {
+                  backgroundColor: "#FEF2F2",
+                  borderColor: "rgba(230,35,37,0.1)",
+                },
+              ]}
+            >
+              <Ionicons name="star" size={16} color={RED} />
+              <Text style={[styles.badgeValue, { color: RED }]}>
+                Nível {me?.level || 1}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.badge,
+                { backgroundColor: YELLOW, borderColor: "rgba(251,188,4,0.3)" },
+              ]}
+            >
+              <Ionicons name="trophy" size={16} color={BLUE} />
+              <Text style={[styles.badgeValue, { color: BLUE }]}>
+                {me?.rank ? `#${me.rank}` : "—"}
+              </Text>
+            </View>
+          </View>
+        </>
+      )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    marginHorizontal: 20,
-    marginTop: 18,
+  card: {
+    marginHorizontal: 16,
+    marginTop: 16,
     backgroundColor: "#fff",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 13,
-    elevation: 2,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#04096D",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  header: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
   },
-
-  left: {
+  tagText: {
+    color: RED,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  title: {
+    color: BLUE,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  arrowBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    flex: 1,
-  },
-
-  icon: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "rgba(49,53,139,0.10)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  title: { fontSize: 14, fontWeight: "900", color: "#222" },
-
-  subtle: { fontSize: 12, color: "#777", marginTop: 2, fontWeight: "600" },
-
-  inline: { flexDirection: "row", gap: 8, alignItems: "center", marginTop: 2 },
-
-  errorText: { fontSize: 12, color: RED, marginTop: 2, fontWeight: "800" },
-
-  right: { flexDirection: "row", alignItems: "center", gap: 8 },
-
-  rankBadge: {
+    backgroundColor: "#F0F2FF",
     paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingVertical: 4,
     borderRadius: 999,
-    minWidth: 44,
-    alignItems: "center",
-    justifyContent: "center",
   },
-
-  rankText: { fontWeight: "900", fontSize: 12 },
-
-  chev: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "rgba(49,53,139,0.08)",
+  arrowText: {
+    color: BLUE,
+    fontSize: 11,
+    fontWeight: "bold",
+    marginRight: 2,
+  },
+  progressContainer: {
+    marginBottom: 16,
+  },
+  progressLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  progressLabel: {
+    color: "#6B7280",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  progressValue: {
+    color: BLUE,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  track: {
+    height: 6,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  bar: {
+    height: "100%",
+    backgroundColor: BLUE,
+    borderRadius: 999,
+  },
+  badgesRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  badge: {
+    flex: 1,
+    flexDirection: "row",
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    gap: 4,
+  },
+  badgeValue: {
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  loadingBox: {
+    paddingVertical: 20,
+    alignItems: "center",
   },
 });

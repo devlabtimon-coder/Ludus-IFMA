@@ -46,7 +46,7 @@ export type GameCollection = {
 type HomePayload = {
   forYou: HomeGame[];
   mostRented: HomeGame[];
-  collections?: GameCollection[]; // <-- Novo
+  collections?: GameCollection[];
 };
 
 export default function HomeScreen() {
@@ -60,7 +60,7 @@ export default function HomeScreen() {
 
   const [forYou, setForYou] = useState<HomeGame[]>([]);
   const [mostRented, setMostRented] = useState<HomeGame[]>([]);
-  const [collections, setCollections] = useState<GameCollection[]>([]); // <-- Novo Estado
+  const [collections, setCollections] = useState<GameCollection[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,7 +81,7 @@ export default function HomeScreen() {
       const res = await api.get<HomePayload>("/games/home");
       setForYou(res.data?.forYou || []);
       setMostRented(res.data?.mostRented || []);
-      setCollections(res.data?.collections || []); // <-- Salvando as coleções
+      setCollections(res.data?.collections || []);
     } catch (e) {
       console.error("Erro ao carregar home:", e);
       setErrMsg("Não foi possível carregar os jogos.");
@@ -128,7 +128,6 @@ export default function HomeScreen() {
       >
         <View style={styles.topBlock}>
           <Header />
-          <EngagementPreview />
 
           <View style={styles.searchWrap}>
             <SearchBar
@@ -138,6 +137,7 @@ export default function HomeScreen() {
               activeFiltersCount={activeCount}
             />
           </View>
+          <EngagementPreview />
         </View>
 
         {loading ? (
