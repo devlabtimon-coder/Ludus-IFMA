@@ -1,7 +1,6 @@
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
-// @ts-ignore
-import auth from "@react-native-firebase/auth";
+import { getAuth } from "@react-native-firebase/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -126,7 +125,9 @@ export default function VerifyPhoneForm() {
     setLoading(true);
     try {
       const formattedPhone = `+55${phoneParam}`;
-      const confirmation = await auth().signInWithPhoneNumber(formattedPhone);
+
+      const confirmation =
+        await getAuth().signInWithPhoneNumber(formattedPhone);
 
       setConfirmSession(confirmation);
       setCountdown(30);
@@ -142,7 +143,8 @@ export default function VerifyPhoneForm() {
       showAlert(
         "error",
         "Erro",
-        "Falha ao enviar o SMS. Verifique o número e tente novamente.",
+        error?.message ||
+          "Falha ao enviar o SMS. Verifique o número e tente novamente.",
       );
     } finally {
       setLoading(false);
@@ -218,7 +220,6 @@ export default function VerifyPhoneForm() {
     setLoading(true);
     try {
       const credential = await confirmSession.confirm(fullCode);
-
       const idToken = await credential?.user.getIdToken();
 
       const response = await api.post("/auth/verify-phone", { idToken });

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -48,19 +48,47 @@ export function LudusCalendar({
 }: LudusCalendarProps) {
   const today = new Date();
 
-  // Gera o grid do calendário (com espaços vazios no início para alinhar os dias da semana)
+  const [holidays, setHolidays] = useState<string[]>([]);
+  const [loadingHolidays, setLoadingHolidays] = useState(false);
+
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      setLoadingHolidays(true);
+      try {
+        const response = await fetch(
+          `https://brasilapi.com.br/api/feriados/v1/${currentYear}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Falha ao buscar feriados");
+        }
+
+        const data = await response.json();
+
+        const holidayDates = data.map((item: any) => item.date);
+
+        setHolidays(holidayDates);
+      } catch (error) {
+        console.error("Erro ao buscar feriados da API:", error);
+        setHolidays([]);
+      } finally {
+        setLoadingHolidays(false);
+      }
+    };
+
+    fetchHolidays();
+  }, [currentYear]);
+
   const calendarGrid = useMemo(() => {
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const days = [];
-
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
-
     return days;
   }, [currentYear, currentMonth]);
 
@@ -70,7 +98,6 @@ export function LudusCalendar({
 
   return (
     <View style={styles.container}>
-      {/* Cabeçalho do Calendário (Mês e Ano) */}
       <View style={styles.header}>
         <Pressable onPress={onPrevMonth} style={styles.navBtn}>
           <Ionicons
@@ -84,17 +111,14 @@ export function LudusCalendar({
             }
           />
         </Pressable>
-
         <Text style={styles.monthTitle}>
           {MONTH_NAMES[currentMonth]} {currentYear}
         </Text>
-
         <Pressable onPress={onNextMonth} style={styles.navBtn}>
           <Ionicons name="chevron-forward" size={24} color="#04096E" />
         </Pressable>
       </View>
 
-      {/* Dias da Semana */}
       <View style={styles.weekDaysRow}>
         {WEEK_DAYS.map((wd, index) => (
           <Text key={index} style={styles.weekDayText}>
@@ -103,11 +127,10 @@ export function LudusCalendar({
         ))}
       </View>
 
-      {/* Grid de Dias */}
-      {isLoading ? (
+      {isLoading || loadingHolidays ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator color="#04096E" size="large" />
-          <Text style={styles.loadingText}>Verificando disponibilidade...</Text>
+          <Text style={styles.loadingText}>Atualizando calendário...</Text>
         </View>
       ) : unavailableDates[0] === "ALL" ? (
         <View style={styles.loadingContainer}>
@@ -123,7 +146,6 @@ export function LudusCalendar({
             if (day === null) {
               return <View key={`empty-${index}`} style={styles.dayCell} />;
             }
-
             const isToday =
               day === today.getDate() &&
               currentMonth === today.getMonth() &&
@@ -137,24 +159,24 @@ export function LudusCalendar({
               59,
             );
 
-            // Regras de Bloqueio Físico
             const isPast = dayDateObj < today && !isToday;
             const dayOfWeek = new Date(currentYear, currentMonth, day).getDay();
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-            // Regras de Bloqueio da API (Esgotado ou Feriado)
             const dateStr = formatDateToApiStr(currentYear, currentMonth, day);
+
             const isFullBooked = unavailableDates.includes(dateStr);
+            const isHoliday = holidays.includes(dateStr);
 
             const isSelected =
               selectedDate?.getDate() === day &&
               selectedDate?.getMonth() === currentMonth &&
               selectedDate?.getFullYear() === currentYear;
 
-            const isDisabled = isPast || isWeekend || isFullBooked;
+            const isDisabled = isPast || isWeekend || isFullBooked || isHoliday;
 
-            // Isolamos a regra do esgotado (para não pintar de vermelho os fins de semana/passado)
-            const isFullBookedDay = isFullBooked && !isPast && !isWeekend;
+            const isFullBookedDay =
+              isFullBooked && !isPast && !isWeekend && !isHoliday;
 
             return (
               <Pressable
@@ -167,7 +189,7 @@ export function LudusCalendar({
                   styles.dayCell,
                   isSelected && styles.dayCellSelected,
                   isDisabled && styles.dayCellDisabled,
-                  isFullBookedDay && styles.dayCellFullBooked, // Borda e fundo vermelho
+                  isFullBookedDay && styles.dayCellFullBooked,
                 ]}
               >
                 <Text
@@ -175,7 +197,7 @@ export function LudusCalendar({
                     styles.dayText,
                     isToday && !isSelected && styles.dayTextToday,
                     isDisabled && styles.dayTextDisabled,
-                    isFullBookedDay && styles.dayTextFullBooked, // Texto em vermelho
+                    isFullBookedDay && styles.dayTextFullBooked,
                     isSelected && styles.dayTextSelected,
                   ]}
                 >
@@ -187,10 +209,8 @@ export function LudusCalendar({
         </View>
       )}
 
-      {/* Legenda Detalhada do Calendário */}
       <View style={styles.legendContainer}>
         <Text style={styles.legendTitle}>Entenda o calendário:</Text>
-
         <View style={styles.legendGrid}>
           <View style={styles.legendItem}>
             <View style={[styles.legendBox, { backgroundColor: "#F9FAFB" }]} />
@@ -199,7 +219,6 @@ export function LudusCalendar({
               (Passado, Feriado ou Fim de Semana). A biblioteca não funciona.
             </Text>
           </View>
-
           <View style={styles.legendItem}>
             <View
               style={[
@@ -226,7 +245,6 @@ export function LudusCalendar({
               Esgotado. Todas as cópias do jogo já foram alugadas neste dia.
             </Text>
           </View>
-
           <View style={styles.legendItem}>
             <View style={[styles.legendBox, { backgroundColor: "#04096E" }]} />
             <Text style={styles.legendText}>
@@ -296,8 +314,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
   },
   dayCellFullBooked: {
-    backgroundColor: "#FFF4F2", // Fundo vermelho muito claro
-    borderColor: "#E62325", // Borda sutil vermelha
+    backgroundColor: "#FFF4F2",
+    borderColor: "#E62325",
     borderWidth: 1,
   },
   dayText: {
@@ -317,7 +335,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   dayTextFullBooked: {
-    color: "#E62325", // Texto do número inteiramente em Vermelho
+    color: "#E62325",
     fontWeight: "800",
   },
   loadingContainer: {
@@ -339,8 +357,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingHorizontal: 20,
   },
-
-  // Estilos da Legenda Detalhada
   legendContainer: {
     marginTop: 16,
     paddingTop: 16,
@@ -368,7 +384,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 2, // Alinha com a primeira linha do texto
+    marginTop: 2,
   },
   legendText: {
     flex: 1,

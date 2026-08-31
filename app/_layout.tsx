@@ -1,3 +1,4 @@
+import "@react-native-firebase/app";
 import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
 import { AuthProvider } from "@/src/contexts/AuthContext";
 import { FiltersProvider } from "@/src/contexts/FiltersContext";
