@@ -204,6 +204,12 @@ export default function ProfileScreen() {
             />
 
             <ProfileMenuItem
+              icon="ticket-outline"
+              title="Meus Prêmios e Cupons"
+              onPress={() => router.push("/wallet")}
+            />
+
+            <ProfileMenuItem
               icon="notifications-outline"
               title="Notificações"
               onPress={() => router.push("/notifications")}

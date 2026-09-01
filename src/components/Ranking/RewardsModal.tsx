@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import {
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { ActiveSeason, BLUE } from "./RankingComponents";
 
@@ -17,6 +18,8 @@ type Props = {
 };
 
 export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
+  const router = useRouter();
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
@@ -89,6 +92,18 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
               );
             })}
           </ScrollView>
+
+          {/* NOVO BOTÃO DE ACESSO À CARTEIRA */}
+          <Pressable
+            style={styles.walletBtn}
+            onPress={() => {
+              onClose();
+              router.push("/wallet");
+            }}
+          >
+            <Ionicons name="ticket" size={20} color="#fff" />
+            <Text style={styles.walletBtnText}>Acessar Minha Carteira</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -106,7 +121,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     padding: 24,
-    maxHeight: "80%",
+    maxHeight: "85%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -155,4 +170,25 @@ const styles = StyleSheet.create({
   roadmapTextWrap: { flex: 1, justifyContent: "center", minHeight: 44 },
   roadmapLevelText: { fontSize: 14, fontWeight: "900", marginBottom: 4 },
   roadmapRewardText: { fontSize: 15, fontWeight: "700" },
+
+  walletBtn: {
+    marginTop: 12,
+    backgroundColor: BLUE,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 16,
+    gap: 8,
+    shadowColor: BLUE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  walletBtnText: {
+    color: "#fff",
+    fontWeight: "900",
+    fontSize: 15,
+  },
 });
