@@ -64,8 +64,24 @@ export async function registerForPush(userId?: string) {
 
 export function attachNotificationListeners() {
   const sub1 = Notifications.addNotificationResponseReceivedListener((resp) => {
-    const route = (resp.notification.request.content.data as any)?.route;
-    if (route) goToRoute(route);
+    const data = resp.notification.request.content.data as any;
+
+    if (data?.route) {
+      goToRoute(data.route);
+      return;
+    }
+
+    const type = String(data?.type || "").toUpperCase();
+
+    if (type.startsWith("RENTAL_") || type.startsWith("RATING")) {
+      goToRoute("/rentals");
+    } else if (type.startsWith("FAVORITE")) {
+      goToRoute("/favorites");
+    } else if (type.includes("LEVEL") || type.includes("POINTS")) {
+      goToRoute("/ranking");
+    } else if (type.includes("VERIFY")) {
+      goToRoute("/profile");
+    }
   });
 
   return () => {
