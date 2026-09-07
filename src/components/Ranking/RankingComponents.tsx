@@ -58,6 +58,23 @@ export function categoryBadgeStyle(cat?: string) {
   return { bg: "#E5E7EB", text: "#374151", label: "Starter" };
 }
 
+export function getLevelTitle(levelNumber: number) {
+  switch (levelNumber) {
+    case 1:
+      return "Iniciante";
+    case 2:
+      return "Veterano";
+    case 3:
+      return "Mestre";
+    case 4:
+      return "Lenda";
+    case 5:
+      return "Mito";
+    default:
+      return `Nível ${levelNumber}`;
+  }
+}
+
 export function Avatar({ uri, picture, size = 42, radius = 14 }: any) {
   const sourceUri = uri || picture || null;
   return (
@@ -103,7 +120,8 @@ export function RulesBox() {
 
 export function MeBox({ me }: { me: MeRow | null }) {
   if (!me) return null;
-  const lvl = me.levelName ?? `Nível ${me.level}`;
+
+  const lvl = me.levelName ?? getLevelTitle(me.level);
   const catStyle = categoryBadgeStyle(me.category);
 
   return (
@@ -139,7 +157,7 @@ export function MeBox({ me }: { me: MeRow | null }) {
 }
 
 export function RankingRow({ item, isMe }: { item: LeaderRow; isMe: boolean }) {
-  const lvl = item.levelName ?? `Nível ${item.level}`;
+  const lvl = item.levelName ?? getLevelTitle(item.level);
   const badge = rankBadgeStyle(item.rank);
   const catStyle = categoryBadgeStyle(item.category);
 

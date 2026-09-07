@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { ActiveSeason, BLUE } from "./RankingComponents";
+import { ActiveSeason, BLUE, getLevelTitle } from "./RankingComponents";
 
 type Props = {
   visible: boolean;
@@ -42,9 +42,13 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
           >
             {[2, 3, 4, 5].map((lvl, index) => {
               const isReached = userLevel >= lvl;
+
+              const customLevelName = getLevelTitle(lvl);
+
               const rewardDesc =
                 season?.rewards?.[`nivel${lvl}`]?.cuponsGerados?.[0]
-                  ?.descricao || `Recompensa Surpresa do Nível ${lvl}`;
+                  ?.descricao ||
+                `Recompensa Surpresa do nível ${customLevelName}`;
 
               return (
                 <View key={lvl} style={styles.roadmapRow}>
@@ -70,6 +74,7 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
                       color={isReached ? "#fff" : "#9CA3AF"}
                     />
                   </View>
+
                   <View style={styles.roadmapTextWrap}>
                     <Text
                       style={[
@@ -77,7 +82,7 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
                         { color: isReached ? BLUE : "#6B7280" },
                       ]}
                     >
-                      Nível {lvl}
+                      {customLevelName}
                     </Text>
                     <Text
                       style={[
@@ -93,7 +98,6 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
             })}
           </ScrollView>
 
-          {/* NOVO BOTÃO DE ACESSO À CARTEIRA */}
           <Pressable
             style={styles.walletBtn}
             onPress={() => {
@@ -170,7 +174,6 @@ const styles = StyleSheet.create({
   roadmapTextWrap: { flex: 1, justifyContent: "center", minHeight: 44 },
   roadmapLevelText: { fontSize: 14, fontWeight: "900", marginBottom: 4 },
   roadmapRewardText: { fontSize: 15, fontWeight: "700" },
-
   walletBtn: {
     marginTop: 12,
     backgroundColor: BLUE,
