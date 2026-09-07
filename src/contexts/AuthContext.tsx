@@ -37,8 +37,7 @@ export type AuthUser = {
   academicVerifiedAt?: string | null;
   matricula?: string | null;
 
-  documentFrontImage?: string | null;
-  documentBackImage?: string | null;
+  documentFile?: string | null;
   addressProof?: string | null;
   selfieWithId?: string | null;
 

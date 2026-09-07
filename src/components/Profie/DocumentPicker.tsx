@@ -1,12 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPickerExpo from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
+
+export type PickedDoc =
+  | string
+  | {
+      uri: string;
+      name?: string;
+      mimeType?: string;
+      size?: number;
+    }
+  | null;
 
 type Props = {
   label: string;
   description: string;
-  imageUri: string | null;
-  onImageSelected: (uri: string) => void;
+  imageUri: PickedDoc;
+  onImageSelected: (file: any) => void;
 };
 
 export function DocumentPicker({
@@ -52,18 +63,42 @@ export function DocumentPicker({
     }
   };
 
+  const pickPdf = async () => {
+    try {
+      const result = await DocumentPickerExpo.getDocumentAsync({
+        type: ["application/pdf", "image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        onImageSelected(result.assets[0]);
+      }
+    } catch (error) {
+      console.error("Erro ao selecionar arquivo:", error);
+    }
+  };
+
   const handlePress = () => {
     Alert.alert(
-      "Adicionar Imagem",
-      "Escolha como deseja enviar a foto",
+      "Anexar Documento",
+      "Escolha como deseja enviar o arquivo (com frente e verso)",
       [
         { text: "Tirar Foto (Câmera)", onPress: takePhoto },
-        { text: "Escolher da Galeria", onPress: pickImage },
+        { text: "Escolher Foto da Galeria", onPress: pickImage },
+        { text: "Arquivo / PDF", onPress: pickPdf },
         { text: "Cancelar", style: "cancel" },
       ],
       { cancelable: true },
     );
   };
+
+  const isString = typeof imageUri === "string";
+  const displayUri = isString ? imageUri : imageUri?.uri;
+  const isPdf = isString
+    ? imageUri.toLowerCase().includes(".pdf")
+    : imageUri?.mimeType === "application/pdf" ||
+      imageUri?.name?.toLowerCase().endsWith(".pdf");
+  const fileName = !isString ? imageUri?.name : "Documento em PDF";
 
   return (
     <View style={styles.container}>
@@ -76,19 +111,29 @@ export function DocumentPicker({
       >
         {imageUri ? (
           <>
-            <Image source={{ uri: imageUri }} style={styles.preview} />
+            {isPdf ? (
+              <View style={styles.pdfPreview}>
+                <Ionicons name="document-text" size={54} color="#31358B" />
+                <Text style={styles.pdfText} numberOfLines={1}>
+                  {fileName}
+                </Text>
+                <Text style={styles.pdfSubtext}>PDF carregado</Text>
+              </View>
+            ) : (
+              <Image source={{ uri: displayUri }} style={styles.preview} />
+            )}
             <View style={styles.changeOverlay}>
-              <Ionicons name="camera-reverse" size={20} color="#fff" />
-              <Text style={styles.changeText}>Trocar foto</Text>
+              <Ionicons name="swap-horizontal" size={18} color="#fff" />
+              <Text style={styles.changeText}>Trocar arquivo</Text>
             </View>
           </>
         ) : (
           <>
             <View style={styles.iconCircle}>
-              <Ionicons name="camera-outline" size={28} color="#04096E" />
+              <Ionicons name="cloud-upload-outline" size={28} color="#04096E" />
             </View>
-            <Text style={styles.uploadText}>Toque para fotografar</Text>
-            <Text style={styles.uploadSubtext}>JPG ou PNG (Máx. 5MB)</Text>
+            <Text style={styles.uploadText}>Toque para anexar</Text>
+            <Text style={styles.uploadSubtext}>PDF, JPG ou PNG (Máx. 5MB)</Text>
           </>
         )}
       </Pressable>
@@ -150,8 +195,29 @@ const styles = StyleSheet.create({
   },
   preview: {
     width: "100%",
-    height: 220, // Aumentado um pouco para selfies ficarem melhores
+    height: 220,
     resizeMode: "cover",
+  },
+  pdfPreview: {
+    width: "100%",
+    height: 220,
+    backgroundColor: "#F0F2FF",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  pdfText: {
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#31358B",
+    textAlign: "center",
+  },
+  pdfSubtext: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#22C55E",
   },
   changeOverlay: {
     position: "absolute",

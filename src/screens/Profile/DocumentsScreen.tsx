@@ -27,11 +27,8 @@ export default function DocumentsScreen() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
 
-  const [docFront, setDocFront] = useState<string | null>(
-    user?.documentFrontImage || null,
-  );
-  const [docBack, setDocBack] = useState<string | null>(
-    user?.documentBackImage || null,
+  const [documentFile, setDocumentFile] = useState<any>(
+    user?.documentFile || null,
   );
 
   const [enrollmentProof, setEnrollmentProof] = useState<any>(
@@ -44,22 +41,16 @@ export default function DocumentsScreen() {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
 
-  // 🔥 CORREÇÃO 1: Força a busca dos dados mais recentes assim que a tela abre
   useEffect(() => {
     refreshUser();
   }, []);
 
-  // 🔥 CORREÇÃO 2: Sincroniza a tela automaticamente quando os dados do usuário chegarem
   useEffect(() => {
-    // Só atualiza se o usuário ainda não tiver selecionado um arquivo novo do celular dele
     if (
-      user?.documentFrontImage &&
-      (!docFront || docFront.startsWith("http"))
+      user?.documentFile &&
+      (!documentFile || typeof documentFile === "string")
     ) {
-      setDocFront(user.documentFrontImage);
-    }
-    if (user?.documentBackImage && (!docBack || docBack.startsWith("http"))) {
-      setDocBack(user.documentBackImage);
+      setDocumentFile(user.documentFile);
     }
     if (
       user?.enrollmentProof &&
@@ -67,11 +58,7 @@ export default function DocumentsScreen() {
     ) {
       setEnrollmentProof(user.enrollmentProof);
     }
-  }, [
-    user?.documentFrontImage,
-    user?.documentBackImage,
-    user?.enrollmentProof,
-  ]);
+  }, [user?.documentFile, user?.enrollmentProof]);
 
   const showAlert = (type: AlertType, title: string, message: string) => {
     setAlertType(type);
@@ -96,7 +83,7 @@ export default function DocumentsScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!docFront || !docBack || !enrollmentProof) {
+    if (!documentFile || !enrollmentProof) {
       return showAlert(
         "info",
         "Faltam informações",
@@ -109,20 +96,28 @@ export default function DocumentsScreen() {
       const formData = new FormData();
       let hasChanges = false;
 
-      if (docFront && !docFront.startsWith("http")) {
-        formData.append("documentFront", {
-          uri: docFront,
-          name: "docFront.jpg",
-          type: "image/jpeg",
+      if (documentFile && typeof documentFile !== "string") {
+        const isPdf =
+          documentFile.mimeType === "application/pdf" ||
+          documentFile.name?.toLowerCase().endsWith(".pdf");
+
+        formData.append("documentFile", {
+          uri: documentFile.uri,
+          name:
+            documentFile.name || (isPdf ? "documento.pdf" : "documento.jpg"),
+          type:
+            documentFile.mimeType || (isPdf ? "application/pdf" : "image/jpeg"),
         } as any);
         hasChanges = true;
-      }
-
-      if (docBack && !docBack.startsWith("http")) {
-        formData.append("documentBack", {
-          uri: docBack,
-          name: "docBack.jpg",
-          type: "image/jpeg",
+      } else if (
+        typeof documentFile === "string" &&
+        !documentFile.startsWith("http")
+      ) {
+        const isPdf = documentFile.toLowerCase().endsWith(".pdf");
+        formData.append("documentFile", {
+          uri: documentFile,
+          name: isPdf ? "documento.pdf" : "documento.jpg",
+          type: isPdf ? "application/pdf" : "image/jpeg",
         } as any);
         hasChanges = true;
       }
@@ -196,8 +191,8 @@ export default function DocumentsScreen() {
             </View>
 
             <Text style={styles.subtitle}>
-              Anexe as fotos do seu documento e o comprovante do SUAP para
-              liberar os aluguéis no IFMA.
+              Anexe o seu documento e o comprovante do SUAP para liberar os
+              aluguéis no IFMA.
             </Text>
 
             <View style={styles.infoBox}>
@@ -304,17 +299,10 @@ export default function DocumentsScreen() {
 
             <View style={styles.docsContainer}>
               <DocumentPicker
-                label="Frente do Documento (RG/CNH)"
-                description="Foto nítida do lado que contém a sua foto."
-                imageUri={docFront}
-                onImageSelected={setDocFront}
-              />
-
-              <DocumentPicker
-                label="Verso do Documento"
-                description="Foto do lado que contém seus dados e CPF."
-                imageUri={docBack}
-                onImageSelected={setDocBack}
+                label="Documento de Identificação (RG/CNH)"
+                description="Envie foto ou PDF contendo frente e verso visíveis."
+                imageUri={documentFile}
+                onImageSelected={setDocumentFile}
               />
             </View>
 
