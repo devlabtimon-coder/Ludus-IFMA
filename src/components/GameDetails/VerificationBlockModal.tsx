@@ -1,5 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export type BlockType =
   | "IFMA_UNVERIFIED"
@@ -14,6 +22,8 @@ interface Props {
   onClose: () => void;
   onAction: () => void;
 }
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export function VerificationBlockModal({
   visible,
@@ -33,7 +43,7 @@ export function VerificationBlockModal({
         "Para alugar jogos no campus Timon, precisamos que você envie alguns documentos que comprovem seu vínculo com o IFMA.",
       actionText: "Enviar Documentos",
       showCancel: true,
-      textColor: "#ffffff",
+      textColor: "#04096E",
     },
     DOCS_UNVERIFIED: {
       icon: "warning",
@@ -41,7 +51,7 @@ export function VerificationBlockModal({
       bg: "#FFF9E6",
       title: "Quase lá! 🛡️",
       message:
-        "Para garantir a segurança do nosso acervo, precisamos que você envie a foto do seu documento e comprovante de residência.",
+        "Para garantir a segurança do acervo, envie o arquivo do seu documento (frente e verso) e o comprovante.",
       actionText: "Enviar Agora",
       showCancel: true,
       textColor: "#04096E",
@@ -63,7 +73,7 @@ export function VerificationBlockModal({
       bg: "#FEF2F2",
       title: "Atenção aos Documentos",
       message:
-        "Houve um problema com suas fotos. Você precisa enviar novamente para conseguir alugar.",
+        "Houve um problema com os arquivos enviados. Reenvie o documento com frente e verso legíveis para continuar.",
       actionText: "Reenviar",
       showCancel: true,
       textColor: "#FFFFFF",
@@ -71,36 +81,65 @@ export function VerificationBlockModal({
   }[type];
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+    >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <View style={[styles.iconWrap, { backgroundColor: content.bg }]}>
-            <Ionicons
-              name={content.icon as any}
-              size={36}
-              color={content.color}
-            />
-          </View>
+          <ScrollView
+            bounces={false}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <View style={[styles.iconWrap, { backgroundColor: content.bg }]}>
+              <Ionicons
+                name={content.icon as any}
+                size={36}
+                color={content.color}
+              />
+            </View>
 
-          <Text style={styles.title}>{content.title}</Text>
-          <Text style={styles.message}>{content.message}</Text>
+            <Text maxFontSizeMultiplier={1.2} style={styles.title}>
+              {content.title}
+            </Text>
+            <Text maxFontSizeMultiplier={1.2} style={styles.message}>
+              {content.message}
+            </Text>
 
-          <View style={styles.buttonRow}>
-            {content.showCancel && (
-              <Pressable style={styles.cancelButton} onPress={onClose}>
-                <Text style={styles.cancelText}>Depois</Text>
+            <View style={styles.buttonRow}>
+              {content.showCancel && (
+                <Pressable
+                  style={[styles.baseButton, styles.cancelButton]}
+                  onPress={onClose}
+                >
+                  <Text maxFontSizeMultiplier={1.1} style={styles.cancelText}>
+                    Depois
+                  </Text>
+                </Pressable>
+              )}
+
+              <Pressable
+                style={[
+                  styles.baseButton,
+                  styles.actionButton,
+                  { backgroundColor: content.color },
+                  !content.showCancel && { flex: 1 },
+                ]}
+                onPress={onAction}
+              >
+                <Text
+                  maxFontSizeMultiplier={1.1}
+                  numberOfLines={2}
+                  style={[styles.actionText, { color: content.textColor }]}
+                >
+                  {content.actionText}
+                </Text>
               </Pressable>
-            )}
-
-            <Pressable
-              style={[styles.actionButton, { backgroundColor: content.color }]}
-              onPress={onAction}
-            >
-              <Text style={[styles.actionText, { color: content.textColor }]}>
-                {content.actionText}
-              </Text>
-            </Pressable>
-          </View>
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -110,33 +149,38 @@ export function VerificationBlockModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(4,9,110,0.6)",
+    backgroundColor: "rgba(4, 9, 110, 0.65)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    paddingHorizontal: 20,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    padding: 24,
     width: "100%",
-    alignItems: "center",
+    maxWidth: 380,
+    maxHeight: SCREEN_HEIGHT * 0.82,
     elevation: 10,
     shadowColor: "#000",
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.18,
     shadowRadius: 15,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
+    overflow: "hidden",
+  },
+  scrollContent: {
+    padding: 24,
+    alignItems: "center",
   },
   iconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
   },
   title: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "900",
     color: "#04096E",
     marginBottom: 10,
@@ -146,34 +190,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#535353",
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 21,
     marginBottom: 24,
   },
   buttonRow: {
     flexDirection: "row",
-    gap: 12,
+    alignItems: "stretch",
+    gap: 10,
     width: "100%",
+  },
+  baseButton: {
+    minHeight: 48,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 14,
     backgroundColor: "#F2F4F8",
-    borderRadius: 14,
-    alignItems: "center",
   },
   cancelText: {
     color: "#7A8194",
     fontWeight: "700",
-    fontSize: 15,
+    fontSize: 14,
+    textAlign: "center",
   },
   actionButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
+    flex: 1.4,
   },
   actionText: {
     fontWeight: "900",
-    fontSize: 15,
+    fontSize: 14,
+    textAlign: "center",
   },
 });

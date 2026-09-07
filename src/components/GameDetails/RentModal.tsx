@@ -55,6 +55,9 @@ export function RentModal({
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
   const [selectionEnd, setSelectionEnd] = useState<string | null>(null);
 
+  // ESTADO PARA DATAS ESGOTADAS
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([]);
+
   useEffect(() => {
     if (visible) {
       setErrorMsg(null);
@@ -62,9 +65,34 @@ export function RentModal({
       setSelectionStart(null);
       setSelectionEnd(null);
       setAvailableSlots([]);
+      setUnavailableDates([]);
       setActivePeriod("morning");
     }
   }, [visible]);
+
+  useEffect(() => {
+    if (!visible || !gameId) return;
+    let mounted = true;
+
+    const fetchUnavailableDates = async () => {
+      try {
+        const res = await api.get(`/rentals/game/${gameId}/unavailable-dates`, {
+          params: { year: currentYear, month: currentMonth + 1 },
+        });
+        if (mounted) {
+          setUnavailableDates(res.data?.unavailableDates || []);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar datas esgotadas do mês", error);
+      }
+    };
+
+    fetchUnavailableDates();
+
+    return () => {
+      mounted = false;
+    };
+  }, [visible, gameId, currentYear, currentMonth]);
 
   const fetchSlotsForDate = useCallback(
     async (date: Date) => {
@@ -241,15 +269,19 @@ export function RentModal({
     setErrorMsg(null);
     if (!selectedDate || !selectionStart || !selectionEnd) return;
 
-    const start = new Date(selectedDate);
-    const [sh, sm] = selectionStart.split(":").map(Number);
-    start.setHours(sh, sm, 0, 0);
+    const y = selectedDate.getFullYear();
+    const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+    const d = String(selectedDate.getDate()).padStart(2, "0");
+
+    const startDateIso = `${y}-${m}-${d}T${selectionStart}:00-03:00`;
 
     const endMins = timeToMins(selectionEnd) + 30;
-    const end = new Date(selectedDate);
-    end.setHours(Math.floor(endMins / 60), endMins % 60, 0, 0);
+    const endH = String(Math.floor(endMins / 60)).padStart(2, "0");
+    const endM = String(endMins % 60).padStart(2, "0");
 
-    await onConfirm(start.toISOString(), end.toISOString());
+    const endDateIso = `${y}-${m}-${d}T${endH}:${endM}:00-03:00`;
+
+    await onConfirm(startDateIso, endDateIso);
   };
 
   const hasSelection = selectionStart && selectionEnd;
@@ -284,7 +316,7 @@ export function RentModal({
               currentYear={currentYear}
               currentMonth={currentMonth}
               selectedDate={selectedDate}
-              unavailableDates={[]}
+              unavailableDates={unavailableDates}
               isLoading={false}
               onSelectDate={setSelectedDate}
               onPrevMonth={handlePrevMonth}
