@@ -12,10 +12,9 @@ type Props = {
   level: number;
   levelLabel: string;
 
-
   clientCategory: string;
   nextCategory: string | null;
-  progress: number; // 0 a 1
+  progress: number;
   rentalsCount: number;
 };
 
@@ -27,7 +26,6 @@ export function AccountSummaryCard({
   points,
   level,
   levelLabel,
-
   clientCategory,
   nextCategory,
   progress,
@@ -51,21 +49,26 @@ export function AccountSummaryCard({
         return [];
     }
   }
-  const displayAvatar = avatar || picture || null;
 
+  const displayAvatar = avatar || picture || null;
   const progressPercent = Math.round(progress * 100);
   const accessList = getCategoryAccess(clientCategory);
 
-  const current = rentalsCount % 10 === 0 && rentalsCount !== 0
-    ? 10
-    : rentalsCount % 10;
-
+  let target = 11;
+  if (rentalsCount <= 10) target = 11;
+  else if (rentalsCount <= 30) target = 31;
+  else if (rentalsCount <= 60) target = 61;
+  else target = rentalsCount;
 
   return (
     <View style={styles.card}>
       <View style={styles.top}>
         {displayAvatar ? (
-          <Image key={displayAvatar} source={{ uri: displayAvatar }} style={styles.avatar} />
+          <Image
+            key={displayAvatar}
+            source={{ uri: displayAvatar }}
+            style={styles.avatar}
+          />
         ) : (
           <Image source={DEFAULT_AVATAR} style={styles.avatar} />
         )}
@@ -88,33 +91,27 @@ export function AccountSummaryCard({
 
       <Text style={styles.levelName}>{levelLabel}</Text>
 
-
       <View style={styles.categoryBox}>
-        <Text style={styles.categoryTitle}>
-          {clientCategory}
-        </Text>
+        <Text style={styles.categoryTitle}>{clientCategory}</Text>
 
         <Text style={styles.categoryAccess}>
           Acesso: {accessList.join(", ")}
         </Text>
 
         {nextCategory && (
-          <Text style={styles.categoryNext}>
-            Próximo: {nextCategory}
-          </Text>
+          <Text style={styles.categoryNext}>Próximo: {nextCategory}</Text>
         )}
 
         <View style={styles.progressBar}>
           <View
-            style={[
-              styles.progressFill,
-              { width: `${progressPercent}%` },
-            ]}
+            style={[styles.progressFill, { width: `${progressPercent}%` }]}
           />
         </View>
 
         <Text style={styles.progressText}>
-          {current}/10 aluguéis • {progressPercent}%
+          {rentalsCount >= 61
+            ? `${rentalsCount} aluguéis realizados (Nível Máximo)`
+            : `${rentalsCount}/${target} aluguéis • ${progressPercent}%`}
         </Text>
       </View>
     </View>
@@ -131,18 +128,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   categoryAccess: {
-  fontSize: 12,
-  fontWeight: "700",
-  color: "#6E7385",
-  marginTop: 4,
-},
-
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#6E7385",
+    marginTop: 4,
+  },
   top: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
   },
-
   avatar: {
     width: 74,
     height: 74,
@@ -151,60 +146,50 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#FFFFFF",
   },
-
   name: {
     fontSize: 18,
     fontWeight: "900",
     color: "#31358B",
   },
-
   email: {
     marginTop: 3,
     fontSize: 12,
     fontWeight: "700",
     color: "#6E7385",
   },
-
   badges: {
     flexDirection: "row",
     gap: 8,
     marginTop: 10,
   },
-
   levelBadge: {
     backgroundColor: "#FBBC04",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
   },
-
   levelBadgeText: {
     color: "#0A1F5C",
     fontWeight: "900",
     fontSize: 12,
   },
-
   pointsBadge: {
     backgroundColor: "#E62325",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
   },
-
   pointsBadgeText: {
     color: "#FFFFFF",
     fontWeight: "900",
     fontSize: 12,
   },
-
   levelName: {
     marginTop: 14,
     color: "#31358B",
     fontSize: 14,
     fontWeight: "800",
   },
-
-
   categoryBox: {
     marginTop: 16,
     padding: 12,
@@ -213,20 +198,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#EEE",
   },
-
   categoryTitle: {
     fontSize: 16,
     fontWeight: "900",
     color: "#31358B",
   },
-
   categoryNext: {
     fontSize: 12,
     fontWeight: "700",
     color: "#6E7385",
     marginTop: 2,
   },
-
   progressBar: {
     marginTop: 10,
     height: 10,
@@ -234,12 +216,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E8F0",
     overflow: "hidden",
   },
-
   progressFill: {
     height: "100%",
     backgroundColor: "#FBBC04",
   },
-
   progressText: {
     marginTop: 6,
     fontSize: 11,

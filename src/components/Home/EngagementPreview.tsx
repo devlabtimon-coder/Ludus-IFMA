@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 
+import { getLevelTitle } from "@/src/components/Ranking/RankingComponents";
+
 type MeRow = {
   userId: string;
   name: string;
@@ -56,6 +58,8 @@ export function EngagementPreview() {
     100,
     Math.max(0, (points / MAX_SEASON_POINTS) * 100),
   );
+
+  const customLevelName = me?.levelName ?? getLevelTitle(me?.level || 1);
 
   return (
     <Pressable style={styles.card} onPress={() => router.push("/ranking")}>
@@ -118,8 +122,13 @@ export function EngagementPreview() {
               ]}
             >
               <Ionicons name="star" size={16} color={RED} />
-              <Text style={[styles.badgeValue, { color: RED }]}>
-                Nível {me?.level || 1}
+
+              <Text
+                style={[styles.badgeValue, { color: RED }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {customLevelName}
               </Text>
             </View>
 

@@ -63,15 +63,32 @@ export function getLevelTitle(levelNumber: number) {
     case 1:
       return "Iniciante";
     case 2:
-      return "Veterano";
+      return "Explorador";
     case 3:
-      return "Mestre";
+      return "Estrategista";
     case 4:
-      return "Lenda";
+      return "Campeão";
     case 5:
-      return "Mito";
+      return "Lenda";
     default:
       return `Nível ${levelNumber}`;
+  }
+}
+
+export function levelBadgeStyle(levelNumber: number) {
+  switch (levelNumber) {
+    case 1:
+      return { bg: "#F3F4F6", text: "#4B5563" };
+    case 2:
+      return { bg: "#D1FAE5", text: "#065F46" };
+    case 3:
+      return { bg: "#DBEAFE", text: "#1E40AF" };
+    case 4:
+      return { bg: "#F3E8FF", text: "#6B21A8" };
+    case 5:
+      return { bg: "#FEF08A", text: "#92400E" };
+    default:
+      return { bg: "#F3F4F6", text: "#4B5563" };
   }
 }
 
@@ -123,6 +140,7 @@ export function MeBox({ me }: { me: MeRow | null }) {
 
   const lvl = me.levelName ?? getLevelTitle(me.level);
   const catStyle = categoryBadgeStyle(me.category);
+  const lvlStyle = levelBadgeStyle(me.level);
 
   return (
     <View style={styles.meBox}>
@@ -139,7 +157,16 @@ export function MeBox({ me }: { me: MeRow | null }) {
             <Text style={{ fontWeight: "normal", fontSize: 12 }}> (Você)</Text>
           </Text>
           <View style={styles.badgesInline}>
-            <Text style={styles.meSub}>{lvl}</Text>
+            <View
+              style={[styles.levelBadgePill, { backgroundColor: lvlStyle.bg }]}
+            >
+              <Text
+                style={[styles.levelBadgePillText, { color: lvlStyle.text }]}
+              >
+                {lvl}
+              </Text>
+            </View>
+
             <View style={[styles.catBadge, { backgroundColor: catStyle.bg }]}>
               <Text style={[styles.catBadgeText, { color: catStyle.text }]}>
                 {catStyle.label}
@@ -160,6 +187,7 @@ export function RankingRow({ item, isMe }: { item: LeaderRow; isMe: boolean }) {
   const lvl = item.levelName ?? getLevelTitle(item.level);
   const badge = rankBadgeStyle(item.rank);
   const catStyle = categoryBadgeStyle(item.category);
+  const lvlStyle = levelBadgeStyle(item.level);
 
   return (
     <View
@@ -183,9 +211,14 @@ export function RankingRow({ item, isMe }: { item: LeaderRow; isMe: boolean }) {
           {item.name} {isMe ? " (você)" : ""}
         </Text>
         <View style={styles.badgesInline}>
-          <Text style={styles.meta} numberOfLines={1}>
-            {lvl}
-          </Text>
+          <View
+            style={[styles.levelBadgePill, { backgroundColor: lvlStyle.bg }]}
+          >
+            <Text style={[styles.levelBadgePillText, { color: lvlStyle.text }]}>
+              {lvl}
+            </Text>
+          </View>
+
           <View style={[styles.catBadge, { backgroundColor: catStyle.bg }]}>
             <Text style={[styles.catBadgeText, { color: catStyle.text }]}>
               {catStyle.label}
@@ -259,7 +292,17 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 4,
   },
-  meSub: { color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: "600" },
+
+  levelBadgePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  levelBadgePillText: {
+    fontSize: 10,
+    fontWeight: "900",
+    textTransform: "uppercase",
+  },
   catBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   catBadgeText: { fontSize: 9, fontWeight: "900", textTransform: "uppercase" },
   mePtsPill: {
@@ -292,7 +335,6 @@ const styles = StyleSheet.create({
   },
   rankBadgeText: { fontWeight: "900", fontSize: 15 },
   name: { fontWeight: "900", color: "#1A1A2E", fontSize: 15 },
-  meta: { color: "#6B7280", fontSize: 12, fontWeight: "600" },
   pointsPill: {
     flexDirection: "row",
     alignItems: "center",

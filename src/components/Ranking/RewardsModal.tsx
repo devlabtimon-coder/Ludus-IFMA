@@ -47,8 +47,7 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
 
               const rewardDesc =
                 season?.rewards?.[`nivel${lvl}`]?.cuponsGerados?.[0]
-                  ?.descricao ||
-                `Recompensa Surpresa do nível ${customLevelName}`;
+                  ?.descricao || `Recompensa Surpresa do ${customLevelName}`;
 
               return (
                 <View key={lvl} style={styles.roadmapRow}>
