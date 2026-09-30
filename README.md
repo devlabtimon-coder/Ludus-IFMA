@@ -1,50 +1,102 @@
-# Welcome to your Expo app 👋
+# Ludus — Aplicativo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo mobile do **Ludus**, sistema de empréstimo de jogos de tabuleiro do IFMA Campus Timon. Alunos e servidores consultam o acervo, reservam exemplares, acompanham seus aluguéis e participam do ranking de temporadas.
 
-## Get started
+O app consome a API do projeto **Backend-Ludus**.
 
-1. Install dependencies
+## Funcionalidades
+
+- Cadastro com e-mail institucional (ou Google) e verificação por e-mail ou telefone
+- Envio de documentos para aprovação do cadastro
+- Catálogo com busca e filtros por mecânica, jogadores, tempo e categoria
+- Reserva de exemplares com calendário de disponibilidade e feriados
+- Acompanhamento e cancelamento de aluguéis
+- Favoritos, avaliações e aviso de disponibilidade de jogos
+- Ranking, níveis, temporadas e carteira de cupons
+- Notificações push com abertura direta da tela relacionada
+- Área administrativa: aluguéis, jogos, exemplares e categorias de clientes
+
+## Tecnologias
+
+- [Expo](https://expo.dev) SDK 54 e React Native 0.81
+- TypeScript (modo `strict`)
+- Expo Router (rotas baseadas em arquivos)
+- Axios para a API, Expo Secure Store para o token de sessão
+- Firebase Auth (verificação de telefone) e Google Sign-In
+- Expo Notifications
+
+## Pré-requisitos
+
+- Node.js 20 ou superior
+- Conta Expo com acesso ao projeto no EAS
+- Android Studio ou Xcode para rodar o development build
+
+O app usa módulos nativos (Firebase, Google Sign-In), então **não roda no Expo Go**; é preciso um development build.
+
+## Configuração
+
+1. Instale as dependências:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. Crie o arquivo `.env` a partir do exemplo e preencha os valores:
 
    ```bash
-   npx expo start
+   cp .env.example .env
    ```
 
-In the output, you'll find options to open the app in a
+   | Variável | Descrição |
+   |---|---|
+   | `EXPO_PUBLIC_API_URL` | URL da API (Backend-Ludus) |
+   | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Client ID web do Google, usado pelo Google Sign-In |
+   | `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Client ID iOS do Google |
+   | `EXPO_PUBLIC_IFMA_MODE` | `true` para aceitar apenas e-mails do IFMA |
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+3. Os arquivos `google-services.json` (Android) e `GoogleService-Info.plist` (iOS) do Firebase devem estar na raiz do projeto.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Executando
 
 ```bash
-npm run reset-project
+npm run android   # compila e abre no Android
+npm run ios       # compila e abre no iOS
+npm start         # inicia o Metro para um development build já instalado
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Qualidade
 
-## Learn more
+```bash
+npm run lint       # ESLint (eslint-config-expo)
+npx tsc --noEmit   # checagem de tipos
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Builds (EAS)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| Perfil | Uso |
+|---|---|
+| `development` | Development client para desenvolvimento local |
+| `preview` | Distribuição interna para testes |
+| `production` | Loja; versão incrementada automaticamente |
 
-## Join the community
+```bash
+eas build --profile production --platform android
+```
 
-Join our community of developers creating universal apps.
+As variáveis do perfil `production` ficam em `eas.json`.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Estrutura
+
+```
+app/                 Rotas (Expo Router); cada arquivo reexporta uma tela
+  admin/             Rotas da área administrativa
+  profile/           Rotas do perfil do usuário
+  game/[id].tsx      Detalhes de um jogo
+src/
+  screens/           Telas
+  components/        Componentes agrupados por funcionalidade
+  contexts/          AuthContext (sessão) e FiltersContext (filtros do catálogo)
+  services/          Cliente da API, push, navegação e alertas
+  constants/         Constantes compartilhadas
+assets/              Imagens e ícones
+```
