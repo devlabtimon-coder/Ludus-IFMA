@@ -43,7 +43,6 @@ export default function Layout() {
             <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
               <Stack.Screen name="index" />
               <Stack.Screen name="home" />
-              <Stack.Screen name="admin/manage" />
             </Stack>
 
             <LudusAlert
