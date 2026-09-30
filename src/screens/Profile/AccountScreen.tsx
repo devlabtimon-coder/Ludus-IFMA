@@ -1,11 +1,11 @@
 import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
 import HomeBackground from "@/src/components/Home/HomeBackground";
-import { AccountActionRow } from "@/src/components/Profie/Account/AccountActionRow";
-import { AccountHeader } from "@/src/components/Profie/Account/AccountHeader";
-import { AccountInfoCard } from "@/src/components/Profie/Account/AccountInfoCard";
-import { AccountPersonalForm } from "@/src/components/Profie/Account/AccountPersonalForm";
-import { AccountStatusPill } from "@/src/components/Profie/Account/AccountStatusPill";
-import { AccountSummaryCard } from "@/src/components/Profie/Account/AccountSummaryCard";
+import { AccountActionRow } from "@/src/components/Profile/Account/AccountActionRow";
+import { AccountHeader } from "@/src/components/Profile/Account/AccountHeader";
+import { AccountInfoCard } from "@/src/components/Profile/Account/AccountInfoCard";
+import { AccountPersonalForm } from "@/src/components/Profile/Account/AccountPersonalForm";
+import { AccountStatusPill } from "@/src/components/Profile/Account/AccountStatusPill";
+import { AccountSummaryCard } from "@/src/components/Profile/Account/AccountSummaryCard";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
 import { useRouter } from "expo-router";

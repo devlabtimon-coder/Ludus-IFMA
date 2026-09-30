@@ -1,7 +1,7 @@
 import { NavFooter } from "@/src/components/common/NavFooter";
-import { AvatarPickerModal } from "@/src/components/Profie/AvatarPickerModal";
-import { ProfileHeader } from "@/src/components/Profie/ProfileHeader";
-import { ProfileMenuItem } from "@/src/components/Profie/ProfileMenuItem";
+import { AvatarPickerModal } from "@/src/components/Profile/AvatarPickerModal";
+import { ProfileHeader } from "@/src/components/Profile/ProfileHeader";
+import { ProfileMenuItem } from "@/src/components/Profile/ProfileMenuItem";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";

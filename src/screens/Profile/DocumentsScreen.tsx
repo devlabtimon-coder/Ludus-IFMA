@@ -1,7 +1,7 @@
 import BackButton from "@/src/components/common/BackButton";
 import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
 import LoginBackground from "@/src/components/Login/LoginBackground";
-import { DocumentPicker } from "@/src/components/Profie/DocumentPicker";
+import { DocumentPicker } from "@/src/components/Profile/DocumentPicker";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";

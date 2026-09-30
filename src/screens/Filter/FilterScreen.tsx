@@ -1,4 +1,4 @@
-import FilterBackground from "@/src/components/Filter/FilterBackgroud";
+import FilterBackground from "@/src/components/Filter/FilterBackground";
 import { FilterCard } from "@/src/components/Filter/FilterCard";
 import { FilterValues, useFilters } from "@/src/contexts/FiltersContext";
 import { useRouter } from "expo-router";

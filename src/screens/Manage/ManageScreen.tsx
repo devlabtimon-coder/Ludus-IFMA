@@ -1,7 +1,7 @@
 import ManageBackground from "@/src/components/Manage/ManageBackground";
 import { ManageContainer } from "@/src/components/Manage/ManageContainer";
 import { ManageGrid } from "@/src/components/Manage/ManageGrid";
-import { ManageSearchModal } from "@/src/components/Manage/ManageSerachModal";
+import { ManageSearchModal } from "@/src/components/Manage/ManageSearchModal";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
