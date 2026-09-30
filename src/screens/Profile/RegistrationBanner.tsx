@@ -56,8 +56,7 @@ export function RegistrationBanner() {
   const hasAllDocs = isIfmaMode
     ? Boolean(user?.enrollmentProof)
     : Boolean(
-        user?.documentFrontImage &&
-        user?.documentBackImage &&
+        user?.documentFile &&
         user?.addressProof &&
         user?.selfieWithId,
       );
