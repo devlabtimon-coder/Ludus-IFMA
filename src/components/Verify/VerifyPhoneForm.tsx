@@ -1,6 +1,6 @@
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
-import { getAuth } from "@react-native-firebase/auth";
+import { getAuth, signInWithPhoneNumber } from "@react-native-firebase/auth";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -127,7 +127,7 @@ export default function VerifyPhoneForm() {
       const formattedPhone = `+55${phoneParam}`;
 
       const confirmation =
-        await getAuth().signInWithPhoneNumber(formattedPhone);
+        await signInWithPhoneNumber(getAuth(), formattedPhone);
 
       setConfirmSession(confirmation);
       setCountdown(30);
