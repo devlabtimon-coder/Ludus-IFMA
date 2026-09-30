@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  header: { paddingHorizontal: 24, mb: 16 },
+  header: { paddingHorizontal: 24, marginBottom: 16 },
   title: { fontSize: 24, fontWeight: "900", color: BLUE },
   subtitle: {
     fontSize: 13,
