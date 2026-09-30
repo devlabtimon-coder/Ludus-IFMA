@@ -47,11 +47,18 @@ export type AuthUser = {
   rejectReason?: string | null;
 };
 
-type AuthResult = { success: true } | { success: false; message: string };
+// A gestão do Ludus é feita pelo painel web; contas ADMIN não usam o app.
+export const ADMIN_NOT_ALLOWED = "ADMIN_NOT_ALLOWED";
+export const ADMIN_NOT_ALLOWED_MESSAGE =
+  "Contas de administrador devem usar o painel web do Ludus.";
+
+type AuthResult =
+  | { success: true }
+  | { success: false; message: string; code?: string };
 
 type GoogleAuthResult =
   | { success: true; needsPhoneVerification: boolean }
-  | { success: false; message: string };
+  | { success: false; message: string; code?: string };
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -85,12 +92,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             `Bearer ${storedToken}`;
 
           const parsedUser = JSON.parse(storedUser);
+          if (parsedUser?.role === "ADMIN") {
+            await logout();
+            return;
+          }
           setUser(parsedUser);
 
           try {
             const res = await api.get(`/users/me?t=${Date.now()}`);
 
             const freshUser = { ...parsedUser, ...res.data };
+            if (freshUser.role === "ADMIN") {
+              await logout();
+              return;
+            }
             setUser(freshUser);
             SecureStore.setItemAsync("user", JSON.stringify(freshUser)).catch(
               () => {},
@@ -153,6 +168,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Não foi possível carregar os dados do perfil.");
     }
 
+    if (userData.role === "ADMIN") {
+      await logout();
+      const error = new Error(ADMIN_NOT_ALLOWED_MESSAGE);
+      error.name = ADMIN_NOT_ALLOWED;
+      throw error;
+    }
+
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
     await SecureStore.setItemAsync("token", token);
@@ -207,6 +229,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signInWithToken(token, userData);
       return { success: true };
     } catch (error: any) {
+      if (error?.name === ADMIN_NOT_ALLOWED) {
+        return { success: false, message: error.message, code: ADMIN_NOT_ALLOWED };
+      }
+
       let message = "Erro ao conectar com o servidor";
 
       if (error?.response) {
@@ -240,6 +266,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         needsPhoneVerification: !!needsPhoneVerification,
       };
     } catch (error: any) {
+      if (error?.name === ADMIN_NOT_ALLOWED) {
+        return { success: false, message: error.message, code: ADMIN_NOT_ALLOWED };
+      }
+
       const message =
         error?.response?.data?.error || "Falha ao autenticar com Google.";
 

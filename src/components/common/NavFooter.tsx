@@ -1,4 +1,3 @@
-import { useAuth } from "@/src/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
@@ -7,7 +6,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export function NavFooter() {
   const router = useRouter();
   const pathName = usePathname();
-  const { user } = useAuth();
   const insets = useSafeAreaInsets();
 
   function getColor(route: string) {
@@ -43,12 +41,6 @@ export function NavFooter() {
       <TouchableOpacity onPress={() => router.push("/profile")}>
         <Ionicons name="person" size={26} color={getColor("/profile")} />
       </TouchableOpacity>
-
-      {user?.role === "ADMIN" && (
-        <TouchableOpacity onPress={() => router.push("/admin/manage")}>
-          <Ionicons name="construct" size={24} color={getColor("/admin")} />
-        </TouchableOpacity>
-      )}
     </View>
   );
 }

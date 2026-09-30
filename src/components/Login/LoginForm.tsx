@@ -1,5 +1,5 @@
 import { styles } from "@/src/components/Login/styles";
-import { useAuth } from "@/src/contexts/AuthContext";
+import { ADMIN_NOT_ALLOWED, useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
@@ -93,11 +93,10 @@ export function LoginForm() {
         showAlert("success", "Acesso liberado", "Bem-vindo de volta ao Ludus!");
         setTimeout(() => {
           setAlertVisible(false);
-          if ((result as any).user?.role === "ADMIN") {
-            return router.replace("/admin/manage");
-          }
           router.replace("/home");
         }, 1200);
+      } else if (result.code === ADMIN_NOT_ALLOWED) {
+        showAlert("info", "Acesso pelo painel web", result.message);
       } else {
         showAlert(
           "error",
@@ -184,11 +183,13 @@ export function LoginForm() {
       );
       setTimeout(() => {
         setAlertVisible(false);
-        if (res.data.user?.role === "ADMIN")
-          return router.replace("/admin/manage");
         router.replace("/home");
       }, 1000);
     } catch (e: any) {
+      if (e?.name === ADMIN_NOT_ALLOWED) {
+        showAlert("info", "Acesso pelo painel web", e.message);
+        return;
+      }
       console.error("Google Login Error:", e);
       if (e.code === "SIGN_IN_CANCELLED" || e.message?.includes("CANCELLED")) {
         setGoogleLoading(false);
