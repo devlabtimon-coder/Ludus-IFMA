@@ -3,6 +3,7 @@ import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
@@ -91,10 +92,16 @@ export default function ChangePasswordScreen() {
 
     setSaving(true);
     try {
-      await api.patch("/users/me/password", {
+      const res = await api.patch("/users/me/password", {
         currentPassword: hasPassword ? currentPassword : undefined,
         newPassword,
       });
+
+      // O backend invalida as sessões antigas e devolve um token novo para esta.
+      if (res.data?.token) {
+        await SecureStore.setItemAsync("token", res.data.token);
+        api.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+      }
 
       showAlert(
         "success",
