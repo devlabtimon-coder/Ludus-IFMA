@@ -57,17 +57,6 @@ type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
   login: (emailOrPhone: string, senha: string) => Promise<AuthResult>;
-  register: (
-    name: string,
-    email: string,
-    phone: string,
-    senha: string,
-    acceptedTerms: boolean,
-    acceptedPrivacy: boolean,
-    cpf: string,
-    address: string,
-    matricula: string,
-  ) => Promise<AuthResult>;
   logout: () => Promise<void>;
   signInWithToken: (
     token: string,
@@ -240,40 +229,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function register(
-    name: string,
-    email: string,
-    phone: string,
-    senha: string,
-    acceptedTerms: boolean,
-    acceptedPrivacy: boolean,
-    cpf: string,
-    address: string,
-    matricula: string,
-  ): Promise<AuthResult> {
-    try {
-      await api.post("/auth/register", {
-        name,
-        email,
-        phone,
-        senha,
-        acceptedTerms,
-        acceptedPrivacy,
-        cpf,
-        address,
-        matricula,
-      });
-
-      return { success: true };
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.error || "Erro ao conectar com o servidor";
-
-      console.error("Erro no registro:", errorMessage);
-      return { success: false, message: errorMessage };
-    }
-  }
-
   async function loginGoogle(idToken: string): Promise<GoogleAuthResult> {
     try {
       const res = await api.post("/auth/google", { idToken });
@@ -322,7 +277,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       login,
       logout,
-      register,
       isLoading,
       signInWithToken,
       loginGoogle,
