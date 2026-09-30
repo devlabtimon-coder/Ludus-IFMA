@@ -5,11 +5,11 @@ import RentalItem, { RentalItemModel } from "./RentalItem";
 type Props = {
   rentals: RentalItemModel[];
   onRefresh?: () => void;
-  loading?: boolean;
+  refreshing?: boolean;
   onPressRental?: (rental: RentalItemModel) => void;
 };
 
-export default function RentalsCard({ rentals, onPressRental }: Props) {
+export default function RentalsCard({ rentals, onRefresh, refreshing = false, onPressRental }: Props) {
   const [tab, setTab] = useState<"ACTIVE" | "HISTORY">("ACTIVE");
 
   const { active, history } = useMemo(() => {
@@ -72,6 +72,8 @@ export default function RentalsCard({ rentals, onPressRental }: Props) {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 120 }}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
           renderItem={({ item }) => (
             <RentalItem
               rental={item}

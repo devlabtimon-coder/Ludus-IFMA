@@ -66,11 +66,11 @@ export default function RentalsScreen() {
           <View style={styles.cardWrap}>
             <RentalsCard
               rentals={rentals}
+              onRefresh={onRefresh}
+              refreshing={refreshing}
               onPressRental={setSelectedRental}
             />
           </View>
-
-          {refreshing && null}
         </View>
       )}
 
