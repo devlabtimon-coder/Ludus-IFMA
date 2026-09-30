@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { gameCoverSource } from "@/src/constants/images";
 
 type Props = {
   gameId: string;
@@ -24,11 +25,7 @@ export function GameHero({ coverUrl, isFavorite, onToggleFavorite }: Props) {
   return (
     <View style={styles.wrap}>
       <Image
-        source={{
-          uri:
-            getHighResImage(coverUrl) ||
-            "https://via.placeholder.com/600x400.png?text=Ludus",
-        }}
+        source={gameCoverSource(getHighResImage(coverUrl))}
         style={styles.image}
         resizeMode="cover"
       />

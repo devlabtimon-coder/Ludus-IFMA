@@ -1,6 +1,7 @@
 import type { AdminRental } from "@/src/screens/Manage/ManageRentalsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { gameCoverSource } from "@/src/constants/images";
 
 function formatDate(dt: string) {
   const d = new Date(dt);
@@ -11,7 +12,6 @@ function formatDate(dt: string) {
 }
 
 export function RentalRow({ item, onPress }: { item: AdminRental; onPress: () => void }) {
-  const coverUri = item.game.cover || "https://via.placeholder.com/200x300.png?text=Ludus";
 
   const now = Date.now();
   const overdue =
@@ -39,7 +39,7 @@ export function RentalRow({ item, onPress }: { item: AdminRental; onPress: () =>
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.92 }]}>
-      <Image source={{ uri: coverUri }} style={styles.thumb} />
+      <Image source={gameCoverSource(item.game.cover)} style={styles.thumb} />
 
       <View style={{ flex: 1 }}>
         <View style={styles.topLine}>

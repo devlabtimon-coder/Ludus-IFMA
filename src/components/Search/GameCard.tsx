@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { gameCoverSource } from "@/src/constants/images";
 
 export type Game = {
   id: string;
@@ -35,15 +36,11 @@ export default function GameCard({ item }: Props) {
         ? `${item.minPlayers}+ jogadores`
         : "—";
 
-  const coverUri =
-    item?.cover ||
-    "https://via.placeholder.com/200x300.png?text=Ludus";
-
   const priceText = Number(item?.price ?? 0).toFixed(2);
 
   return (
     <Pressable style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }]} onPress={() => router.push(`/game/${item.id}`)}>
-      <Image source={{ uri: coverUri }} style={styles.image} resizeMode="cover" />
+      <Image source={gameCoverSource(item?.cover)} style={styles.image} resizeMode="cover" />
 
       <View style={styles.info}>
         <View>

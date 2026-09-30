@@ -1,15 +1,15 @@
 import type { ManageGame } from "@/src/screens/Manage/EditGamesScreen";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { gameCoverSource } from "@/src/constants/images";
 
 export function ManageGameRow({ item, onPress }: { item: ManageGame; onPress: () => void }) {
-  const coverUri = item.cover || "https://via.placeholder.com/200x300.png?text=Ludus";
   const rating = typeof item.rating === "number" ? item.rating.toFixed(1) : "0.0";
   const count = typeof item.ratingsCount === "number" ? item.ratingsCount : 0;
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.9 }]}>
-      <Image source={{ uri: coverUri }} style={styles.thumb} />
+      <Image source={gameCoverSource(item.cover)} style={styles.thumb} />
 
       <View style={{ flex: 1 }}>
         <Text style={styles.name} numberOfLines={1}>

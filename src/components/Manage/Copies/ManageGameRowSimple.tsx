@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { gameCoverSource } from "@/src/constants/images";
 
 type Game = { id: string; title: string; cover?: string | null };
 
 export function ManageGameRowSimple({ item, onPress }: { item: Game; onPress: () => void }) {
-  const coverUri = item.cover || "https://via.placeholder.com/200x300.png?text=Ludus";
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.9 }]}>
-      <Image source={{ uri: coverUri }} style={styles.thumb} />
+      <Image source={gameCoverSource(item.cover)} style={styles.thumb} />
       <View style={{ flex: 1 }}>
         <Text style={styles.name} numberOfLines={1}>
           {item.title}
