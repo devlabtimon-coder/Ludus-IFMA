@@ -15,7 +15,6 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-
 import LudusAlert from "../common/LudusAlert/LudusAlert";
 import { styles } from "./styles";
 
@@ -44,17 +43,16 @@ function getPasswordStrength(password: string) {
 export default function RegisterFormIFMA() {
   const router = useRouter();
   const { signInWithToken } = useAuth();
-
   const params = useLocalSearchParams();
+
   const initialEmail = (params.googleEmail as string) || "";
   const initialName = (params.googleName as string) || "";
-  const googleIdToken = (params.googleIdToken as string) || "";
-
-  const isGoogleFlow = !!googleIdToken || !!initialEmail;
+  const googleIdToken =
+    (params.googleIdToken as string) || (params.idToken as string) || "";
+  const isGoogleFlow = !!googleIdToken;
 
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
-
   const [matricula, setMatricula] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -89,6 +87,7 @@ export default function RegisterFormIFMA() {
     () => getPasswordStrength(password),
     [password],
   );
+
   const passwordRules = useMemo(
     () => ({
       minLength: password.length >= 6,
@@ -117,9 +116,8 @@ export default function RegisterFormIFMA() {
   }, [email]);
 
   const IFMA_MATRICULA_REGEX = /^(\d{5}[A-Z0-9.]+\.TMN\d+|\d{7})$/;
-
-  const isValidMatricula = (matricula: string) => {
-    const clean = matricula.trim().toUpperCase();
+  const isValidMatricula = (mat: string) => {
+    const clean = mat.trim().toUpperCase();
     return IFMA_MATRICULA_REGEX.test(clean);
   };
 
@@ -132,7 +130,6 @@ export default function RegisterFormIFMA() {
     if (!cleanName) {
       return showAlert("info", "Nome obrigatório", "Digite seu nome completo.");
     }
-
     if (!cleanEmail) {
       return showAlert(
         "info",
@@ -140,7 +137,6 @@ export default function RegisterFormIFMA() {
         "Digite seu e-mail institucional.",
       );
     }
-
     if (!isValidIfmaEmail(cleanEmail)) {
       return showAlert(
         "info",
@@ -148,7 +144,6 @@ export default function RegisterFormIFMA() {
         "Apenas e-mails institucionais são aceitos (@acad.ifma.edu.br ou @ifma.edu.br).",
       );
     }
-
     if (!cleanMatricula || !isValidMatricula(cleanMatricula)) {
       return showAlert(
         "error",
@@ -156,7 +151,6 @@ export default function RegisterFormIFMA() {
         "Use o padrão de aluno (ex: 20241INF.TMN0021) ou o seu SIAPE (7 dígitos).",
       );
     }
-
     if (cleanPhone.length < 10) {
       return showAlert(
         "info",
@@ -170,7 +164,6 @@ export default function RegisterFormIFMA() {
         setTouched((t) => ({ ...t, password: true }));
         return showAlert("info", "Senha fraca", "Use pelo menos 6 caracteres.");
       }
-
       if (password !== confirm) {
         setTouched((t) => ({ ...t, confirm: true }));
         return showAlert(
@@ -192,27 +185,30 @@ export default function RegisterFormIFMA() {
     setLoading(true);
 
     try {
-      const response = await api.post("/auth/ifma/register", {
+      const payload: any = {
         name: cleanName,
         email: cleanEmail,
         matricula: cleanMatricula,
         phone: cleanPhone || undefined,
-        senha: password || "",
         acceptedTerms,
         acceptedPrivacy,
-        googleIdToken: googleIdToken || undefined,
-        isGoogle: isGoogleFlow,
-      });
+      };
+
+      if (isGoogleFlow) {
+        payload.idToken = googleIdToken;
+      } else {
+        payload.senha = password;
+      }
+
+      const response = await api.post("/auth/ifma/register", payload);
 
       if (isGoogleFlow) {
         await signInWithToken(response.data.token, response.data.user);
-
         showAlert(
           "success",
-          "Tudo pronto! 🎉",
+          "Tudo pronto!",
           "Seu cadastro foi concluído com sucesso via Google.",
         );
-
         setTimeout(() => {
           setAlertVisible(false);
           router.replace("/home");
@@ -220,10 +216,9 @@ export default function RegisterFormIFMA() {
       } else {
         showAlert(
           "success",
-          "Cadastro iniciado! 🎉",
+          "Cadastro iniciado!",
           "Enviamos um código para seu e-mail institucional. Confirme para continuar.",
         );
-
         setTimeout(() => {
           setAlertVisible(false);
           router.push({
@@ -233,11 +228,8 @@ export default function RegisterFormIFMA() {
         }, 1400);
       }
     } catch (e: any) {
-      console.error("ERRO COMPLETO NO FRONTEND:", e);
-
       const status = e?.response?.status;
       const code = e?.response?.data?.code;
-
       const msg =
         e?.response?.data?.error ||
         e?.message ||
@@ -398,11 +390,13 @@ export default function RegisterFormIFMA() {
                 />
               </Pressable>
             </View>
+
             <PasswordStrengthSection
               visible={password.length > 0}
               strength={passwordStrength}
               rules={passwordRules}
             />
+
             {passwordError ? (
               <Text style={styles.errorText}>{passwordError}</Text>
             ) : null}
@@ -437,6 +431,7 @@ export default function RegisterFormIFMA() {
                 />
               </Pressable>
             </View>
+
             {confirmError ? (
               <Text style={styles.errorText}>{confirmError}</Text>
             ) : null}
