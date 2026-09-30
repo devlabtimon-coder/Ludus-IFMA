@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (e) {
-        console.log("Erro ao carregar dados", e);
+        console.error("Erro ao carregar dados", e);
       } finally {
         setIsLoading(false);
       }
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return next;
       });
     } catch (e) {
-      console.log("Erro ao recarregar dados do usuário:", e);
+      console.error("Erro ao recarregar dados do usuário:", e);
     }
   }, []);
 
@@ -165,25 +165,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const pushToken = await registerForPush(userData.id);
-      if (pushToken) {
-        console.log("Push Token registrado com sucesso:", pushToken);
-      } else {
-        console.log(
-          "Push token não registrado: permissão negada ou indisponível.",
-        );
-      }
+      await registerForPush(userData.id);
     } catch (error: any) {
       const status = error?.response?.status;
       const code = error?.response?.data?.code;
 
-      if (status === 403 || code === "ACCOUNT_NOT_VERIFIED") {
-        console.log(
-          "Push token adiado até a conta ter ao menos um fator verificado.",
-        );
-      } else {
-        console.log(
-          "Não foi possível registrar push token agora:",
+      // Conta sem fator verificado: o registro é refeito no próximo login.
+      if (status !== 403 && code !== "ACCOUNT_NOT_VERIFIED") {
+        console.warn(
+          "Não foi possível registrar o push token:",
           error?.message || error,
         );
       }
@@ -261,8 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function logout() {
     try {
       await GoogleSignin.signOut();
-    } catch (error) {
-      console.log("Sessão do Google já estava limpa ou inativa.");
+    } catch {
+      // Sessão do Google já estava encerrada.
     }
 
     await SecureStore.deleteItemAsync("token");

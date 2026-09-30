@@ -621,8 +621,8 @@ export default function GameDetailsScreen() {
                     const res = await api.get(`/users/me?t=${Date.now()}`);
                     latestUser = { ...latestUser, ...res.data };
                     refreshUser();
-                  } catch (e) {
-                    console.log("Falha ao checar status silenciosamente");
+                  } catch {
+                    // Segue com os dados locais se a checagem falhar.
                   }
                 }
 

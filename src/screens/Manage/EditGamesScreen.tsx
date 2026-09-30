@@ -54,7 +54,7 @@ export default function EditGamesScreen() {
       const res = await api.get<ManageGame[]>("/games");
       setGames(res.data || []);
     } catch (err) {
-      console.log("Erro ao buscar jogos:", err);
+      console.error("Erro ao buscar jogos:", err);
       setGames([]);
     } finally {
       setLoading(false);
@@ -81,7 +81,7 @@ export default function EditGamesScreen() {
 
       setSelected(null);
     } catch (err) {
-      console.log("Erro ao salvar jogo:", err);
+      console.error("Erro ao salvar jogo:", err);
     }
   }
 
@@ -92,7 +92,7 @@ export default function EditGamesScreen() {
       setSelected(null);
     } catch (err) {
       const error = err as any;
-      console.log("Erro ao deletar jogo:", err);
+      console.error("Erro ao deletar jogo:", err);
       Alert.alert(
         "Erro",
         error.message || "Não foi possível deletar o jogo. Tente novamente mais tarde."

@@ -139,7 +139,7 @@ export default function VerifyPhoneForm() {
         "Enviamos o código para o seu número.",
       );
     } catch (error: any) {
-      console.log("Erro Firebase SMS:", error);
+      console.error("Erro Firebase SMS:", error);
       showAlert(
         "error",
         "Erro",
@@ -243,7 +243,7 @@ export default function VerifyPhoneForm() {
         }, 1200);
       }
     } catch (error: any) {
-      console.log("Erro de Verificação:", error);
+      console.error("Erro de Verificação:", error);
       if (error.code === "auth/invalid-verification-code") {
         showAlert(
           "error",

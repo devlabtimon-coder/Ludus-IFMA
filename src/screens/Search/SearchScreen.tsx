@@ -78,7 +78,7 @@ export default function SearchScreen() {
 
       setGames(res.data || []);
     } catch (e) {
-      console.log("Erro ao buscar jogos:", e);
+      console.error("Erro ao buscar jogos:", e);
       if (currentId === requestIdRef.current) {
         setGames([]);
       }

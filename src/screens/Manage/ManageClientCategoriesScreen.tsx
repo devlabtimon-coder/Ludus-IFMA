@@ -98,7 +98,7 @@ export default function ManageClientCategoriesScreen() {
       const res = await api.get<ClientUser[]>("/categories/users", { params });
       setUsers(res.data || []);
     } catch (err) {
-      console.log("Erro ao buscar clientes:", err);
+      console.error("Erro ao buscar clientes:", err);
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ export default function ManageClientCategoriesScreen() {
       );
       setSelected(null);
     } catch (err) {
-      console.log("Erro ao alterar categoria:", err);
+      console.error("Erro ao alterar categoria:", err);
     } finally {
       setSaving(false);
     }

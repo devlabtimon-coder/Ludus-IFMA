@@ -47,7 +47,6 @@ export async function registerForPush(userId?: string) {
   }
 
   if (finalStatus !== "granted") {
-    console.log("Permissão de notificação negada.");
     return;
   }
 

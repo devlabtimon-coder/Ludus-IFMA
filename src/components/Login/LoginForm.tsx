@@ -189,7 +189,7 @@ export function LoginForm() {
         router.replace("/home");
       }, 1000);
     } catch (e: any) {
-      console.log("Google Login Error:", e);
+      console.error("Google Login Error:", e);
       if (e.code === "SIGN_IN_CANCELLED" || e.message?.includes("CANCELLED")) {
         setGoogleLoading(false);
         return;
