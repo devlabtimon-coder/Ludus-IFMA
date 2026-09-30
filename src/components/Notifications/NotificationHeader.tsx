@@ -27,9 +27,7 @@ export function NotificationsHeader({
   );
 }
 
-const BLUE = "#31358B";
 const RED = "#B3193A";
-const YELLOW = "#FBBC04";
 
 const styles = StyleSheet.create({
   header: {

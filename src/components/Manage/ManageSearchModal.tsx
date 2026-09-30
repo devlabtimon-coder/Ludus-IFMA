@@ -61,7 +61,7 @@ export function ManageSearchModal({ visible, onClose }: Props) {
         `/games/search-ludopedia?q=${encodeURIComponent(search)}`
       );
       setResults(response.data);
-    } catch (error) {
+    } catch {
       showAlert("error", "Erro", "Erro ao buscar jogos");
     } finally {
       setLoading(false);

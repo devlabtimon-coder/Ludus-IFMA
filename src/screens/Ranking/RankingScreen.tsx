@@ -52,7 +52,7 @@ export default function RankingScreen() {
       setData(Array.isArray(leaderRes.data) ? leaderRes.data : []);
       setMe(meRes.data ?? null);
       setSeason(seasonRes.data?.activeSeason ?? null);
-    } catch (e) {
+    } catch {
       setErr("Não foi possível carregar o ranking.");
       setData([]);
       setMe(null);

@@ -2,7 +2,7 @@ import { NavFooter } from "@/src/components/common/NavFooter";
 import HomeBackground from "@/src/components/Home/HomeBackground";
 import { api } from "@/src/services/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -101,7 +101,6 @@ function getLetter(m: Mecanica): string {
 
 export default function GuideScreen() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const params = useLocalSearchParams();
 
   const [tab, setTab] = useState<GuideTab>("mechanics");

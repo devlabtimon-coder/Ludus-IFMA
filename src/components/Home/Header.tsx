@@ -19,7 +19,7 @@ export function Header() {
         "/notifications/unread-count",
       );
       setNotificationsCount(res.data?.count ?? 0);
-    } catch (e) {
+    } catch {
       setNotificationsCount(0);
     }
   }, []);

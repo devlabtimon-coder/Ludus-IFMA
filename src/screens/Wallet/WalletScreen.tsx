@@ -14,7 +14,6 @@ import {
 } from "react-native";
 
 const BLUE = "#04096D";
-const YELLOW = "#FBBC04";
 const GREEN = "#22C55E";
 const GRAY = "#8A8A8A";
 

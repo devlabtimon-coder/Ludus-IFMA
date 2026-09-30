@@ -40,7 +40,7 @@ export function EngagementPreview() {
       try {
         const res = await api.get<MeRow>("/engagement/me");
         if (mounted) setMe(res.data ?? null);
-      } catch (e: any) {
+      } catch {
         if (mounted) setMe(null);
       } finally {
         if (mounted) setLoading(false);

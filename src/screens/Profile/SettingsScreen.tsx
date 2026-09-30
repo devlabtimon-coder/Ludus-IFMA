@@ -13,7 +13,6 @@ import {
 
 const BLUE = "#31358B";
 const RED = "#E62325";
-const YELLOW = "#FBBC04";
 
 function SettingsItem({
   icon,

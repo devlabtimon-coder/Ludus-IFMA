@@ -19,12 +19,12 @@ type Counts = {
   system: number;
 };
 
-const FILTERS: Array<{
+const FILTERS: {
   key: NotificationTypeFilterValue;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   tone: "blue" | "red" | "yellow";
-}> = [
+}[] = [
   { key: "all", label: "Tudo", icon: "apps", tone: "blue" },
   { key: "rentals", label: "Aluguéis", icon: "dice-outline", tone: "blue" },
   { key: "ratings", label: "Avaliações", icon: "star", tone: "yellow" },
