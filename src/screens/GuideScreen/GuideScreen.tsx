@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import logoLudusDice from "../../../assets/logo-dice.png";
+const logoLudusDice = require("../../../assets/logo-dice.png");
 
 type GuideTab = "mechanics" | "users" | "games";
 
