@@ -30,11 +30,25 @@ export type AdminRental = {
   copy?: { id: string; code?: string | null; number: number; condition?: string | null } | null;
 };
 
+type AdminRentalsPage = {
+  data: AdminRental[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+const PAGE_SIZE = 50;
+
 export default function ManageRentalsScreen() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [rentals, setRentals] = useState<AdminRental[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<RentalStatus | "ALL">("ALL");
   const [overdueOnly, setOverdueOnly] = useState(false);
@@ -54,28 +68,43 @@ export default function ManageRentalsScreen() {
     setAlertVisible(true);
   };
 
-  const fetchRentals = useCallback(async () => {
-    setLoading(true);
+  const fetchRentals = useCallback(async (nextPage = 1) => {
+    if (nextPage === 1) setLoading(true);
+    else setLoadingMore(true);
+
     try {
-      const res = await api.get<AdminRental[]>("/admin/rentals", {
+      const res = await api.get<AdminRentalsPage>("/admin/rentals", {
         params: {
           q: q.trim() || undefined,
           status: status === "ALL" ? undefined : status,
           overdue: overdueOnly ? "true" : undefined,
+          page: nextPage,
+          limit: PAGE_SIZE,
         },
       });
-      setRentals(res.data || []);
-    } catch (e: any) {
-      setRentals([]);
+
+      const items = res.data?.data ?? [];
+      setRentals((prev) => (nextPage === 1 ? items : [...prev, ...items]));
+      setPage(nextPage);
+      setTotalPages(res.data?.totalPages ?? 1);
+      setTotal(res.data?.total ?? items.length);
+    } catch {
+      if (nextPage === 1) setRentals([]);
       showAlert("error", "Erro", "Não foi possível carregar os aluguéis.");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, [q, status, overdueOnly]);
 
   useEffect(() => {
-    fetchRentals();
+    fetchRentals(1);
   }, [fetchRentals]);
+
+  const loadMore = () => {
+    if (loading || loadingMore || page >= totalPages) return;
+    fetchRentals(page + 1);
+  };
 
   const chips = useMemo(
     () => [
@@ -89,7 +118,6 @@ export default function ManageRentalsScreen() {
   );
 
   const counts = useMemo(() => {
-    const total = rentals.length;
     const pending = rentals.filter((r) => r.status === "PENDING").length;
     const active = rentals.filter((r) => r.status === "ACTIVE").length;
     const returned = rentals.filter((r) => r.status === "RETURNED").length;
@@ -101,7 +129,7 @@ export default function ManageRentalsScreen() {
     ).length;
 
     return { total, pending, active, returned, canceled, overdue };
-  }, [rentals]);
+  }, [rentals, total]);
 
   const setRentalStatus = async (rentalId: string, nextStatus: "ACTIVE" | "RETURNED" | "CANCELED") => {
     setSaving(true);
@@ -163,7 +191,7 @@ export default function ManageRentalsScreen() {
             value={q}
             onChangeText={setQ}
             returnKeyType="search"
-            onSubmitEditing={fetchRentals}
+            onSubmitEditing={() => fetchRentals(1)}
           />
 
           <Pressable
@@ -203,6 +231,13 @@ export default function ManageRentalsScreen() {
             renderItem={({ item }) => (
               <RentalRow item={item} onPress={() => setSelected(item)} />
             )}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.4}
+            ListFooterComponent={
+              loadingMore ? (
+                <ActivityIndicator style={{ marginVertical: 16 }} color="#31358B" />
+              ) : null
+            }
             ListEmptyComponent={
               <View style={styles.emptyWrap}>
                 <Ionicons name="stats-chart-outline" size={46} color="#999" />
