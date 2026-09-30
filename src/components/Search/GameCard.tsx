@@ -15,6 +15,7 @@ export type Game = {
   minTime?: number | null;
   maxTime?: number | null;
   available?: boolean;
+  isAvailableNow?: boolean;
 };
 
 type Props = {
@@ -25,7 +26,8 @@ type Props = {
 
 export default function GameCard({ item }: Props) {
   const router = useRouter()
-  const isAvailable = item?.available !== false;
+  // isAvailableNow considera os exemplares livres; `available` é só a flag manual do jogo.
+  const isAvailable = item?.isAvailableNow ?? item?.available !== false;
 
   const rating = typeof item?.rating === "number" ? item.rating.toFixed(1) : "0.0";
 
