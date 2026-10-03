@@ -94,8 +94,9 @@ export function DocumentPicker({
 
   const isString = typeof imageUri === "string";
   const displayUri = isString ? imageUri : imageUri?.uri;
+  // Links assinados do Cloudinary indicam o formato em `format=pdf`.
   const isPdf = isString
-    ? imageUri.toLowerCase().includes(".pdf")
+    ? /\.pdf|format=pdf/.test(imageUri.toLowerCase())
     : imageUri?.mimeType === "application/pdf" ||
       imageUri?.name?.toLowerCase().endsWith(".pdf");
   const fileName = !isString ? imageUri?.name : "Documento em PDF";
