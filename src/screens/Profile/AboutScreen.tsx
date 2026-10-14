@@ -28,7 +28,7 @@ const BLUE = "#31358B";
 const DARK_BLUE = "#0A1F5C";
 const YELLOW = "#FBBC04";
 
-const LUDUS_LOGO = require("../../../assets/logo-dice.png");
+const LUDUS_LOGO = require("../../../assets/logo-wordmark.png");
 
 function SectionTitle({ title }: { title: string }) {
   return (
@@ -170,11 +170,13 @@ export default function AboutScreen() {
             contentContainerStyle={styles.scrollContent}
           >
             <View style={styles.heroCard}>
-              <View style={styles.logoWrap}>
-                <Image source={LUDUS_LOGO} style={styles.logo} resizeMode="contain" />
-              </View>
+              <Image
+                source={LUDUS_LOGO}
+                style={styles.logo}
+                resizeMode="contain"
+                accessibilityLabel={identity.appName}
+              />
 
-              <Text style={styles.appName}>{identity.appName}</Text>
               <Text style={styles.heroText}>{identity.description}</Text>
 
               {identity.chips.length > 0 && (
@@ -353,28 +355,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(49,53,139,0.08)",
   },
 
-  logoWrap: {
-    width: 92,
-    height: 92,
-    borderRadius: 999,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "rgba(49,53,139,0.08)",
-  },
-
+  // Letreiro horizontal (900x308).
   logo: {
-    width: 72,
+    width: 210,
     height: 72,
-  },
-
-  appName: {
-    marginTop: 14,
-    fontSize: 24,
-    fontWeight: "900",
-    color: BLUE,
   },
 
   heroText: {
