@@ -1,7 +1,18 @@
 import HomeBackground from "@/src/components/Home/HomeBackground";
+import {
+  ABOUT_COLORS,
+  ABOUT_ICON_NAMES,
+  ABOUT_STATUS_COLORS,
+  DEFAULT_ABOUT,
+  type AboutColor,
+  type AboutContent,
+  type AboutIcon,
+} from "@/src/constants/about";
+import { fetchAbout, getCachedAbout } from "@/src/services/about.service";
 import { Ionicons } from "@expo/vector-icons";
 import * as Application from "expo-application";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
     Image,
     KeyboardAvoidingView,
@@ -15,7 +26,6 @@ import {
 
 const BLUE = "#31358B";
 const DARK_BLUE = "#0A1F5C";
-const RED = "#E62325";
 const YELLOW = "#FBBC04";
 
 const LUDUS_LOGO = require("../../../assets/logo-dice.png");
@@ -33,27 +43,19 @@ function FeatureCard({
   icon,
   title,
   text,
-  accent = "blue",
+  color,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: AboutIcon;
   title: string;
   text: string;
-  accent?: "blue" | "red" | "yellow";
+  color: AboutColor;
 }) {
-  const bg =
-    accent === "red"
-      ? "#FFE9EA"
-      : accent === "yellow"
-      ? "#FFF6D9"
-      : "#EEF0FF";
-
-  const color =
-    accent === "red" ? RED : accent === "yellow" ? "#9A6B00" : BLUE;
+  const palette = ABOUT_COLORS[color] ?? ABOUT_COLORS.blue;
 
   return (
     <View style={styles.featureCard}>
-      <View style={[styles.featureIconWrap, { backgroundColor: bg }]}>
-        <Ionicons name={icon} size={20} color={color} />
+      <View style={[styles.featureIconWrap, { backgroundColor: palette.bg }]}>
+        <Ionicons name={ABOUT_ICON_NAMES[icon] ?? "ellipse-outline"} size={20} color={palette.fg} />
       </View>
 
       <View style={{ flex: 1 }}>
@@ -64,25 +66,85 @@ function FeatureCard({
   );
 }
 
-function StatPill({
-  icon,
-  label,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}) {
+function StatusBadge({ status }: { status: string }) {
+  const palette = ABOUT_STATUS_COLORS[status] ?? ABOUT_STATUS_COLORS["Serviço configurável"];
   return (
-    <View style={styles.statPill}>
-      <Ionicons name={icon} size={14} color={BLUE} />
-      <Text style={styles.statPillText}>{label}</Text>
+    <View style={[styles.statusBadge, { backgroundColor: palette.bg }]}>
+      <Text style={[styles.statusBadgeText, { color: palette.fg }]}>{status}</Text>
     </View>
   );
 }
 
+function ProjectItem({
+  icon,
+  label,
+  value,
+  first,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  first?: boolean;
+}) {
+  return (
+    <>
+      {!first && <View style={styles.projectDivider} />}
+      <View style={styles.projectRow}>
+        <Ionicons name={icon} size={18} color={BLUE} />
+        <Text style={styles.projectLabel}>{label}</Text>
+      </View>
+      <Text style={styles.projectValue}>{value}</Text>
+    </>
+  );
+}
+
+// "A, B e C"
+function joinNames(names: string[]) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
+}
+
 export default function AboutScreen() {
   const router = useRouter();
+  const [about, setAbout] = useState<AboutContent>(DEFAULT_ABOUT);
+  const [changelogOpen, setChangelogOpen] = useState(false);
+
+  // Mostra a última versão salva no aparelho e atualiza com a publicada no painel.
+  useEffect(() => {
+    let alive = true;
+    getCachedAbout().then((cached) => {
+      if (alive && cached) setAbout(cached);
+    });
+    fetchAbout()
+      .then((fresh) => {
+        if (alive) setAbout(fresh);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const appVersion = Application.nativeApplicationVersion || "1.0.0";
+  const { identity, features, mission, team, version, integrations } = about;
+
+  const projectItems: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }[] = [];
+  if (team?.institution) projectItems.push({ icon: "business-outline", label: "Instituição", value: team.institution });
+  if (team && team.members.length > 0) {
+    projectItems.push({
+      icon: "people-outline",
+      label: "Equipe",
+      value: joinNames(team.members.map((m) => (m.role ? `${m.name} (${m.role})` : m.name))),
+    });
+  }
+  if (team?.advisor) {
+    projectItems.push({
+      icon: "ribbon-outline",
+      label: "Orientação",
+      value: team.advisorTitle ? `${team.advisor} · ${team.advisorTitle}` : team.advisor,
+    });
+  }
+
   return (
     <View style={styles.root}>
       <HomeBackground />
@@ -97,10 +159,8 @@ export default function AboutScreen() {
           </Pressable>
 
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Sobre o Ludus</Text>
-            <Text style={styles.headerSubtitle}>
-              Plataforma de aluguel de jogos do IFMA Campus Timon
-            </Text>
+            <Text style={styles.headerTitle}>Sobre o {identity.appName}</Text>
+            {!!identity.subtitle && <Text style={styles.headerSubtitle}>{identity.subtitle}</Text>}
           </View>
         </View>
 
@@ -114,103 +174,113 @@ export default function AboutScreen() {
                 <Image source={LUDUS_LOGO} style={styles.logo} resizeMode="contain" />
               </View>
 
-              <Text style={styles.appName}>Ludus</Text>
-              <Text style={styles.heroText}>
-                O Ludus organiza e moderniza o acesso ao acervo de jogos,
-                facilitando consultas, reservas, empréstimos e acompanhamento
-                do uso da coleção em uma experiência simples, visual e envolvente.
-              </Text>
+              <Text style={styles.appName}>{identity.appName}</Text>
+              <Text style={styles.heroText}>{identity.description}</Text>
 
-              <View style={styles.heroPills}>
-                <StatPill icon="school-outline" label="IFMA Campus Timon" />
-                <StatPill icon="phone-portrait-outline" label="Aplicativo mobile" />
-                <StatPill icon="trophy-outline" label="Gamificação" />
-              </View>
+              {identity.chips.length > 0 && (
+                <View style={styles.heroPills}>
+                  {identity.chips.map((chip, i) => (
+                    <View key={`${chip}-${i}`} style={styles.statPill}>
+                      <Text style={styles.statPillText}>{chip}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
 
-            <SectionTitle title="O que o app oferece" />
+            {features.length > 0 && (
+              <>
+                <SectionTitle title="O que o app oferece" />
+                {features.map((f) => (
+                  <FeatureCard key={f.id} icon={f.icon} title={f.title} text={f.description} color={f.color} />
+                ))}
+              </>
+            )}
 
-            <FeatureCard
-              icon="grid-outline"
-              title="Catálogo inteligente"
-              text="Permite explorar o acervo com busca e filtros, tornando mais rápido encontrar jogos por perfil, duração e disponibilidade."
-              accent="blue"
-            />
+            {mission && (!!mission.mission || !!mission.vision) && (
+              <>
+                <SectionTitle title="Propósito" />
+                <View style={styles.textBox}>
+                  {!!mission.mission && <Text style={styles.textBoxText}>{mission.mission}</Text>}
+                  {!!mission.vision && (
+                    <Text style={[styles.textBoxText, !!mission.mission && { marginTop: 10 }]}>
+                      <Text style={styles.visionLabel}>Visão: </Text>
+                      {mission.vision}
+                    </Text>
+                  )}
+                </View>
+              </>
+            )}
 
-            <FeatureCard
-              icon="bookmark-outline"
-              title="Reservas e empréstimos"
-              text="Centraliza o fluxo de solicitação, retirada e devolução, reduzindo controles manuais e trazendo mais organização ao processo."
-              accent="yellow"
-            />
-
-            <FeatureCard
-              icon="notifications-outline"
-              title="Acompanhamento e avisos"
-              text="Ajuda o usuário a acompanhar sua jornada dentro do sistema, com histórico, alertas e informações importantes sobre uso do acervo."
-              accent="red"
-            />
-
-            <FeatureCard
-              icon="bar-chart-outline"
-              title="Engajamento e métricas"
-              text="Incorpora ranking e elementos de gamificação para incentivar participação contínua e ampliar o uso consciente dos jogos."
-              accent="blue"
-            />
-
-            <SectionTitle title="Propósito" />
-
-            <View style={styles.textBox}>
-              <Text style={styles.textBoxText}>
-                Mais do que digitalizar empréstimos, o Ludus foi pensado para
-                aproximar tecnologia, ludicidade e educação. A proposta do app é
-                tornar o acervo de jogos do IFMA mais acessíveis,
-                organizados e atrativos para a comunidade acadêmica.
-              </Text>
-            </View>
-
-            <SectionTitle title="Projeto" />
-
-            <View style={styles.projectCard}>
-              <View style={styles.projectRow}>
-                <Ionicons name="business-outline" size={18} color={BLUE} />
-                <Text style={styles.projectLabel}>Instituição</Text>
-              </View>
-              <Text style={styles.projectValue}>
-                Instituto Federal do Maranhão – IFMA Campus Timon
-              </Text>
-
-              <View style={styles.projectDivider} />
-
-              <View style={styles.projectRow}>
-                <Ionicons name="people-outline" size={18} color={BLUE} />
-                <Text style={styles.projectLabel}>Equipe</Text>
-              </View>
-              <Text style={styles.projectValue}>
-                Joseni Daniel, Hemyly Rayany, Ramilson Rios, Marcelo Loureiro,
-                Guilherme Raphael e Hélio Victor
-              </Text>
-
-              <View style={styles.projectDivider} />
-
-              <View style={styles.projectRow}>
-                <Ionicons name="ribbon-outline" size={18} color={BLUE} />
-                <Text style={styles.projectLabel}>Orientação</Text>
-              </View>
-              <Text style={styles.projectValue}>Nara Chaves</Text>
-            </View>
+            {projectItems.length > 0 && (
+              <>
+                <SectionTitle title="Projeto" />
+                <View style={styles.projectCard}>
+                  {projectItems.map((item, i) => (
+                    <ProjectItem key={item.label} {...item} first={i === 0} />
+                  ))}
+                </View>
+              </>
+            )}
 
             <SectionTitle title="Aplicativo" />
 
             <View style={styles.appMetaRow}>
-              <View style={styles.metaCard}>
-                <Text style={styles.metaTitle}>Versão</Text>
-                <Text style={styles.metaValue}>{appVersion}</Text>
+              <View style={[styles.metaCard, styles.versionCard]}>
+                <View>
+                  <Text style={styles.metaTitle}>Versão</Text>
+                  <Text style={styles.metaValue}>{appVersion}</Text>
+                </View>
+                <StatusBadge status={version.status} />
               </View>
             </View>
 
+            {version.changelog.length > 0 && (
+              <View style={styles.changelogCard}>
+                <Pressable
+                  onPress={() => setChangelogOpen((o) => !o)}
+                  style={styles.changelogHeader}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: changelogOpen }}
+                >
+                  <Text style={styles.changelogTitle}>Histórico de versões</Text>
+                  <Ionicons name={changelogOpen ? "chevron-up" : "chevron-down"} size={18} color={BLUE} />
+                </Pressable>
+                {changelogOpen &&
+                  version.changelog.map((entry) => (
+                    <View key={entry.id} style={styles.changelogItem}>
+                      <View style={styles.changelogDot} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.changelogVersion}>
+                          v{entry.version} · {entry.title}
+                        </Text>
+                        {!!entry.description && <Text style={styles.changelogText}>{entry.description}</Text>}
+                      </View>
+                    </View>
+                  ))}
+              </View>
+            )}
+
+            {integrations.length > 0 && (
+              <>
+                <SectionTitle title="APIs e integrações" />
+                {integrations.map((api) => (
+                  <View key={api.id} style={styles.integrationCard}>
+                    <View style={[styles.featureIconWrap, styles.integrationIcon]}>
+                      <Ionicons name={ABOUT_ICON_NAMES[api.icon] ?? "ellipse-outline"} size={18} color={BLUE} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.integrationName}>{api.name}</Text>
+                      <Text style={styles.integrationUsage}>{api.usage}</Text>
+                    </View>
+                    <StatusBadge status={api.status} />
+                  </View>
+                ))}
+              </>
+            )}
+
             <View style={styles.footerCard}>
-              <Text style={styles.footerTitle}>Ludus ©</Text>
+              <Text style={styles.footerTitle}>{identity.appName} ©</Text>
               <Text style={styles.footerText}>
                 Uma solução criada para fortalecer o acesso ao acervo de jogos e
                 transformar a experiência de uso em algo mais organizado, moderno
@@ -484,5 +554,110 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 13,
     lineHeight: 20,
+  },
+
+  visionLabel: {
+    color: BLUE,
+    fontWeight: "900",
+  },
+
+  versionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignSelf: "center",
+  },
+
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  changelogCard: {
+    marginTop: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(49,53,139,0.08)",
+  },
+
+  changelogHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  changelogTitle: {
+    color: BLUE,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  changelogItem: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+
+  changelogDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#2FA84F",
+    marginTop: 6,
+  },
+
+  changelogVersion: {
+    color: BLUE,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  changelogText: {
+    marginTop: 4,
+    color: "#666D7E",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 19,
+  },
+
+  integrationCard: {
+    marginTop: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "rgba(49,53,139,0.08)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  integrationIcon: {
+    backgroundColor: "#EEF0FF",
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+  },
+
+  integrationName: {
+    color: BLUE,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+
+  integrationUsage: {
+    marginTop: 3,
+    color: "#666D7E",
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17,
   },
 });
