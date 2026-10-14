@@ -20,6 +20,7 @@ import { GameFactsRow } from "@/src/components/GameDetails/GameFactsRow";
 import { GameHero } from "@/src/components/GameDetails/GameHero";
 import { GameHowToPlay } from "@/src/components/GameDetails/GameHowToPlay";
 import { GameMeta } from "@/src/components/GameDetails/GameMeta";
+import { MarketPriceBadge } from "@/src/components/GameDetails/MarketPriceBadge";
 import { RateModal } from "@/src/components/GameDetails/RateModal";
 import { RentModal } from "@/src/components/GameDetails/RentModal";
 import {
@@ -476,6 +477,8 @@ export default function GameDetailsScreen() {
                   availabilityForecast={null}
                   tier={game.tier}
                 />
+
+                <MarketPriceBadge gameId={game.id} />
 
                 <GameFactsRow
                   minPlayers={game.minPlayers}
