@@ -4,16 +4,16 @@ import { useEffect, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
 type MarketPrice = {
-  median: number;
-  listingsCount: number;
+  price: number;
+  storesCount: number;
   sourceUrl: string | null;
 };
 
 const formatBRL = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-// Valor de mercado do jogo (mediana dos anúncios de venda na Ludopedia),
-// buscado na hora. Sem preço ou com falha, o selo simplesmente não aparece.
+// Valor de mercado do jogo (menor preço de novo no ComparaJogos), buscado
+// na hora. Sem preço ou com falha, o selo simplesmente não aparece.
 export function MarketPriceBadge({ gameId }: { gameId: string }) {
   const [price, setPrice] = useState<MarketPrice | null>(null);
 
@@ -33,14 +33,14 @@ export function MarketPriceBadge({ gameId }: { gameId: string }) {
 
   if (!price) return null;
 
-  const listings = price.listingsCount === 1 ? "1 anúncio" : `${price.listingsCount} anúncios`;
+  const stores = price.storesCount === 1 ? "1 loja" : `${price.storesCount} lojas`;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.badge}>
         <Ionicons name="pricetag-outline" size={15} color="#2E7D32" />
         <Text style={styles.label}>
-          Valor de mercado: <Text style={styles.value}>{formatBRL(price.median)}</Text>
+          Valor de mercado: a partir de <Text style={styles.value}>{formatBRL(price.price)}</Text>
         </Text>
       </View>
 
@@ -51,7 +51,7 @@ export function MarketPriceBadge({ gameId }: { gameId: string }) {
         hitSlop={8}
       >
         <Text style={styles.source}>
-          Mediana de {listings} de venda na Ludopedia
+          Menor preço novo em {stores} no ComparaJogos
           {price.sourceUrl ? " ›" : ""}
         </Text>
       </Pressable>
