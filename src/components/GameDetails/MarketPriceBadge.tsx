@@ -23,7 +23,10 @@ export function MarketPriceBadge({ gameId }: { gameId: string }) {
     api
       .get<{ marketPrice: MarketPrice | null }>(`/games/${gameId}/market-price`)
       .then(({ data }) => {
-        if (alive) setPrice(data.marketPrice);
+        // Resposta em formato inesperado (ex.: backend antigo) esconde o selo
+        // em vez de derrubar a tela do jogo.
+        const value = data?.marketPrice;
+        if (alive) setPrice(value && Number.isFinite(value.price) ? value : null);
       })
       .catch(() => {});
     return () => {
