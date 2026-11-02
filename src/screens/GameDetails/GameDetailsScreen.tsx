@@ -1,6 +1,6 @@
 import { api } from "@/src/services/api";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -27,7 +27,6 @@ import {
   BlockType,
   VerificationBlockModal,
 } from "@/src/components/GameDetails/VerificationBlockModal";
-import { TermsRentModal } from "@/src/components/RentTerms/TermsRentModal";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -102,14 +101,6 @@ export default function GameDetailsScreen() {
   const [watching, setWatching] = useState(false);
   const [loadingWatch, setLoadingWatch] = useState(false);
 
-  const [termsOpen, setTermsOpen] = useState(false);
-  const [termsLoading, setTermsLoading] = useState(false);
-
-  const pendingRentRef = useRef<null | {
-    startDateIso: string;
-    endDateIso: string;
-  }>(null);
-
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState<AlertType>("info");
   const [alertTitle, setAlertTitle] = useState("");
@@ -182,31 +173,40 @@ export default function GameDetailsScreen() {
           : prev,
       );
 
+      // No iOS um Modal não abre enquanto outro ainda está fechando: o
+      // alerta espera o modal de avaliação sair (mesmo atraso da reserva).
       setRateOpen(false);
-      showAlert(
-        "success",
-        "Avaliação salva!",
-        "Sua avaliação foi registrada com sucesso.",
-      );
+      setTimeout(() => {
+        showAlert(
+          "success",
+          "Avaliação salva!",
+          "Sua avaliação foi registrada com sucesso.",
+        );
+      }, 400);
     } catch (e: any) {
       const code = e?.response?.data?.code;
       const msg = e?.response?.data?.error;
 
+      setRateOpen(false);
       if (code === "CANNOT_RATE") {
         setCanRate(false);
-        showAlert(
-          "info",
-          "Avaliação bloqueada",
-          "Você só pode avaliar este jogo após devolver.",
-        );
+        setTimeout(() => {
+          showAlert(
+            "info",
+            "Avaliação bloqueada",
+            "Você só pode avaliar este jogo após devolver.",
+          );
+        }, 400);
         return;
       }
 
-      showAlert(
-        "error",
-        "Erro",
-        msg || "Não foi possível salvar sua avaliação. Tente novamente.",
-      );
+      setTimeout(() => {
+        showAlert(
+          "error",
+          "Erro",
+          msg || "Não foi possível salvar sua avaliação. Tente novamente.",
+        );
+      }, 400);
     } finally {
       setSavingRate(false);
     }
@@ -281,15 +281,7 @@ export default function GameDetailsScreen() {
         setRentOpen(false);
 
         setTimeout(() => {
-          const status = e?.response?.status;
           const code = e?.response?.data?.code;
-
-          if (status === 403 && code === "TERMS_NOT_ACCEPTED") {
-            pendingRentRef.current = { startDateIso, endDateIso };
-            setTermsOpen(true);
-            return;
-          }
-
           const msg = e?.response?.data?.error;
 
           if (code === "RENTAL_LIMIT_REACHED") {
@@ -333,29 +325,6 @@ export default function GameDetailsScreen() {
     },
     [game, fetchDetails, showAlert],
   );
-
-  const acceptTermsAndContinue = useCallback(async () => {
-    if (!pendingRentRef.current) return;
-
-    setTermsLoading(true);
-    try {
-      await api.post("/rentals/accept-terms");
-      setTermsOpen(false);
-
-      const pending = pendingRentRef.current;
-      pendingRentRef.current = null;
-
-      await handleConfirmRental(pending.startDateIso, pending.endDateIso);
-    } catch {
-      showAlert(
-        "error",
-        "Erro",
-        "Não foi possível aceitar os termos. Tente novamente.",
-      );
-    } finally {
-      setTermsLoading(false);
-    }
-  }, [handleConfirmRental, showAlert]);
 
   const openRentFlow = useCallback(() => {
     if (!game) return;
@@ -678,16 +647,6 @@ export default function GameDetailsScreen() {
               loading={rentLoading}
               onClose={() => setRentOpen(false)}
               onConfirm={handleConfirmRental}
-            />
-
-            <TermsRentModal
-              visible={termsOpen}
-              loading={termsLoading}
-              onClose={() => {
-                setTermsOpen(false);
-                pendingRentRef.current = null;
-              }}
-              onAccept={acceptTermsAndContinue}
             />
 
             {favToastVisible && (

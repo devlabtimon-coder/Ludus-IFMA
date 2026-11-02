@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 const BLUE = "#31358B";
 const RED = "#E62325";
@@ -54,6 +55,7 @@ function SettingsItem({
 }
 
 export default function SettingsScreen() {
+  const safeTop = useSafeTop(58);
   const router = useRouter();
 
   async function handleOpenNotificationSettings() {
@@ -68,7 +70,7 @@ export default function SettingsScreen() {
 
       <BackButton />
 
-      <View style={styles.topTitle}>
+      <View style={[styles.topTitle, { top: safeTop }]}>
         <Text style={styles.h1}>Configurações</Text>
       </View>
 

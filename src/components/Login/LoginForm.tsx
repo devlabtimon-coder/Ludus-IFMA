@@ -80,7 +80,7 @@ export function LoginForm() {
     if (!cleanedEmail || !cleanedPassword) {
       return showAlert(
         "info",
-        "Inventário vazio",
+        "Campos obrigatórios",
         "Preencha e-mail e senha para continuar.",
       );
     }
@@ -100,7 +100,7 @@ export function LoginForm() {
       } else {
         showAlert(
           "error",
-          "Falha crítica",
+          "Não foi possível entrar",
           result.message || "E-mail ou senha incorretos",
         );
       }
@@ -115,8 +115,8 @@ export function LoginForm() {
     if (!clientId) {
       showAlert(
         "error",
-        "Erro Estrutural",
-        "Web Client ID ausente no APK. O eas.json não injetou a chave.",
+        "Login com Google indisponível",
+        "Entre com seu e-mail e senha por enquanto.",
       );
       setGoogleLoading(false);
       return;
@@ -238,15 +238,18 @@ export function LoginForm() {
           Entre com seu e-mail cadastrado ou número de telefone.
         </Text>
 
-        <Text style={styles.label}>E-mail</Text>
+        <Text style={styles.label}>E-mail ou telefone</Text>
         <TextInput
           ref={emailRef}
-          placeholder="Seu e-mail"
+          placeholder="Seu e-mail ou telefone"
           placeholderTextColor="#999"
           style={styles.input}
           onChangeText={setEmail}
           value={email}
           autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="username"
+          autoComplete="username"
           onLayout={(e) => handleLayout("email", e.nativeEvent.layout.y)}
           onFocus={() => handleFocus("email")}
           returnKeyType="next"
@@ -267,10 +270,19 @@ export function LoginForm() {
             style={styles.inputPassword}
             onChangeText={setSenha}
             value={senha}
+            textContentType="password"
+            autoComplete="current-password"
             onFocus={() => handleFocus("senha")}
             editable={!loading && !googleLoading}
           />
-          <Pressable onPress={() => setHidePassword(!hidePassword)}>
+          <Pressable
+            onPress={() => setHidePassword(!hidePassword)}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={
+              hidePassword ? "Mostrar senha" : "Ocultar senha"
+            }
+          >
             <Ionicons
               name={hidePassword ? "eye-off" : "eye"}
               size={24}
@@ -289,13 +301,13 @@ export function LoginForm() {
           disabled={loading || googleLoading}
         >
           <Text style={styles.buttonText}>
-            {loading ? "Carregando..." : "Logar"}
+            {loading ? "Entrando..." : "Entrar"}
           </Text>
         </Pressable>
 
         <View style={styles.divider}>
           <View style={styles.line} />
-          <Text style={styles.or}>or</Text>
+          <Text style={styles.or}>ou</Text>
           <View style={styles.line} />
         </View>
 
@@ -311,8 +323,14 @@ export function LoginForm() {
               style={{ marginRight: 10 }}
               color="#0409ce"
             />
-            <Text style={styles.googleText}>
-              {googleLoading ? "Conectando..." : "Logar com Google"}
+            <Text
+              style={styles.googleText}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {googleLoading
+                ? "Conectando..."
+                : "Entrar com conta IFMA (Google)"}
             </Text>
           </View>
         </Pressable>

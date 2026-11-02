@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, TextInput, View } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 type Props = {
   value: string;
@@ -20,13 +21,16 @@ export default function SearchTop({
   activeFiltersCount = 0,
 }: Props) {
   const router = useRouter();
+  const safeTop = useSafeTop(56);
 
   return (
-    <View style={{ paddingTop: 56, paddingHorizontal: 16 }}>
+    <View style={{ paddingTop: safeTop, paddingHorizontal: 16 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         
         <Pressable
           onPress={() => router.replace("/home")}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
           style={{
             width: 49,
             height: 49,

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 export function NotificationsHeader({
   onBack,
@@ -8,8 +9,9 @@ export function NotificationsHeader({
   onBack: () => void;
   onReadAll: () => void;
 }) {
+  const safeTop = useSafeTop(54);
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: safeTop }]}>
       <Pressable onPress={onBack} style={styles.backBtn} hitSlop={10}>
         <Ionicons name="chevron-back" size={22} color={RED} />
       </Pressable>

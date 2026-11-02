@@ -6,13 +6,42 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "ludus",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.ludus.ios",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "35F9.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "E174.1"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -41,7 +70,8 @@
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
-          "color": "#31358B"
+          "color": "#31358B",
+          "enableBackgroundRemoteNotifications": true
         }
       ],
       [
@@ -53,14 +83,29 @@
           "backgroundColor": "#31358B"
         }
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.1008142639242-l45f7prh3v5cpcs3n79mai63kqhe74fh"
+          "iosUrlScheme": "com.googleusercontent.apps.706484468010-s8rkf8o3vok29vlpnp0fi9gaqb9602gn"
         }
       ],
       "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Ludus acessa suas fotos para você escolher a foto de perfil e enviar as imagens do documento de identidade e do comprovante de matrícula.",
+          "cameraPermission": "O Ludus usa a câmera para você tirar a foto de perfil e fotografar o documento de identidade e o comprovante de matrícula.",
+          "microphonePermission": false
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
       [
         "expo-build-properties",
         {

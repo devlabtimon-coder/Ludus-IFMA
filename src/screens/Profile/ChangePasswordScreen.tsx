@@ -16,6 +16,7 @@ import {
     TextInput,
     View,
 } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 type AlertType = "error" | "success" | "info";
 
@@ -25,6 +26,7 @@ type MeResponse = {
 };
 
 export default function ChangePasswordScreen() {
+  const safeTop = useSafeTop(56);
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -140,7 +142,7 @@ export default function ChangePasswordScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: safeTop }]}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={22} color="#fff" />
           </Pressable>

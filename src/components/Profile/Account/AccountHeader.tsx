@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 type Props = {
   title: string;
@@ -8,8 +9,9 @@ type Props = {
 };
 
 export function AccountHeader({ title, subtitle, onBack }: Props) {
+  const safeTop = useSafeTop(56);
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: safeTop }]}>
       <Pressable onPress={onBack} style={styles.backBtn}>
         <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
       </Pressable>

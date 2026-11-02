@@ -27,6 +27,9 @@ import { RegistrationBanner } from "./RegistrationBanner";
 const BLUE = "#31358B";
 const RED = "#E62325";
 
+const waitModalClose = () =>
+  new Promise<void>((resolve) => setTimeout(resolve, 400));
+
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -84,6 +87,8 @@ export default function ProfileScreen() {
 
   async function handlePickFromGallery() {
     setAvatarModalVisible(false);
+    // No iOS o seletor nativo não abre enquanto o modal ainda está fechando.
+    await waitModalClose();
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -113,6 +118,8 @@ export default function ProfileScreen() {
 
   async function handleTakePhoto() {
     setAvatarModalVisible(false);
+    // No iOS o seletor nativo não abre enquanto o modal ainda está fechando.
+    await waitModalClose();
 
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -163,6 +170,8 @@ export default function ProfileScreen() {
       setLeaving(true);
       await logout();
       setLogoutOpen(false);
+      // Tira as telas logadas da pilha: o gesto de voltar não leva de volta a elas.
+      if (router.canDismiss()) router.dismissAll();
       router.replace("/onboarding");
     } finally {
       setLeaving(false);

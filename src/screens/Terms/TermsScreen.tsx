@@ -2,8 +2,10 @@ import HomeBackground from "@/src/components/Home/HomeBackground";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 export default function TermsScreen() {
+  const safeTop = useSafeTop(54);
   const router = useRouter();
 
   return (
@@ -11,7 +13,7 @@ export default function TermsScreen() {
       <HomeBackground />
 
 
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: safeTop }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={22} color="#e80f0f" />
         </TouchableOpacity>

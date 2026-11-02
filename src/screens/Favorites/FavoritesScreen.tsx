@@ -5,10 +5,12 @@ import { api } from "@/src/services/api";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 type SortKey = "price" | "rating" | "title";
 
 export default function FavoritesScreen() {
+  const safeTop = useSafeTop(58);
   const [items, setItems] = useState<FavoriteGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export default function FavoritesScreen() {
     <View style={styles.root}>
       <HomeBackground />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: safeTop }]}>
         <Text style={styles.title}>Favoritos</Text>
       </View>
 
