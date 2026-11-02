@@ -134,7 +134,7 @@ export function RulesBox() {
       <View style={styles.ruleRow}>
         <View style={[styles.dot, { backgroundColor: RED }]} />
         <Text style={styles.ruleText}>
-          -2 pts ao cancelar uma reserva pendente
+          -2 pts ao cancelar com menos de 2h de antecedência
         </Text>
       </View>
       <View style={styles.ruleRow}>

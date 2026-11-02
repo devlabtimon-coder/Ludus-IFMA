@@ -481,9 +481,9 @@ export default function GuideScreen() {
                 <Text style={styles.staticHeroIcon}>🏆</Text>
                 <Text style={styles.staticMainTitle}>Progressão de Nível</Text>
                 <Text style={styles.staticDesc}>
-                  Sua categoria sobe conforme o total de retiradas concluídas
-                  (contadas quando a biblioteca confirma que você retirou o
-                  jogo) e libera novos níveis do acervo.
+                  Sua categoria sobe a cada aluguel devolvido no prazo e sem
+                  avaria; ao completar 11, 31 e 61 aluguéis você libera novos
+                  níveis do acervo.
                 </Text>
               </View>
 
@@ -498,19 +498,19 @@ export default function GuideScreen() {
                   name: "Family",
                   color: "#F59E0B",
                   icon: "home",
-                  desc: "A partir de 11 retiradas concluídas. Libera também os jogos Prata.",
+                  desc: "Ao completar 11 aluguéis. Libera também os jogos Prata.",
                 },
                 {
                   name: "Expert",
                   color: "#7C3AED",
                   icon: "medal",
-                  desc: "A partir de 31 retiradas concluídas. Libera também os jogos Ouro.",
+                  desc: "Ao completar 31 aluguéis. Libera também os jogos Ouro.",
                 },
                 {
                   name: "Ultragamer",
                   color: "#31358B",
                   icon: "trophy",
-                  desc: "A partir de 61 retiradas concluídas. Acesso a todo o acervo, incluindo os jogos Diamante.",
+                  desc: "Ao completar 61 aluguéis. Acesso a todo o acervo, incluindo os jogos Diamante.",
                 },
               ].map((lvl) => (
                 <View key={lvl.name} style={styles.levelCard}>
