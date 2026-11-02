@@ -14,7 +14,8 @@ export default function BackButton({ color = "#B3193A" }: BackButtonProps) {
   return (
     <Pressable
       style={[styles.container, { top }]}
-      onPress={() => router.back()}
+      // Aberta direto por uma notificação, a tela não tem para onde voltar.
+      onPress={() => (router.canGoBack() ? router.back() : router.replace("/home"))}
       accessibilityRole="button"
       accessibilityLabel="Voltar"
     >

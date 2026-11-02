@@ -30,7 +30,10 @@ export function GameHero({ coverUrl, isFavorite, onToggleFavorite }: Props) {
         resizeMode="cover"
       />
       <Pressable
-        onPress={() => router.back()}
+        // Aberta direto por uma notificação, a tela não tem para onde voltar.
+        onPress={() =>
+          router.canGoBack() ? router.back() : router.replace("/home")
+        }
         style={[styles.backBtn, { top: topPosition }]}
       >
         <Ionicons name="chevron-back" size={22} color="#fff" />

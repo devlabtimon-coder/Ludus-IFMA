@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import BackButton from "@/src/components/common/BackButton";
 import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
 import { BottomBar } from "@/src/components/GameDetails/BottomBar";
 import { GameComponents } from "@/src/components/GameDetails/GameComponents";
@@ -390,7 +391,15 @@ export default function GameDetailsScreen() {
             <Text style={{ color: "#666", fontWeight: "700" }}>{errMsg}</Text>
             <Text
               onPress={fetchDetails}
-              style={{ marginTop: 10, color: "#0A1F5C", fontWeight: "900" }}
+              accessibilityRole="button"
+              suppressHighlighting
+              style={{
+                marginTop: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                color: "#0A1F5C",
+                fontWeight: "900",
+              }}
             >
               Tentar novamente
             </Text>
@@ -671,6 +680,9 @@ export default function GameDetailsScreen() {
           </>
         )}
       </View>
+
+      {/* Sem o jogo carregado não há o cabeçalho com a seta de voltar. */}
+      {loading || errMsg || !game ? <BackButton /> : null}
     </View>
   );
 }
