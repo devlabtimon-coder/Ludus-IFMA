@@ -58,6 +58,8 @@ type GameDetails = {
   maxTime?: number | null;
 
   isAvailableNow?: boolean;
+  // Há horário livre nos próximos 7 dias (ausente em backends antigos).
+  hasFreeSlotSoon?: boolean;
   rentedByMe?: boolean;
 
   tier?: string | null;
@@ -241,7 +243,9 @@ export default function GameDetailsScreen() {
         showAlert(
           "success",
           "Aviso ativado",
-          "Vamos te avisar quando o jogo voltar a ficar disponível.",
+          game.isAvailableNow && game.hasFreeSlotSoon === false
+            ? "Vamos te avisar quando abrir um horário para este jogo."
+            : "Vamos te avisar quando o jogo voltar a ficar disponível.",
         );
       } else {
         await api.delete(`/games/${game.id}/watch`);
@@ -613,8 +617,8 @@ export default function GameDetailsScreen() {
             </ScrollView>
 
             <BottomBar
-              price={game.price}
               unavailable={!game.isAvailableNow}
+              noSlotSoon={game.hasFreeSlotSoon === false}
               rentedByMe={game.rentedByMe}
               watching={watching}
               loadingWatch={loadingWatch}
