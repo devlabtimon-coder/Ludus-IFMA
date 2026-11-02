@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { formatDateTime, getRentalStatusMeta } from "@/src/utils/rentals";
 import type { RentalItemModel } from "./RentalItem";
 
 type Props = {
@@ -9,54 +10,6 @@ type Props = {
   onCancelRental: (rentalId: string) => void | Promise<void>;
   cancelLoading?: boolean;
 };
-
-function fmtDateTime(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("pt-BR");
-}
-
-function getStatusMeta(status: string) {
-  const s = (status || "").toUpperCase();
-
-  if (s === "PENDING") {
-    return {
-      label: "Pendente",
-      color: "#FBBC04",
-      description: "Seu aluguel ainda não foi ativado. Você pode cancelá-lo.",
-    };
-  }
-
-  if (s === "ACTIVE") {
-    return {
-      label: "Ativo",
-      color: "#2FA84F",
-      description: "Seu aluguel está em andamento.",
-    };
-  }
-
-  if (s === "RETURNED") {
-    return {
-      label: "Devolvido",
-      color: "#31358B",
-      description: "Esse aluguel já foi finalizado com devolução.",
-    };
-  }
-
-  if (s === "CANCELED") {
-    return {
-      label: "Cancelado",
-      color: "#B3193A",
-      description: "Esse aluguel foi cancelado.",
-    };
-  }
-
-  return {
-    label: status || "—",
-    color: "#6A6A6A",
-    description: "Informações do aluguel.",
-  };
-}
 
 function getRemainingText(endDate: string, status: string) {
   if ((status || "").toUpperCase() !== "ACTIVE") return null;
@@ -86,7 +39,7 @@ export default function RentalDetailsModal({
 }: Props) {
   if (!rental) return null;
 
-  const status = getStatusMeta(rental.status);
+  const status = getRentalStatusMeta(rental.status);
   const remainingText = getRemainingText(rental.endDate, rental.status);
 
   const canCancel = (rental.status || "").toUpperCase() === "PENDING";
@@ -106,7 +59,13 @@ export default function RentalDetailsModal({
 
           <View style={styles.header}>
             <Text style={styles.title}>Detalhes do aluguel</Text>
-            <Pressable onPress={onClose} style={styles.closeBtn}>
+            <Pressable
+              onPress={onClose}
+              style={styles.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar detalhes do aluguel"
+              hitSlop={6}
+            >
               <Ionicons name="close" size={20} color="#31358B" />
             </Pressable>
           </View>
@@ -138,8 +97,8 @@ export default function RentalDetailsModal({
 
           <View style={styles.infoBox}>
             <InfoRow icon="cube-outline" label="Exemplar" value={copyLabel} />
-            <InfoRow icon="calendar-outline" label="Início" value={fmtDateTime(rental.startDate)} />
-            <InfoRow icon="calendar-clear-outline" label="Prazo final" value={fmtDateTime(rental.endDate)} />
+            <InfoRow icon="calendar-outline" label="Retirada" value={formatDateTime(rental.startDate)} />
+            <InfoRow icon="calendar-clear-outline" label="Devolução até" value={formatDateTime(rental.endDate)} />
           </View>
 
           {canCancel ? (

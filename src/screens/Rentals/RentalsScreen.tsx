@@ -12,16 +12,20 @@ export default function RentalsScreen() {
   const [rentals, setRentals] = useState<RentalItemModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const [selectedRental, setSelectedRental] = useState<RentalItemModel | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
 
+  // Em caso de erro mantém a lista que já estava na tela: um "nenhum
+  // aluguel" falso faria o aluno achar que perdeu a reserva.
   const load = useCallback(async () => {
     try {
       const res = await api.get("/rentals/me");
       setRentals(res.data || []);
+      setLoadError(false);
     } catch {
-      setRentals([]);
+      setLoadError(true);
     }
   }, []);
 
@@ -37,6 +41,12 @@ export default function RentalsScreen() {
     setRefreshing(true);
     await load();
     setRefreshing(false);
+  }, [load]);
+
+  const onRetry = useCallback(async () => {
+    setLoading(true);
+    await load();
+    setLoading(false);
   }, [load]);
 
   async function handleCancelRental(rentalId: string) {
@@ -69,6 +79,8 @@ export default function RentalsScreen() {
               onRefresh={onRefresh}
               refreshing={refreshing}
               onPressRental={setSelectedRental}
+              loadError={loadError}
+              onRetry={onRetry}
             />
           </View>
         </View>

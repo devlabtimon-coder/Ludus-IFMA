@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { formatRentalPeriod, getRentalStatusMeta } from "@/src/utils/rentals";
 
 export type RentalItemModel = {
   id: string;
@@ -10,21 +11,6 @@ export type RentalItemModel = {
   copy?: { id: string; code?: string | null; number: number } | null;
 };
 
-function fmtDate(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("pt-BR");
-}
-
-function statusLabel(status: string) {
-  const s = (status || "").toUpperCase();
-  if (s === "PENDING") return { text: "Pendente", color: "#FBBC04" };
-  if (s === "ACTIVE") return { text: "Em andamento", color: "#2FA84F" };
-  if (s === "RETURNED") return { text: "Devolvido", color: "#31358B" };
-  if (s === "CANCELED") return { text: "Cancelado", color: "#B3193A" };
-  return { text: status || "—", color: "#6A6A6A" };
-}
-
 export default function RentalItem({
   rental,
   onPress,
@@ -32,7 +18,9 @@ export default function RentalItem({
   rental: RentalItemModel;
   onPress?: () => void;
 }) {
-  const st = statusLabel(rental.status);
+  const st = getRentalStatusMeta(rental.status);
+  const isPending = (rental.status || "").toUpperCase() === "PENDING";
+  const period = formatRentalPeriod(rental.startDate, rental.endDate);
 
   const copyLabel =
     rental.copy?.number != null
@@ -42,6 +30,9 @@ export default function RentalItem({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${rental.game.title}, ${st.label}, ${period}`}
+      accessibilityHint="Abre os detalhes do aluguel"
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.92 }]}
     >
       {rental.game.cover ? (
@@ -57,7 +48,7 @@ export default function RentalItem({
           </Text>
 
           <View style={[styles.badge, { backgroundColor: st.color }]}>
-            <Text style={styles.badgeText}>{st.text}</Text>
+            <Text style={styles.badgeText}>{st.label}</Text>
           </View>
         </View>
 
@@ -70,10 +61,17 @@ export default function RentalItem({
 
         <View style={styles.subRow}>
           <Ionicons name="calendar-outline" size={14} color="#8B8EA1" />
-          <Text style={styles.subText}>
-            {fmtDate(rental.startDate)} • até {fmtDate(rental.endDate)}
-          </Text>
+          <Text style={styles.subText}>{period}</Text>
         </View>
+
+        {isPending ? (
+          <View style={styles.subRow}>
+            <Ionicons name="location-outline" size={14} color="#9A6B00" />
+            <Text style={styles.pickupText} numberOfLines={2}>
+              Retire na biblioteca no horário agendado (tolerância de 30 min)
+            </Text>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -95,11 +93,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#EEE",
   },
   info: { flex: 1, marginLeft: 12 },
-  topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
-  title: { flex: 1, fontSize: 16, fontWeight: "900", color: "#2C2C2C" },
+  // Título em cima e selo embaixo: "Aguardando retirada" não cabe ao lado
+  // do título em telas estreitas.
+  topRow: { alignItems: "flex-start", gap: 6 },
+  title: { alignSelf: "stretch", fontSize: 16, fontWeight: "900", color: "#2C2C2C" },
   badge: { paddingHorizontal: 10, height: 26, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   badgeText: { color: "#fff", fontWeight: "900", fontSize: 12 },
 
   subRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6 },
   subText: { color: "#8B8EA1", fontWeight: "700", fontSize: 13, flex: 1 },
+  pickupText: { color: "#9A6B00", fontWeight: "700", fontSize: 12, flex: 1 },
 });

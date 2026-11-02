@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import RentalItem, { RentalItemModel } from "./RentalItem";
@@ -7,9 +9,20 @@ type Props = {
   onRefresh?: () => void;
   refreshing?: boolean;
   onPressRental?: (rental: RentalItemModel) => void;
+  // A última carga falhou (sem rede, servidor fora).
+  loadError?: boolean;
+  onRetry?: () => void;
 };
 
-export default function RentalsCard({ rentals, onRefresh, refreshing = false, onPressRental }: Props) {
+export default function RentalsCard({
+  rentals,
+  onRefresh,
+  refreshing = false,
+  onPressRental,
+  loadError = false,
+  onRetry,
+}: Props) {
+  const router = useRouter();
   const [tab, setTab] = useState<"ACTIVE" | "HISTORY">("ACTIVE");
 
   const { active, history } = useMemo(() => {
@@ -39,6 +52,8 @@ export default function RentalsCard({ rentals, onRefresh, refreshing = false, on
         <Pressable
           onPress={() => setTab("ACTIVE")}
           style={[styles.tab, tab === "ACTIVE" && styles.tabActive]}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: tab === "ACTIVE" }}
         >
           <Text style={[styles.tabText, tab === "ACTIVE" && styles.tabTextActive]}>
             Em andamento ({active.length})
@@ -48,6 +63,8 @@ export default function RentalsCard({ rentals, onRefresh, refreshing = false, on
         <Pressable
           onPress={() => setTab("HISTORY")}
           style={[styles.tab, tab === "HISTORY" && styles.tabActive]}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: tab === "HISTORY" }}
         >
           <Text style={[styles.tabText, tab === "HISTORY" && styles.tabTextActive]}>
             Anteriores ({history.length})
@@ -55,7 +72,22 @@ export default function RentalsCard({ rentals, onRefresh, refreshing = false, on
         </Pressable>
       </View>
 
-      {data.length === 0 ? (
+      {loadError && rentals.length === 0 ? (
+        <View style={styles.empty}>
+          <Ionicons name="cloud-offline-outline" size={36} color="#8B8EA1" />
+          <Text style={styles.emptyTitle}>Não foi possível carregar</Text>
+          <Text style={styles.emptyText}>
+            Verifique sua conexão e tente de novo.
+          </Text>
+          <Pressable
+            style={styles.emptyBtn}
+            onPress={onRetry}
+            accessibilityRole="button"
+          >
+            <Text style={styles.emptyBtnText}>Tentar novamente</Text>
+          </Pressable>
+        </View>
+      ) : data.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>
             {tab === "ACTIVE" ? "Nenhum aluguel em andamento" : "Sem histórico ainda"}
@@ -65,9 +97,25 @@ export default function RentalsCard({ rentals, onRefresh, refreshing = false, on
               ? "Quando você alugar um jogo, ele aparece aqui."
               : "Depois que você devolver um jogo, ele aparece aqui."}
           </Text>
+          {tab === "ACTIVE" ? (
+            <Pressable
+              style={styles.emptyBtn}
+              onPress={() => router.push("/search")}
+              accessibilityRole="button"
+            >
+              <Text style={styles.emptyBtnText}>Explorar jogos</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : (
         <FlatList
+          ListHeaderComponent={
+            loadError ? (
+              <Text style={styles.staleText}>
+                Não foi possível atualizar. Puxe a lista para tentar de novo.
+              </Text>
+            ) : null
+          }
           data={data}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
@@ -113,7 +161,24 @@ const styles = StyleSheet.create({
   tabText: { fontWeight: "900", color: "#6A6A6A" },
   tabTextActive: { color: "#FFF" },
 
-  empty: { paddingTop: 40, alignItems: "center" },
+  empty: { paddingTop: 40, alignItems: "center", gap: 2 },
+  emptyBtn: {
+    marginTop: 16,
+    height: 46,
+    paddingHorizontal: 22,
+    borderRadius: 14,
+    backgroundColor: "#0A1F5C",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyBtnText: { color: "#FFF", fontWeight: "900", fontSize: 14 },
+  staleText: {
+    color: "#B3193A",
+    fontWeight: "700",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
+  },
   emptyTitle: { fontWeight: "900", fontSize: 16, color: "#2C2C2C" },
   emptyText: { marginTop: 6, color: "#8B8EA1", fontWeight: "700", textAlign: "center" },
 });
