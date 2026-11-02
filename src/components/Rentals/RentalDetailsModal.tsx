@@ -4,6 +4,8 @@ import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } fr
 import { formatDateTime, getRentalStatusMeta } from "@/src/utils/rentals";
 import type { RentalItemModel } from "./RentalItem";
 
+const CANCEL_PENALTY_WINDOW_MS = 2 * 60 * 60 * 1000;
+
 type Props = {
   visible: boolean;
   rental: RentalItemModel | null;
@@ -55,6 +57,11 @@ export default function RentalDetailsModal({
   const remainingText = getRemainingText(rental.endDate, rental.status);
 
   const canCancel = (rental.status || "").toUpperCase() === "PENDING";
+
+  // Regra de produto: só perde pontos quem cancela com menos de 2 h para a
+  // retirada.
+  const cancelLosesPoints =
+    new Date(rental.startDate).getTime() - Date.now() < CANCEL_PENALTY_WINDOW_MS;
 
   const copyLabel =
     rental.copy?.number != null
@@ -117,7 +124,9 @@ export default function RentalDetailsModal({
             <View style={styles.confirmBox}>
               <Text style={styles.confirmTitle}>Cancelar esta reserva?</Text>
               <Text style={styles.confirmText}>
-                A reserva será cancelada e você perde 2 pontos.
+                {cancelLosesPoints
+                  ? "Como faltam menos de 2 horas, você perde 2 pontos."
+                  : "Cancelar com antecedência não tira pontos."}
               </Text>
 
               {cancelError ? (
