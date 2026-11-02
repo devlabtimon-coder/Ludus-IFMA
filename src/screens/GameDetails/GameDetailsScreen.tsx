@@ -173,31 +173,40 @@ export default function GameDetailsScreen() {
           : prev,
       );
 
+      // No iOS um Modal não abre enquanto outro ainda está fechando: o
+      // alerta espera o modal de avaliação sair (mesmo atraso da reserva).
       setRateOpen(false);
-      showAlert(
-        "success",
-        "Avaliação salva!",
-        "Sua avaliação foi registrada com sucesso.",
-      );
+      setTimeout(() => {
+        showAlert(
+          "success",
+          "Avaliação salva!",
+          "Sua avaliação foi registrada com sucesso.",
+        );
+      }, 400);
     } catch (e: any) {
       const code = e?.response?.data?.code;
       const msg = e?.response?.data?.error;
 
+      setRateOpen(false);
       if (code === "CANNOT_RATE") {
         setCanRate(false);
-        showAlert(
-          "info",
-          "Avaliação bloqueada",
-          "Você só pode avaliar este jogo após devolver.",
-        );
+        setTimeout(() => {
+          showAlert(
+            "info",
+            "Avaliação bloqueada",
+            "Você só pode avaliar este jogo após devolver.",
+          );
+        }, 400);
         return;
       }
 
-      showAlert(
-        "error",
-        "Erro",
-        msg || "Não foi possível salvar sua avaliação. Tente novamente.",
-      );
+      setTimeout(() => {
+        showAlert(
+          "error",
+          "Erro",
+          msg || "Não foi possível salvar sua avaliação. Tente novamente.",
+        );
+      }, 400);
     } finally {
       setSavingRate(false);
     }
