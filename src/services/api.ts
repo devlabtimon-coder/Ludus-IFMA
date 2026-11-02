@@ -1,22 +1,33 @@
 import axios from "axios";
-import axiosRetry from "axios-retry";
+import axiosRetry, {
+  exponentialDelay,
+  isNetworkError,
+  isRetryableError,
+} from "axios-retry";
 import * as SecureStore from "expo-secure-store";
 import { showLudusAlert } from "./alert.service";
 import { goToVerify } from "./navigation";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
-  timeout: 30000,
+  timeout: 15000,
 });
 
+// Só repete requisições que não mudam nada no servidor. Um POST que estourou
+// o tempo pode ter sido processado (ex.: a reserva foi criada e a resposta se
+// perdeu); repetir duplicaria a ação.
+const SAFE_METHODS = ["get", "head", "options"];
+
 axiosRetry(api, {
-  retries: 3,
-  retryDelay: axiosRetry.exponentialDelay,
+  retries: 2,
+  retryDelay: exponentialDelay,
   retryCondition: (error) => {
-    return (
-      axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-      error.code === "ECONNABORTED"
-    );
+    const method = (error.config?.method || "").toLowerCase();
+    if (!SAFE_METHODS.includes(method)) return false;
+
+    // Sem resposta (rede caiu) ou 5xx/429. Timeout não repete: o tempo
+    // total da requisição continua limitado ao timeout acima.
+    return isNetworkError(error) || isRetryableError(error);
   },
 });
 

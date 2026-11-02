@@ -140,8 +140,10 @@ export default function DocumentsScreen() {
         );
       }
 
+      // Envio de fotos demora mais que uma requisição comum.
       await api.patch("/users/me/documents", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 60000,
       });
 
       await refreshUser();
