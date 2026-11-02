@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { formatDateTime, getRentalStatusMeta } from "@/src/utils/rentals";
 import type { RentalItemModel } from "./RentalItem";
@@ -9,6 +10,9 @@ type Props = {
   onClose: () => void;
   onCancelRental: (rentalId: string) => void | Promise<void>;
   cancelLoading?: boolean;
+  // Erro do último cancelamento, mostrado dentro do próprio modal: no iOS
+  // outro Modal (alerta) não abre por cima deste.
+  cancelError?: string | null;
 };
 
 function getRemainingText(endDate: string, status: string) {
@@ -36,7 +40,15 @@ export default function RentalDetailsModal({
   onClose,
   onCancelRental,
   cancelLoading = false,
+  cancelError = null,
 }: Props) {
+  // Cancelar pede confirmação: o primeiro toque só mostra o aviso.
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+
+  useEffect(() => {
+    setConfirmingCancel(false);
+  }, [rental?.id, visible]);
+
   if (!rental) return null;
 
   const status = getRentalStatusMeta(rental.status);
@@ -101,17 +113,52 @@ export default function RentalDetailsModal({
             <InfoRow icon="calendar-clear-outline" label="Devolução até" value={formatDateTime(rental.endDate)} />
           </View>
 
-          {canCancel ? (
+          {canCancel && confirmingCancel ? (
+            <View style={styles.confirmBox}>
+              <Text style={styles.confirmTitle}>Cancelar esta reserva?</Text>
+              <Text style={styles.confirmText}>
+                A reserva será cancelada e você perde 2 pontos.
+              </Text>
+
+              {cancelError ? (
+                <Text style={styles.errorText} accessibilityRole="alert">
+                  {cancelError}
+                </Text>
+              ) : null}
+
+              <View style={styles.confirmRow}>
+                <Pressable
+                  style={[styles.keepBtn, cancelLoading && { opacity: 0.7 }]}
+                  onPress={() => setConfirmingCancel(false)}
+                  disabled={cancelLoading}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.keepBtnText}>Manter reserva</Text>
+                </Pressable>
+
+                <Pressable
+                  style={[styles.confirmBtn, cancelLoading && { opacity: 0.7 }]}
+                  onPress={() => onCancelRental(rental.id)}
+                  disabled={cancelLoading}
+                  accessibilityRole="button"
+                  accessibilityLabel="Sim, cancelar reserva"
+                  accessibilityState={{ busy: cancelLoading, disabled: cancelLoading }}
+                >
+                  {cancelLoading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={styles.cancelBtnText}>Sim, cancelar</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          ) : canCancel ? (
             <Pressable
-              style={[styles.cancelBtn, cancelLoading && { opacity: 0.7 }]}
-              onPress={() => onCancelRental(rental.id)}
-              disabled={cancelLoading}
+              style={styles.cancelBtn}
+              onPress={() => setConfirmingCancel(true)}
+              accessibilityRole="button"
             >
-              {cancelLoading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.cancelBtnText}>Cancelar aluguel</Text>
-              )}
+              <Text style={styles.cancelBtnText}>Cancelar reserva</Text>
             </Pressable>
           ) : null}
         </View>
@@ -283,6 +330,65 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  confirmBox: {
+    marginTop: 18,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 18,
+    padding: 14,
+  },
+
+  confirmTitle: {
+    color: "#B3193A",
+    fontWeight: "900",
+    fontSize: 15,
+  },
+
+  confirmText: {
+    marginTop: 4,
+    color: "#6A6A6A",
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+
+  errorText: {
+    marginTop: 10,
+    color: "#B3193A",
+    fontWeight: "800",
+    lineHeight: 20,
+  },
+
+  confirmRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+
+  keepBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#E6E6EF",
+  },
+
+  keepBtnText: {
+    color: "#2C2C2C",
+    fontWeight: "900",
+    fontSize: 14,
+  },
+
+  confirmBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#B3193A",
   },
 
   cancelBtnText: {
