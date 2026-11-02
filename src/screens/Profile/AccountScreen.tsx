@@ -6,6 +6,7 @@ import { AccountInfoCard } from "@/src/components/Profile/Account/AccountInfoCar
 import { AccountPersonalForm } from "@/src/components/Profile/Account/AccountPersonalForm";
 import { AccountStatusPill } from "@/src/components/Profile/Account/AccountStatusPill";
 import { AccountSummaryCard } from "@/src/components/Profile/Account/AccountSummaryCard";
+import { DeleteAccountModal } from "@/src/components/Profile/Account/DeleteAccountModal";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { api } from "@/src/services/api";
 import { useRouter } from "expo-router";
@@ -40,6 +41,7 @@ type MeResponse = {
   level?: number;
 
   authProvider?: string;
+  hasPassword?: boolean;
 
   clientCategory: string;
   totalRentalsCount: number;
@@ -79,7 +81,7 @@ function getLevelLabel(level?: number) {
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
 
   const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
 
@@ -99,6 +101,8 @@ export default function AccountScreen() {
   const [level, setLevel] = useState<number>(1);
   const [authProvider, setAuthProvider] = useState<string>("LOCAL");
   const [role, setRole] = useState<string>("USER");
+  const [hasPassword, setHasPassword] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState<AlertType>("info");
@@ -133,6 +137,7 @@ export default function AccountScreen() {
       setPoints(data.points || 0);
       setLevel(data.level || 1);
       setAuthProvider(data.authProvider || "LOCAL");
+      setHasPassword(!!data.hasPassword);
       setRole(data.role || "USER");
       setClientCategory(data.clientCategory || "STARTER");
       setNextCategory(data.categoryProgress?.nextCategory || null);
@@ -170,6 +175,14 @@ export default function AccountScreen() {
   }, [name, phone, email, isIfmaMode]);
 
   const displayName = name.trim() || user?.nome || user?.name || "Usuário";
+
+  async function handleAccountDeleted() {
+    setDeleteOpen(false);
+    await logout();
+    // Tira as telas da conta da pilha: o gesto de voltar não leva de volta a elas.
+    if (router.canDismiss()) router.dismissAll();
+    router.replace("/onboarding");
+  }
 
   async function handleSave() {
     const cleanName = name.trim();
@@ -444,6 +457,25 @@ export default function AccountScreen() {
                 />
               </View>
 
+              {role !== "ADMIN" && (
+                <>
+                  <Text style={[styles.sectionTitle, { marginTop: 26 }]}>
+                    Excluir conta
+                  </Text>
+                  <View style={styles.sectionLine} />
+
+                  <View style={{ marginTop: 18 }}>
+                    <AccountActionRow
+                      icon="trash-outline"
+                      title="Excluir minha conta"
+                      subtitle="Apaga seus dados pessoais do Ludus"
+                      accent="red"
+                      onPress={() => setDeleteOpen(true)}
+                    />
+                  </View>
+                </>
+              )}
+
               <Pressable
                 onPress={handleSave}
                 disabled={!canSave || saving}
@@ -460,6 +492,13 @@ export default function AccountScreen() {
           )}
         </View>
       </KeyboardAvoidingView>
+
+      <DeleteAccountModal
+        visible={deleteOpen}
+        hasPassword={hasPassword}
+        onClose={() => setDeleteOpen(false)}
+        onDeleted={handleAccountDeleted}
+      />
 
       <LudusAlert
         visible={alertVisible}
