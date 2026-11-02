@@ -1,5 +1,6 @@
 import { api } from "@/src/services/api";
-import { goToRoute } from "@/src/services/navigation";
+import { openHref } from "@/src/services/navigation";
+import { resolveNotificationRoute } from "@/src/services/notificationRoutes";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -61,27 +62,51 @@ export async function registerForPush(userId?: string) {
   return token;
 }
 
+// Com o app fechado, o toque chega antes do login ser restaurado e a splash
+// ainda vai trocar a tela para a Home. A rota fica guardada até a splash
+// liberar a navegação (releaseNotificationNavigation).
+let navigationReady = false;
+let pendingRoute: string | null = null;
+const handledResponses = new Set<string>();
+
+function handleResponse(resp: Notifications.NotificationResponse) {
+  const id = resp.notification.request.identifier;
+  if (handledResponses.has(id)) return;
+  handledResponses.add(id);
+
+  // Não reabrir a mesma notificação no próximo início do app.
+  try {
+    Notifications.clearLastNotificationResponse();
+  } catch {
+    // Sem suporte nativo: o Set acima já evita repetir nesta sessão.
+  }
+
+  const route = resolveNotificationRoute(resp.notification.request.content.data);
+  if (!route) return;
+
+  if (navigationReady && openHref(route)) return;
+  pendingRoute = route;
+}
+
+// Chamado pela splash depois de decidir a tela inicial. Logado, abre a rota
+// da notificação que iniciou o app; deslogado, descarta.
+export function releaseNotificationNavigation(loggedIn: boolean) {
+  navigationReady = true;
+  const route = pendingRoute;
+  pendingRoute = null;
+  if (route && loggedIn) openHref(route);
+}
+
 export function attachNotificationListeners() {
-  const sub1 = Notifications.addNotificationResponseReceivedListener((resp) => {
-    const data = resp.notification.request.content.data as any;
+  const sub1 = Notifications.addNotificationResponseReceivedListener(handleResponse);
 
-    if (data?.route) {
-      goToRoute(data.route);
-      return;
-    }
-
-    const type = String(data?.type || "").toUpperCase();
-
-    if (type.startsWith("RENTAL_") || type.startsWith("RATING")) {
-      goToRoute("/rentals");
-    } else if (type.startsWith("FAVORITE")) {
-      goToRoute("/favorites");
-    } else if (type.includes("LEVEL") || type.includes("POINTS")) {
-      goToRoute("/ranking");
-    } else if (type.includes("VERIFY")) {
-      goToRoute("/profile");
-    }
-  });
+  // App aberto pelo toque numa notificação (estava fechado).
+  try {
+    const last = Notifications.getLastNotificationResponse();
+    if (last) handleResponse(last);
+  } catch {
+    // Plataforma sem suporte (web).
+  }
 
   return () => {
     sub1.remove();

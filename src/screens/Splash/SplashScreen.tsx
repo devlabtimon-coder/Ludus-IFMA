@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import * as ExpoSplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Image, StyleSheet, View } from "react-native";
+import { releaseNotificationNavigation } from "@/src/services/push.client";
 
 ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -45,6 +46,9 @@ export default function SplashScreen() {
         } else {
           router.replace("/onboarding");
         }
+        // App aberto pelo toque numa notificação: abre o destino por cima
+        // da Home (o voltar leva à Home).
+        releaseNotificationNavigation(!!user);
       });
     }
   }, [isLoading, user, appReady, router]);

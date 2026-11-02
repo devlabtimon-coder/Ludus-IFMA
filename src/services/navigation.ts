@@ -30,3 +30,10 @@ export function resetTo(pathname: string) {
   if (routerRef.canDismiss()) routerRef.dismissAll();
   routerRef.replace(pathname as any);
 }
+
+// Abre uma rota já pronta (pode ter parâmetros na própria string).
+export function openHref(href: string) {
+  if (!routerRef) return false;
+  routerRef.push(href as any);
+  return true;
+}
