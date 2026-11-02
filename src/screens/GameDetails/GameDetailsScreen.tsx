@@ -28,6 +28,10 @@ import {
   VerificationBlockModal,
 } from "@/src/components/GameDetails/VerificationBlockModal";
 import { useAuth } from "@/src/contexts/AuthContext";
+import {
+  getVerificationState,
+  type VerificationState,
+} from "@/src/utils/verification";
 import { Ionicons } from "@expo/vector-icons";
 
 type GameDetails = {
@@ -80,7 +84,11 @@ export default function GameDetailsScreen() {
   );
 
   const [blockModalVisible, setBlockModalVisible] = useState(false);
-  const [blockType, setBlockType] = useState<BlockType>(null);
+  const [blockState, setBlockState] = useState<VerificationState | null>(
+    null,
+  );
+  const blockType: BlockType =
+    blockState && blockState.status !== "APPROVED" ? blockState.status : null;
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [favSaving, setFavSaving] = useState(false);
@@ -580,53 +588,27 @@ export default function GameDetailsScreen() {
                   return;
                 }
 
-                const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
+                let verification = getVerificationState(user);
 
-                let latestUser = user;
-
-                const locallyBlocked = isIfmaMode
-                  ? !latestUser?.isAcademicVerified
-                  : latestUser?.registrationStatus !== "APPROVED";
-
-                if (locallyBlocked) {
+                // O dado local pode estar velho (a biblioteca aprovou depois
+                // do último carregamento): confirma no servidor antes de barrar.
+                if (verification.status !== "APPROVED") {
                   try {
                     const res = await api.get(`/users/me?t=${Date.now()}`);
-                    latestUser = { ...latestUser, ...res.data };
+                    verification = getVerificationState({
+                      ...user,
+                      ...res.data,
+                    });
                     refreshUser();
                   } catch {
                     // Segue com os dados locais se a checagem falhar.
                   }
                 }
 
-                if (isIfmaMode) {
-                  if (!latestUser?.isAcademicVerified) {
-                    setBlockType("IFMA_UNVERIFIED");
-                    setBlockModalVisible(true);
-                    return;
-                  }
-                } else {
-                  if (latestUser?.registrationStatus !== "APPROVED") {
-                    const isRejected =
-                      latestUser?.registrationStatus === "REJECTED";
-
-                    const hasSentDocs = Boolean(
-                      (latestUser as any)?.documentFrontImage &&
-                      (latestUser as any)?.documentBackImage &&
-                      (latestUser as any)?.addressProof &&
-                      (latestUser as any)?.selfieWithId,
-                    );
-
-                    const isAnalysis =
-                      latestUser?.registrationStatus === "PENDING" &&
-                      hasSentDocs;
-
-                    if (isAnalysis) setBlockType("DOCS_PENDING");
-                    else if (isRejected) setBlockType("DOCS_REJECTED");
-                    else setBlockType("DOCS_UNVERIFIED");
-
-                    setBlockModalVisible(true);
-                    return;
-                  }
+                if (verification.status !== "APPROVED") {
+                  setBlockState(verification);
+                  setBlockModalVisible(true);
+                  return;
                 }
 
                 openRentFlow();
@@ -674,12 +656,14 @@ export default function GameDetailsScreen() {
             <VerificationBlockModal
               visible={blockModalVisible}
               type={blockType}
+              rejectReason={blockState?.rejectReason}
               onClose={() => setBlockModalVisible(false)}
               onAction={() => {
                 setBlockModalVisible(false);
 
-                if (blockType === "DOCS_PENDING") {
-                } else {
+                // Em análise ou conta suspensa não há o que enviar: o botão
+                // "Entendido" só fecha.
+                if (blockType === "NOT_SUBMITTED" || blockType === "REJECTED") {
                   router.push("/profile/documents");
                 }
               }}

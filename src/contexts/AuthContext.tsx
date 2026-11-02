@@ -44,7 +44,7 @@ export type AuthUser = {
 
   enrollmentProof?: string | null;
 
-  registrationStatus?: "PENDING" | "APPROVED" | "REJECTED";
+  registrationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
   rejectReason?: string | null;
 };
 
