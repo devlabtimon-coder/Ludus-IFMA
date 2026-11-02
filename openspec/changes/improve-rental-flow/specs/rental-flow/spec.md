@@ -72,3 +72,53 @@ O app MUST abrir a tela do jogo ao tocar numa notificação com rota `/details?i
 #### Scenario: App fechado
 - **WHEN** o aluno abre o app pelo toque numa notificação
 - **THEN** a splash leva à Home e em seguida abre o destino da notificação
+
+### Requirement: Aluguel grátis sem preço na tela
+O app MUST NOT mostrar preço de aluguel ("R$ X / dia") em cards, favoritos ou na tela do jogo, nem oferecer filtro ou ordenação por preço. O selo "Valor de mercado" continua.
+
+#### Scenario: Aluno abre a tela do jogo
+- **WHEN** o aluno abre os detalhes de um jogo disponível
+- **THEN** a barra inferior mostra "Grátis" e "Devolução no mesmo dia" ao lado de "Alugar", sem valor em reais
+
+### Requirement: Erros de reserva das regras da rodada 2
+O app SHALL mostrar um aviso claro quando o servidor recusar a reserva com `SAME_DAY_ONLY` ou `OVERDUE_RENTAL`, usando a mensagem do servidor no caso do atraso.
+
+#### Scenario: Aluno com jogo em atraso tenta reservar
+- **WHEN** o POST de reserva volta 409 `OVERDUE_RENTAL`
+- **THEN** o app mostra "Jogo em atraso" com a mensagem do servidor
+
+#### Scenario: Reserva fora do mesmo dia
+- **WHEN** o POST de reserva volta 400 `SAME_DAY_ONLY`
+- **THEN** o app explica que a retirada e a devolução precisam ser no mesmo dia
+
+### Requirement: Me avise sem horário livre em breve
+O app SHALL oferecer o "Me avise" quando o jogo estiver indisponível ou quando o servidor informar `hasFreeSlotSoon = false`; sem o campo, vale só a indisponibilidade.
+
+#### Scenario: Jogo com exemplar mas sem horário nos próximos 7 dias
+- **WHEN** o jogo tem `isAvailableNow = true` e `hasFreeSlotSoon = false`
+- **THEN** a barra explica "Sem horários livres nos próximos 7 dias. Peça para ser avisado quando abrir um horário." e mostra "Me avise" e "Ver datas"
+
+### Requirement: Brindes na carteira
+A carteira MUST apresentar cada código como "Brinde", com a situação (Ativo, Usado em dd/mm, Expirado), a validade e a instrução de mostrar o código na biblioteca, sem textos de desconto.
+
+#### Scenario: Brinde sem data de validade
+- **WHEN** o brinde vem com `expiresAt` nulo
+- **THEN** a carteira mostra "Válido até o fim da próxima temporada"
+
+#### Scenario: Brinde já entregue
+- **WHEN** o brinde vem com status usado e `usedAt`
+- **THEN** a carteira mostra "Usado em dd/mm" e o código fica esmaecido
+
+### Requirement: Aviso de jogo em atraso
+A tela de aluguéis SHALL mostrar um aviso no topo quando o aluno tiver um aluguel retirado com o horário de devolução vencido.
+
+#### Scenario: Aluno com jogo atrasado abre Meus aluguéis
+- **WHEN** existe um aluguel `ACTIVE` com `endDate` no passado
+- **THEN** o topo da tela mostra "Jogo em atraso — devolva na biblioteca" e que novas reservas ficam bloqueadas
+
+### Requirement: Termo e guia com as regras da rodada 2
+O Termo de Compromisso e o Guia MUST descrever aluguel grátis com retirada e devolução no mesmo dia (seg–sex, 8h às 19h), -10 pontos e bloqueio de reservas no atraso, -2 só ao cancelar com menos de 2h, -5 por não comparecimento após 30 minutos, promoção só por devolução no prazo e sem avaria e brindes válidos até o fim da temporada seguinte.
+
+#### Scenario: Aluno lê o Termo
+- **WHEN** o aluno abre Termos e Contrato
+- **THEN** não há menção a "até 3 dias", tabela de preços ou pagamento

@@ -23,6 +23,8 @@ A auditoria do fluxo de aluguel encontrou problemas que fazem o aluno perder res
 - Notificações: `/details?id=X` abre `/game/X`; toque com o app fechado é guardado até a splash decidir a tela inicial.
 - Textos de erro sem jargão; saudação da Home com `name`; rótulos e área de toque nos botões só com ícone.
 
+- Rodada 2 (decisões de produto): aluguel grátis sem "R$/dia" em nenhuma tela; avisos para `SAME_DAY_ONLY` e `OVERDUE_RENTAL`; "Me avise" também quando não há horário livre nos próximos 7 dias (`hasFreeSlotSoon`); Termo e Guia com retirada e devolução no mesmo dia, -10 no atraso com bloqueio de reservas e brindes; carteira de brindes com situação e validade; aviso de jogo em atraso na lista de aluguéis.
+
 ## Capabilities
 
 ### New Capabilities
@@ -34,5 +36,4 @@ A auditoria do fluxo de aluguel encontrou problemas que fazem o aluno perder res
 
 - Só o app. Usa os códigos de erro já existentes no backend (`RENTAL_LIMIT_REACHED`, `ACCOUNT_PENDING`, `CONCURRENCY_CONFLICT`, `ONLY_PENDING_CAN_CANCEL`, `ACCOUNT_BLOCKED`).
 - Requisições GET que falham por timeout não são mais repetidas; o tempo máximo de espera cai de ~2 min para 15 s.
-- Preço "R$/dia" e prazo "até 3 dias" nos Termos não mudam aqui.
-- O backend ainda aplica -2 em todo cancelamento e promove pela retirada confirmada; a mudança para as novas regras vem em outra rodada.
+- Rodada 2 depende do backend `feat/regras-rodada-2`: códigos `SAME_DAY_ONLY` e `OVERDUE_RENTAL`, campo `hasFreeSlotSoon` em `GET /games/:id` e, na carteira, `usedAt`, `expiresAt` nulo e status ATIVO/USADO/EXPIRADO. Sem esses campos o app mantém o comportamento anterior.
