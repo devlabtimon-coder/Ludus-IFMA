@@ -1,6 +1,7 @@
 import BackButton from "@/src/components/common/BackButton";
 import LoginBackground from "@/src/components/Login/LoginBackground";
 import { api } from "@/src/services/api";
+import { formatDate } from "@/src/utils/rentals";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
@@ -14,20 +15,51 @@ import {
 } from "react-native";
 
 const BLUE = "#04096D";
-const GREEN = "#22C55E";
 const GRAY = "#8A8A8A";
 
+type CouponStatus = "ATIVO" | "USADO" | "EXPIRADO";
+
+// O servidor já mandou o status em minúsculas ("ativo", "utilizado",
+// "expirado") e passa a mandar ATIVO | USADO | EXPIRADO: aceita os dois.
 type Coupon = {
   id: string;
   code: string;
-  type: "percentual" | "fixo" | "brinde";
-  value: number;
-  description: string;
-  status: "ativo" | "utilizado" | "expirado";
-  seasonName: string;
-  expiresAt: string;
-  createdAt: string;
+  rewardType?: string | null;
+  type?: string | null;
+  description?: string | null;
+  status?: string | null;
+  seasonName?: string | null;
+  // Nulo = vale até o fim da próxima temporada.
+  expiresAt?: string | null;
+  usedAt?: string | null;
+  createdAt?: string;
 };
+
+function normalizeStatus(status?: string | null): CouponStatus {
+  const s = (status ?? "").toUpperCase();
+  if (s === "USADO" || s === "UTILIZADO") return "USADO";
+  if (s === "EXPIRADO") return "EXPIRADO";
+  return "ATIVO";
+}
+
+const STATUS_COLORS: Record<CouponStatus, { bg: string; fg: string }> = {
+  ATIVO: { bg: "rgba(34,197,94,0.12)", fg: "#15803D" },
+  USADO: { bg: "rgba(4,9,110,0.08)", fg: BLUE },
+  EXPIRADO: { bg: "rgba(229,57,53,0.10)", fg: "#C62828" },
+};
+
+function statusLabel(status: CouponStatus, usedAt?: string | null) {
+  if (status === "USADO") {
+    return usedAt ? `Usado em ${formatDate(usedAt).slice(0, 5)}` : "Usado";
+  }
+  if (status === "EXPIRADO") return "Expirado";
+  return "Ativo";
+}
+
+function validityText(expiresAt?: string | null) {
+  if (!expiresAt) return "Válido até o fim da próxima temporada";
+  return `Válido até ${formatDate(expiresAt)}`;
+}
 
 export default function WalletScreen() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -55,48 +87,48 @@ export default function WalletScreen() {
   }, []);
 
   const filteredCoupons = coupons.filter((c) =>
-    filter === "ativos" ? c.status === "ativo" : c.status !== "ativo",
+    filter === "ativos"
+      ? normalizeStatus(c.status) === "ATIVO"
+      : normalizeStatus(c.status) !== "ATIVO",
   );
 
   const renderTicket = ({ item }: { item: Coupon }) => {
-    const isBrinde = item.type === "brinde";
-    const isAtivo = item.status === "ativo";
-    const isUsado = item.status === "utilizado";
-
-    const expireDate = new Date(item.expiresAt).toLocaleDateString("pt-BR");
+    const status = normalizeStatus(item.status);
+    const isAtivo = status === "ATIVO";
+    const colors = STATUS_COLORS[status];
 
     return (
       <View style={[styles.ticketContainer, !isAtivo && styles.ticketDisabled]}>
         <View style={styles.ticketLeft}>
-          <View
-            style={[
-              styles.iconWrap,
-              {
-                backgroundColor: isBrinde
-                  ? "rgba(251,188,4,0.15)"
-                  : "rgba(4,9,110,0.1)",
-              },
-            ]}
-          >
-            <Ionicons
-              name={isBrinde ? "gift" : "ticket"}
-              size={24}
-              color={isBrinde ? "#9A6B00" : BLUE}
-            />
+          <View style={[styles.iconWrap, { backgroundColor: "rgba(251,188,4,0.15)" }]}>
+            <Ionicons name="gift" size={24} color="#9A6B00" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.ticketTitle} numberOfLines={2}>
-              {item.description}
-            </Text>
-            <Text style={styles.ticketSeason}>{item.seasonName}</Text>
-
-            {isAtivo ? (
-              <Text style={styles.ticketExpire}>Válido até {expireDate}</Text>
-            ) : (
+            <View style={styles.badgeRow}>
+              <Text style={styles.kindBadge}>Brinde</Text>
               <Text
-                style={[styles.ticketExpire, { color: isUsado ? GREEN : RED }]}
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: colors.bg, color: colors.fg },
+                ]}
               >
-                {isUsado ? "Prêmio Resgatado" : "Cupom Expirado"}
+                {statusLabel(status, item.usedAt)}
+              </Text>
+            </View>
+            <Text style={styles.ticketTitle} numberOfLines={2}>
+              {item.description || "Brinde da temporada"}
+            </Text>
+            {!!item.seasonName && (
+              <Text style={styles.ticketSeason}>{item.seasonName}</Text>
+            )}
+            {status !== "USADO" && (
+              <Text
+                style={[
+                  styles.ticketExpire,
+                  status === "EXPIRADO" && { color: RED },
+                ]}
+              >
+                {validityText(item.expiresAt)}
               </Text>
             )}
           </View>
@@ -112,12 +144,15 @@ export default function WalletScreen() {
           <Text style={styles.codeLabel}>CÓDIGO</Text>
           <View style={[styles.codeBox, !isAtivo && styles.codeBoxDisabled]}>
             <Text
+              selectable
               style={[styles.codeText, !isAtivo && styles.codeTextDisabled]}
             >
               {item.code}
             </Text>
           </View>
-          {isAtivo && <Text style={styles.codeHint}>Apresente no balcão</Text>}
+          {isAtivo && (
+            <Text style={styles.codeHint}>Mostre na biblioteca</Text>
+          )}
         </View>
       </View>
     );
@@ -130,9 +165,9 @@ export default function WalletScreen() {
 
       <View style={styles.card}>
         <View style={styles.header}>
-          <Text style={styles.title}>Meus Prêmios</Text>
+          <Text style={styles.title}>Meus Brindes</Text>
           <Text style={styles.subtitle}>
-            Apresente o código na biblioteca para resgatar.
+            Mostre este código na biblioteca para retirar seu brinde.
           </Text>
         </View>
 
@@ -147,7 +182,7 @@ export default function WalletScreen() {
                 filter === "ativos" && styles.tabTextActive,
               ]}
             >
-              Prêmios Disponíveis
+              Disponíveis
             </Text>
           </Pressable>
           <Pressable
@@ -190,7 +225,7 @@ export default function WalletScreen() {
                 <Ionicons name="sad-outline" size={48} color="#D1D5DB" />
                 <Text style={styles.emptyText}>
                   {filter === "ativos"
-                    ? "Você não tem nenhum prêmio disponível no momento.\nContinue alugando e subindo de nível!"
+                    ? "Você não tem nenhum brinde disponível no momento.\nContinue alugando e subindo de nível!"
                     : "Seu histórico está vazio."}
                 </Text>
               </View>
@@ -303,6 +338,30 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   ticketSeason: { fontSize: 12, color: BLUE, fontWeight: "700" },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 6,
+  },
+  kindBadge: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#9A6B00",
+    backgroundColor: "rgba(251,188,4,0.18)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  statusBadge: {
+    fontSize: 10,
+    fontWeight: "900",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
   ticketExpire: { fontSize: 11, color: GRAY, marginTop: 6, fontWeight: "600" },
 
   ticketDivider: {

@@ -9,7 +9,9 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 export function Header() {
   const { user } = useAuth();
 
-  const firstName = user?.nome ? user.nome.split(" ")[0] : "Visitante";
+  // Login devolve "nome" e "name"; o /users/me só "name".
+  const fullName = (user?.nome || user?.name || "").trim();
+  const firstName = fullName ? fullName.split(" ")[0] : "Visitante";
 
   const [notificationsCount, setNotificationsCount] = useState(0);
 
@@ -46,6 +48,12 @@ export function Header() {
           goToRoute("/notifications");
         }}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={
+          notificationsCount > 0
+            ? `Notificações, ${notificationsCount} não lidas`
+            : "Notificações"
+        }
       >
         <Ionicons
           name={

@@ -3,36 +3,90 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
-  price: number;
   onPressRent?: () => void;
   unavailable?: boolean;
+  // Tem exemplar, mas nenhum horário livre nos próximos 7 dias: oferece
+  // o "Me avise" sem tirar a opção de reservar mais para frente.
+  noSlotSoon?: boolean;
   watching?: boolean;
   loadingWatch?: boolean;
   onToggleWatch?: () => void;
-  rentedByMe?: boolean; 
+  rentedByMe?: boolean;
 };
 
 export function BottomBar({
-  price,
   onPressRent,
   unavailable,
+  noSlotSoon,
   watching,
   loadingWatch,
   onToggleWatch,
   rentedByMe,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const priceText = Number(price ?? 0).toFixed(2);
+
+  const notifyButton = (
+    <Pressable
+      onPress={onToggleWatch}
+      disabled={loadingWatch}
+      style={styles.notifyBtn}
+      accessibilityRole="button"
+      accessibilityLabel={watching ? "Desativar aviso" : "Me avise"}
+    >
+      {loadingWatch ? (
+        <ActivityIndicator color="#111" />
+      ) : (
+        <>
+          <Ionicons
+            name={watching ? "notifications" : "notifications-outline"}
+            size={18}
+            color="#111"
+          />
+          <Text style={styles.notifyText}>
+            {watching ? "Aviso ativado" : "Me avise"}
+          </Text>
+        </>
+      )}
+    </Pressable>
+  );
+
+  if (!unavailable && noSlotSoon) {
+    return (
+      <View style={[styles.wrap, { paddingBottom: insets.bottom + 10 }]}>
+        <View style={[styles.inner, styles.innerColumn]}>
+          <Text style={styles.hint}>
+            Sem horários livres nos próximos 7 dias. Peça para ser avisado
+            quando abrir um horário.
+          </Text>
+          <View style={styles.row}>
+            <View style={styles.flex}>{notifyButton}</View>
+            <Pressable
+              onPress={onPressRent}
+              style={[styles.btn, styles.flex]}
+              accessibilityRole="button"
+            >
+              <Text style={styles.btnText}>Ver datas</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.wrap, { paddingBottom: insets.bottom + 10 }]}>
       <View style={styles.inner}>
-        <Text style={styles.price}>
-          R${priceText} <Text style={styles.perDay}>/ dia</Text>
-        </Text>
+        <View style={styles.flex}>
+          <Text style={styles.free}>Grátis</Text>
+          <Text style={styles.freeSub}>Devolução no mesmo dia</Text>
+        </View>
 
         {!unavailable ? (
-          <Pressable onPress={onPressRent} style={styles.btn}>
+          <Pressable
+            onPress={onPressRent}
+            style={styles.btn}
+            accessibilityRole="button"
+          >
             <Text style={styles.btnText}>Alugar</Text>
           </Pressable>
         ) : rentedByMe ? (
@@ -41,22 +95,7 @@ export function BottomBar({
             <Text style={styles.rentedText}>Em aluguel</Text>
           </View>
         ) : (
-          <Pressable onPress={onToggleWatch} style={styles.notifyBtn}>
-            {loadingWatch ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons
-                  name={watching ? "notifications" : "notifications-outline"}
-                  size={18}
-                  color="#fff"
-                />
-                <Text style={styles.notifyText}>
-                  {watching ? "Aviso ativado" : "Me avise"}
-                </Text>
-              </>
-            )}
-          </Pressable>
+          notifyButton
         )}
       </View>
     </View>
@@ -90,16 +129,39 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
   },
 
-  price: {
-    fontSize: 22,
+  innerColumn: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 10,
+  },
+
+  row: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  flex: {
+    flex: 1,
+  },
+
+  hint: {
+    fontSize: 13,
+    color: "#555",
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+
+  free: {
+    fontSize: 20,
     fontWeight: "900",
     color: "#2E7D32",
   },
 
-  perDay: {
-    fontSize: 14,
-    fontWeight: "700",
+  freeSub: {
+    fontSize: 12,
+    fontWeight: "600",
     color: "#777",
+    marginTop: 2,
   },
 
   btn: {

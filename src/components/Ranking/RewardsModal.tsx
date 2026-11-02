@@ -31,7 +31,13 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
                 {season?.name || "Temporada Atual"}
               </Text>
             </View>
-            <Pressable style={styles.closeBtn} onPress={onClose} hitSlop={10}>
+            <Pressable
+              style={styles.closeBtn}
+              onPress={onClose}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar recompensas"
+            >
               <Ionicons name="close" size={24} color="#666" />
             </Pressable>
           </View>
@@ -47,7 +53,7 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
 
               const rewardDesc =
                 season?.rewards?.[`nivel${lvl}`]?.cuponsGerados?.[0]
-                  ?.descricao || `Recompensa Surpresa do ${customLevelName}`;
+                  ?.descricao || `Brinde surpresa do ${customLevelName}`;
 
               return (
                 <View key={lvl} style={styles.roadmapRow}>
@@ -105,7 +111,7 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
             }}
           >
             <Ionicons name="ticket" size={20} color="#fff" />
-            <Text style={styles.walletBtnText}>Acessar Minha Carteira</Text>
+            <Text style={styles.walletBtnText}>Ver meus brindes</Text>
           </Pressable>
         </View>
       </View>

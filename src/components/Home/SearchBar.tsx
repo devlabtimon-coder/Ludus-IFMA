@@ -35,6 +35,12 @@ export default function SearchBar({
       <TouchableOpacity
         style={styles.filterButton}
         onPress={() => router.push("/filter")}
+        accessibilityRole="button"
+        accessibilityLabel={
+          activeFiltersCount
+            ? `Filtros, ${activeFiltersCount} ativos`
+            : "Filtros"
+        }
       >
         <Ionicons name="filter" size={22} color="#31358B" />
 

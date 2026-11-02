@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import BackButton from "@/src/components/common/BackButton";
 import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
 import { BottomBar } from "@/src/components/GameDetails/BottomBar";
 import { GameComponents } from "@/src/components/GameDetails/GameComponents";
@@ -28,6 +29,10 @@ import {
   VerificationBlockModal,
 } from "@/src/components/GameDetails/VerificationBlockModal";
 import { useAuth } from "@/src/contexts/AuthContext";
+import {
+  getVerificationState,
+  type VerificationState,
+} from "@/src/utils/verification";
 import { Ionicons } from "@expo/vector-icons";
 
 type GameDetails = {
@@ -53,6 +58,8 @@ type GameDetails = {
   maxTime?: number | null;
 
   isAvailableNow?: boolean;
+  // Há horário livre nos próximos 7 dias (ausente em backends antigos).
+  hasFreeSlotSoon?: boolean;
   rentedByMe?: boolean;
 
   tier?: string | null;
@@ -80,7 +87,11 @@ export default function GameDetailsScreen() {
   );
 
   const [blockModalVisible, setBlockModalVisible] = useState(false);
-  const [blockType, setBlockType] = useState<BlockType>(null);
+  const [blockState, setBlockState] = useState<VerificationState | null>(
+    null,
+  );
+  const blockType: BlockType =
+    blockState && blockState.status !== "APPROVED" ? blockState.status : null;
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [favSaving, setFavSaving] = useState(false);
@@ -232,7 +243,9 @@ export default function GameDetailsScreen() {
         showAlert(
           "success",
           "Aviso ativado",
-          "Vamos te avisar quando o jogo voltar a ficar disponível.",
+          game.isAvailableNow && game.hasFreeSlotSoon === false
+            ? "Vamos te avisar quando abrir um horário para este jogo."
+            : "Vamos te avisar quando o jogo voltar a ficar disponível.",
         );
       } else {
         await api.delete(`/games/${game.id}/watch`);
@@ -284,11 +297,43 @@ export default function GameDetailsScreen() {
           const code = e?.response?.data?.code;
           const msg = e?.response?.data?.error;
 
+          // Sem resposta: a reserva pode ter sido criada mesmo assim (o
+          // POST não é repetido automaticamente para não duplicar).
+          if (!e?.response) {
+            showAlert(
+              "error",
+              "Sem resposta do servidor",
+              "Não sabemos se a reserva foi criada. Confira em Meus aluguéis antes de tentar de novo.",
+            );
+            return;
+          }
+
           if (code === "RENTAL_LIMIT_REACHED") {
             showAlert(
               "info",
               "Limite atingido",
-              "Você já possui 2 aluguéis em aberto. Finalize um para agendar outro.",
+              msg
+                ? `${msg} Finalize ou cancele um para agendar outro.`
+                : "Você atingiu o limite de aluguéis em aberto. Finalize ou cancele um para agendar outro.",
+            );
+            return;
+          }
+
+          if (code === "ACCOUNT_PENDING") {
+            refreshUser();
+            showAlert(
+              "info",
+              "Cadastro não liberado",
+              "Você poderá alugar assim que a biblioteca aprovar o seu cadastro.",
+            );
+            return;
+          }
+
+          if (code === "CONCURRENCY_CONFLICT") {
+            showAlert(
+              "error",
+              "Horário Ocupado",
+              "Outra pessoa acabou de reservar este horário. Escolha outro horário.",
             );
             return;
           }
@@ -298,6 +343,25 @@ export default function GameDetailsScreen() {
               "error",
               "Acesso restrito",
               msg || "Sua categoria de cliente não permite alugar este jogo.",
+            );
+            return;
+          }
+
+          if (code === "OVERDUE_RENTAL") {
+            showAlert(
+              "error",
+              "Jogo em atraso",
+              msg ||
+                "Você está com um jogo em atraso. Devolva-o na biblioteca para fazer novas reservas.",
+            );
+            return;
+          }
+
+          if (code === "SAME_DAY_ONLY") {
+            showAlert(
+              "info",
+              "Devolução no mesmo dia",
+              "A retirada e a devolução precisam ser no mesmo dia. Escolha um horário de início e de fim na mesma data.",
             );
             return;
           }
@@ -323,7 +387,7 @@ export default function GameDetailsScreen() {
         setRentLoading(false);
       }
     },
-    [game, fetchDetails, showAlert],
+    [game, fetchDetails, showAlert, refreshUser],
   );
 
   const openRentFlow = useCallback(() => {
@@ -382,7 +446,15 @@ export default function GameDetailsScreen() {
             <Text style={{ color: "#666", fontWeight: "700" }}>{errMsg}</Text>
             <Text
               onPress={fetchDetails}
-              style={{ marginTop: 10, color: "#0A1F5C", fontWeight: "900" }}
+              accessibilityRole="button"
+              suppressHighlighting
+              style={{
+                marginTop: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                color: "#0A1F5C",
+                fontWeight: "900",
+              }}
             >
               Tentar novamente
             </Text>
@@ -442,7 +514,7 @@ export default function GameDetailsScreen() {
                     setRateOpen(true);
                   }}
                   available={!!game.available}
-                  rentalDaysText="Por agendamento"
+                  rentalDaysText="Retirada e devolução no mesmo dia"
                   availabilityForecast={null}
                   tier={game.tier}
                 />
@@ -564,8 +636,8 @@ export default function GameDetailsScreen() {
             </ScrollView>
 
             <BottomBar
-              price={game.price}
               unavailable={!game.isAvailableNow}
+              noSlotSoon={game.hasFreeSlotSoon === false}
               rentedByMe={game.rentedByMe}
               watching={watching}
               loadingWatch={loadingWatch}
@@ -580,53 +652,27 @@ export default function GameDetailsScreen() {
                   return;
                 }
 
-                const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
+                let verification = getVerificationState(user);
 
-                let latestUser = user;
-
-                const locallyBlocked = isIfmaMode
-                  ? !latestUser?.isAcademicVerified
-                  : latestUser?.registrationStatus !== "APPROVED";
-
-                if (locallyBlocked) {
+                // O dado local pode estar velho (a biblioteca aprovou depois
+                // do último carregamento): confirma no servidor antes de barrar.
+                if (verification.status !== "APPROVED") {
                   try {
                     const res = await api.get(`/users/me?t=${Date.now()}`);
-                    latestUser = { ...latestUser, ...res.data };
+                    verification = getVerificationState({
+                      ...user,
+                      ...res.data,
+                    });
                     refreshUser();
                   } catch {
                     // Segue com os dados locais se a checagem falhar.
                   }
                 }
 
-                if (isIfmaMode) {
-                  if (!latestUser?.isAcademicVerified) {
-                    setBlockType("IFMA_UNVERIFIED");
-                    setBlockModalVisible(true);
-                    return;
-                  }
-                } else {
-                  if (latestUser?.registrationStatus !== "APPROVED") {
-                    const isRejected =
-                      latestUser?.registrationStatus === "REJECTED";
-
-                    const hasSentDocs = Boolean(
-                      (latestUser as any)?.documentFrontImage &&
-                      (latestUser as any)?.documentBackImage &&
-                      (latestUser as any)?.addressProof &&
-                      (latestUser as any)?.selfieWithId,
-                    );
-
-                    const isAnalysis =
-                      latestUser?.registrationStatus === "PENDING" &&
-                      hasSentDocs;
-
-                    if (isAnalysis) setBlockType("DOCS_PENDING");
-                    else if (isRejected) setBlockType("DOCS_REJECTED");
-                    else setBlockType("DOCS_UNVERIFIED");
-
-                    setBlockModalVisible(true);
-                    return;
-                  }
+                if (verification.status !== "APPROVED") {
+                  setBlockState(verification);
+                  setBlockModalVisible(true);
+                  return;
                 }
 
                 openRentFlow();
@@ -674,12 +720,14 @@ export default function GameDetailsScreen() {
             <VerificationBlockModal
               visible={blockModalVisible}
               type={blockType}
+              rejectReason={blockState?.rejectReason}
               onClose={() => setBlockModalVisible(false)}
               onAction={() => {
                 setBlockModalVisible(false);
 
-                if (blockType === "DOCS_PENDING") {
-                } else {
+                // Em análise ou conta suspensa não há o que enviar: o botão
+                // "Entendido" só fecha.
+                if (blockType === "NOT_SUBMITTED" || blockType === "REJECTED") {
                   router.push("/profile/documents");
                 }
               }}
@@ -687,6 +735,9 @@ export default function GameDetailsScreen() {
           </>
         )}
       </View>
+
+      {/* Sem o jogo carregado não há o cabeçalho com a seta de voltar. */}
+      {loading || errMsg || !game ? <BackButton /> : null}
     </View>
   );
 }

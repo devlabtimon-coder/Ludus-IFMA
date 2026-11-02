@@ -9,11 +9,6 @@ function formatRating(v?: number | null) {
   return Number.isFinite(n) ? n.toFixed(1) : "0.0";
 }
 
-function formatPrice(v: number) {
-
-  return `R$${Number(v).toFixed(0)}`;
-}
-
 export default function FavoriteItem({
   game,
   onDelete,
@@ -88,13 +83,6 @@ export default function FavoriteItem({
               {game.locationLabel ?? "Biblioteca"}
             </Text>
           </View>
-
-          <Text style={styles.price}>
-            <Text style={{ color: "#2FA84F" }}>
-              {formatPrice(game.price)}
-            </Text>
-            <Text style={{ color: "#6A6A6A" }}> / dia</Text>
-          </Text>
         </View>
       </Pressable>
     </Swipeable>
@@ -173,11 +161,5 @@ const styles = StyleSheet.create({
     color: "#8B8EA1",
     fontWeight: "600",
     fontSize: 12,
-  },
-
-  price: {
-    marginTop: 6,
-    fontSize: 15,
-    fontWeight: "800",
   },
 });

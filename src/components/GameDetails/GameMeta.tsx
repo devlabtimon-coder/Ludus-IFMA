@@ -32,7 +32,7 @@ export function GameMeta({
   ratingsCount,
   onPressRate,
   available = false,
-  rentalDaysText = "Até 3 dias",
+  rentalDaysText = "Retirada e devolução no mesmo dia",
   availabilityForecast,
   tier,
 }: Props) {

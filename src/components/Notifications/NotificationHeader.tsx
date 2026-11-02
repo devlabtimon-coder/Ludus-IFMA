@@ -12,7 +12,13 @@ export function NotificationsHeader({
   const safeTop = useSafeTop(54);
   return (
     <View style={[styles.header, { paddingTop: safeTop }]}>
-      <Pressable onPress={onBack} style={styles.backBtn} hitSlop={10}>
+      <Pressable
+        onPress={onBack}
+        style={styles.backBtn}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+      >
         <Ionicons name="chevron-back" size={22} color={RED} />
       </Pressable>
 
@@ -21,7 +27,13 @@ export function NotificationsHeader({
         
       </View>
 
-      <Pressable onPress={onReadAll} style={styles.readAll} hitSlop={10}>
+      <Pressable
+        onPress={onReadAll}
+        style={styles.readAll}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Marcar todas como lidas"
+      >
         <Ionicons name="checkmark-done" size={18} color="#fff" />
         <Text style={styles.readAllText}>Ler tudo</Text>
       </Pressable>

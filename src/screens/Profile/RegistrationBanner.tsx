@@ -10,6 +10,11 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
+import {
+  getVerificationState,
+  isIfmaMode as getIfmaMode,
+  VERIFICATION_PENDING_TEXT,
+} from "../../utils/verification";
 
 export function RegistrationBanner() {
   const router = useRouter();
@@ -30,12 +35,9 @@ export function RegistrationBanner() {
 
       await refreshUser();
 
-      const isIfma = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
-      const stillPending = isIfma
-        ? !res.data.isAcademicVerified
-        : res.data.registrationStatus !== "APPROVED";
+      const fresh = getVerificationState({ ...user, ...res.data });
 
-      if (stillPending) {
+      if (fresh.status !== "APPROVED") {
         router.push("/profile/documents");
       }
     } catch (error) {
@@ -45,27 +47,20 @@ export function RegistrationBanner() {
     }
   };
 
-  const isIfmaMode = process.env.EXPO_PUBLIC_IFMA_MODE === "true";
+  const isIfmaMode = getIfmaMode();
+  const { status, rejectReason } = getVerificationState(user);
 
-  if (isIfmaMode && user?.isAcademicVerified) return null;
-  if (!isIfmaMode && user?.registrationStatus === "APPROVED") return null;
+  // Aprovado não precisa de aviso; conta suspensa é tratada no login.
+  if (status === "APPROVED" || status === "BLOCKED") return null;
 
-  const isRejected = user?.registrationStatus === "REJECTED";
-  const isPending = user?.registrationStatus === "PENDING";
-
-  const hasAllDocs = isIfmaMode
-    ? Boolean(user?.enrollmentProof)
-    : Boolean(
-        user?.documentFile &&
-        user?.addressProof &&
-        user?.selfieWithId,
-      );
-
-  const isAnalysis = isPending || (hasAllDocs && !isRejected);
-
-  if (isAnalysis) {
+  if (status === "PENDING") {
     return (
-      <Pressable style={styles.containerInfo} onPress={handleCheckStatus}>
+      <Pressable
+        style={styles.containerInfo}
+        onPress={handleCheckStatus}
+        accessibilityRole="button"
+        accessibilityHint="Atualiza a situação do cadastro"
+      >
         <View style={styles.iconWrapInfo}>
           {isRefreshing ? (
             <ActivityIndicator color="#1D4ED8" />
@@ -76,16 +71,14 @@ export function RegistrationBanner() {
         <View style={styles.textWrap}>
           <Text style={styles.titleInfo}>Em Análise</Text>
           <Text style={styles.subtitleInfo}>
-            {isIfmaMode
-              ? "Seu comprovante de vínculo está sendo avaliado. Toque aqui para atualizar."
-              : "Seus documentos estão sendo avaliados. Toque aqui para atualizar o status."}
+            {VERIFICATION_PENDING_TEXT} Toque aqui para atualizar.
           </Text>
         </View>
       </Pressable>
     );
   }
 
-  if (isRejected) {
+  if (status === "REJECTED") {
     return (
       <Pressable
         style={styles.containerError}
@@ -95,9 +88,11 @@ export function RegistrationBanner() {
           <Ionicons name="alert-circle" size={24} color="#DC2626" />
         </View>
         <View style={styles.textWrap}>
-          <Text style={styles.titleError}>Atenção aos seus documentos</Text>
+          <Text style={styles.titleError}>Cadastro recusado</Text>
           <Text style={styles.subtitleError}>
-            Houve um problema. Toque aqui para ver o motivo e reenviar.
+            {rejectReason
+              ? `Motivo: ${rejectReason.replace(/[.!]+$/, "")}. Toque aqui para reenviar os documentos.`
+              : "A biblioteca recusou seus documentos. Toque aqui para reenviar."}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#DC2626" />

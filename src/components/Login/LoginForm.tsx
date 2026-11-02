@@ -199,8 +199,7 @@ export function LoginForm() {
         "error",
         "Erro Google",
         e?.response?.data?.error ||
-          e?.message ||
-          "Falha ao autenticar com Google.",
+          "Não foi possível entrar com o Google. Tente novamente.",
       );
     } finally {
       setGoogleLoading(false);

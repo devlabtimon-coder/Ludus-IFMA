@@ -303,7 +303,13 @@ export function RentModal({
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>Agendar Jogo</Text>
-            <Pressable onPress={onClose} style={styles.closeBtn}>
+            <Pressable
+              onPress={onClose}
+              style={styles.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar agendamento"
+              hitSlop={8}
+            >
               <Ionicons name="close" size={24} color="#0A1628" />
             </Pressable>
           </View>

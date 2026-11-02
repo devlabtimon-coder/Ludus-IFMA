@@ -19,6 +19,51 @@ const logoLudusDice = require("../../../assets/logo-dice.png");
 
 type GuideTab = "mechanics" | "users" | "games";
 
+// Regras de produto mostradas no guia (iguais às do Termo de Compromisso).
+const RENTAL_RULES: {
+  title: string;
+  desc: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  color: string;
+}[] = [
+  {
+    title: "Grátis",
+    desc: "Alugar não custa nada. Só cuide bem do jogo.",
+    icon: "gift-outline",
+    color: "#22C55E",
+  },
+  {
+    title: "Retirada e devolução no mesmo dia",
+    desc: "Na biblioteca, de segunda a sexta, das 8h às 19h. Para jogar outro dia, faça uma nova reserva.",
+    icon: "time-outline",
+    color: "#31358B",
+  },
+  {
+    title: "Atraso na devolução",
+    desc: "Devolver com atraso tira 10 pontos. Enquanto o jogo atrasado não voltar, novas reservas ficam bloqueadas.",
+    icon: "alert-circle-outline",
+    color: "#E53935",
+  },
+  {
+    title: "Cancelamento",
+    desc: "Cancelar com menos de 2 horas para a retirada tira 2 pontos. Antes disso, não perde nada.",
+    icon: "close-circle-outline",
+    color: "#F59E0B",
+  },
+  {
+    title: "Não comparecimento",
+    desc: "Há 30 minutos de tolerância. Depois disso a reserva é encerrada e você perde 5 pontos.",
+    icon: "hourglass-outline",
+    color: "#7C3AED",
+  },
+  {
+    title: "Brindes da temporada",
+    desc: "As recompensas são brindes: mostre o código na biblioteca para retirar. Valem até o fim da temporada seguinte.",
+    icon: "ribbon-outline",
+    color: "#FBBC04",
+  },
+];
+
 interface Mecanica {
   id: string | number;
   letter?: string;
@@ -340,6 +385,9 @@ export default function GuideScreen() {
                     <Pressable
                       onPress={clearAll}
                       style={styles.clearFiltersBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel="Limpar busca e filtros"
+                      hitSlop={12}
                     >
                       <Ionicons name="close" size={14} color="#666" />
                     </Pressable>
@@ -478,8 +526,9 @@ export default function GuideScreen() {
                 <Text style={styles.staticHeroIcon}>🏆</Text>
                 <Text style={styles.staticMainTitle}>Progressão de Nível</Text>
                 <Text style={styles.staticDesc}>
-                  Entenda como evoluir sua categoria e desbloquear acesso a
-                  jogos exclusivos do Ludus.
+                  Sua categoria sobe a cada aluguel devolvido no prazo e sem
+                  avaria; ao completar 11, 31 e 61 aluguéis você libera novos
+                  níveis do acervo.
                 </Text>
               </View>
 
@@ -488,25 +537,25 @@ export default function GuideScreen() {
                   name: "Starter",
                   color: "#22C55E",
                   icon: "leaf",
-                  desc: "Nível inicial após cadastro. Acesso: Latão e Bronze.",
+                  desc: "Nível inicial após o cadastro. Acesso aos jogos Latão e Bronze.",
                 },
                 {
                   name: "Family",
                   color: "#F59E0B",
                   icon: "home",
-                  desc: "Conclua 10 aluguéis sem atraso. Acesso estendido ao Prata.",
+                  desc: "Ao completar 11 aluguéis. Libera também os jogos Prata.",
                 },
                 {
                   name: "Expert",
                   color: "#7C3AED",
                   icon: "medal",
-                  desc: "10+ aluguéis e avaliações. Acesso a Ouro liberado.",
+                  desc: "Ao completar 31 aluguéis. Libera também os jogos Ouro.",
                 },
                 {
                   name: "Ultragamer",
                   color: "#31358B",
                   icon: "trophy",
-                  desc: "Com mais +10 aluguéis, você atinge o auge do engajamento. Acesso VIP aos jogos Diamante.",
+                  desc: "Ao completar 61 aluguéis. Acesso a todo o acervo, incluindo os jogos Diamante.",
                 },
               ].map((lvl) => (
                 <View key={lvl.name} style={styles.levelCard}>
@@ -525,6 +574,30 @@ export default function GuideScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.levelName}>{lvl.name}</Text>
                     <Text style={styles.levelDesc}>{lvl.desc}</Text>
+                  </View>
+                </View>
+              ))}
+
+              <View style={[styles.staticHero, styles.rulesHero]}>
+                <Text style={styles.staticMainTitle}>Regras do aluguel</Text>
+                <Text style={styles.staticDesc}>
+                  O que vale para todos os jogos do acervo.
+                </Text>
+              </View>
+
+              {RENTAL_RULES.map((rule) => (
+                <View key={rule.title} style={styles.levelCard}>
+                  <View
+                    style={[
+                      styles.levelIconWrap,
+                      { backgroundColor: rule.color + "20" },
+                    ]}
+                  >
+                    <Ionicons name={rule.icon} size={24} color={rule.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.levelName}>{rule.title}</Text>
+                    <Text style={styles.levelDesc}>{rule.desc}</Text>
                   </View>
                 </View>
               ))}
@@ -549,25 +622,25 @@ export default function GuideScreen() {
                   name: "Latão",
                   color: "#8B7355",
                   icon: "shield-outline",
-                  desc: "Regras simples, rápidos. Ideais para iniciar. Acesso Livre.",
+                  desc: "Regras simples, rápidos. Ideais para iniciar. Liberado para todas as categorias.",
                 },
                 {
                   name: "Bronze",
                   color: "#CD7F32",
                   icon: "shield-half-outline",
-                  desc: "Profundidade moderada, partidas até 60 min. Acesso Livre.",
+                  desc: "Profundidade moderada, partidas até 60 min. Liberado para todas as categorias.",
                 },
                 {
                   name: "Prata",
                   color: "#7A7A7A",
                   icon: "shield",
-                  desc: "Mecânicas complexas, múltiplas fases. Requer Family+.",
+                  desc: "Mecânicas complexas, múltiplas fases. Requer Family, Expert ou Ultragamer.",
                 },
                 {
                   name: "Ouro",
                   color: "#B8860B",
                   icon: "star-outline",
-                  desc: "Estratégia pesada, longa duração. Requer Expert+.",
+                  desc: "Estratégia pesada, longa duração. Requer Expert ou Ultragamer.",
                 },
                 {
                   name: "Diamante",
@@ -825,6 +898,7 @@ const styles = StyleSheet.create({
   staticContainer: { paddingTop: 24, paddingHorizontal: 20 },
   staticHero: { alignItems: "center", marginBottom: 24 },
   staticHeroIcon: { fontSize: 48, marginBottom: 8 },
+  rulesHero: { marginTop: 24, marginBottom: 16 },
   staticMainTitle: {
     fontSize: 22,
     fontWeight: "900",

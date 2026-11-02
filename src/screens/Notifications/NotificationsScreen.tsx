@@ -4,6 +4,7 @@ import { NotificationItem, type AppNotification } from "@/src/components/Notific
 import { NotificationsTabs } from "@/src/components/Notifications/NotificationsTabs";
 import { NotificationsTypeFilter, type NotificationTypeFilterValue } from "@/src/components/Notifications/NotificationTypeFilter";
 import { api } from "@/src/services/api";
+import { resolveNotificationRoute } from "@/src/services/notificationRoutes";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -28,7 +29,11 @@ export default function NotificationsScreen() {
       const res = await api.get<MeResponse>("/notifications/me");
       setItems(res.data?.notifications ?? []);
     } catch (e: any) {
-      setErr(e?.response?.data?.error || "Não foi possível carregar notificações.");
+      setErr(
+        e?.response
+          ? "Não foi possível carregar as notificações."
+          : "Sem conexão. Verifique sua internet e tente novamente.",
+      );
       setItems([]);
     } finally {
       setLoading(false);
@@ -144,8 +149,8 @@ export default function NotificationsScreen() {
                 item={n}
                 onOpen={async (item) => {
                   await markRead(item.id);
-                  const route = item.data?.route;
-                  if (route) router.push(route);
+                  const route = resolveNotificationRoute(item.data);
+                  if (route) router.push(route as any);
                 }}
               />
             ))}

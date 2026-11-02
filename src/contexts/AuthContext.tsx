@@ -13,6 +13,7 @@ import {
   attachNotificationListeners,
   registerForPush,
 } from "../services/push.client";
+import { setLogoutHandler } from "../services/session";
 
 type Role = "USER" | "ADMIN" | string;
 
@@ -43,7 +44,7 @@ export type AuthUser = {
 
   enrollmentProof?: string | null;
 
-  registrationStatus?: "PENDING" | "APPROVED" | "REJECTED";
+  registrationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
   rejectReason?: string | null;
 };
 
@@ -129,6 +130,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const detach = attachNotificationListeners();
     return detach;
+  }, []);
+
+  // Conta bloqueada (403 ACCOUNT_BLOCKED em qualquer requisição): o
+  // interceptor da API chama este logout para limpar a sessão e o estado.
+  useEffect(() => {
+    setLogoutHandler(() => logout());
+    return () => setLogoutHandler(null);
   }, []);
 
   const refreshUser = useCallback(async () => {

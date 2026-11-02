@@ -30,8 +30,13 @@ export function GameHero({ coverUrl, isFavorite, onToggleFavorite }: Props) {
         resizeMode="cover"
       />
       <Pressable
-        onPress={() => router.back()}
+        // Aberta direto por uma notificação, a tela não tem para onde voltar.
+        onPress={() =>
+          router.canGoBack() ? router.back() : router.replace("/home")
+        }
         style={[styles.backBtn, { top: topPosition }]}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
       >
         <Ionicons name="chevron-back" size={22} color="#fff" />
       </Pressable>
@@ -39,6 +44,11 @@ export function GameHero({ coverUrl, isFavorite, onToggleFavorite }: Props) {
       <Pressable
         onPress={onToggleFavorite}
         style={[styles.bookmarkBtn, { top: topPosition }]}
+        accessibilityRole="button"
+        accessibilityLabel={
+          isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"
+        }
+        accessibilityState={{ selected: isFavorite }}
       >
         <Ionicons
           name={isFavorite ? "heart" : "heart-outline"}

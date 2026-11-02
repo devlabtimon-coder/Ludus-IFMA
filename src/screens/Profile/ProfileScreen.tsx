@@ -57,10 +57,12 @@ export default function ProfileScreen() {
         type: asset.mimeType || "image/jpeg",
       } as any);
 
+      // Envio de foto demora mais que uma requisição comum.
       const response = await api.post("/users/me/avatar", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        timeout: 60000,
       });
 
       const nextUser = response.data?.user;
@@ -214,7 +216,7 @@ export default function ProfileScreen() {
 
             <ProfileMenuItem
               icon="ticket-outline"
-              title="Meus Prêmios e Cupons"
+              title="Meus Brindes"
               onPress={() => router.push("/wallet")}
             />
 

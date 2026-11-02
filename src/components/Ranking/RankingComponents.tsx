@@ -122,13 +122,28 @@ export function RulesBox() {
         <Text style={styles.ruleText}>+5 pts ao devolver no tempo correto</Text>
       </View>
       <View style={styles.ruleRow}>
-        <View style={[styles.dot, { backgroundColor: GRAY }]} />
-        <Text style={styles.ruleText}>+2 pts ao devolver com atraso</Text>
+        <View style={[styles.dot, { backgroundColor: RED }]} />
+        <Text style={styles.ruleText}>
+          -10 pts ao devolver com atraso (e novas reservas ficam bloqueadas
+          até a devolução)
+        </Text>
       </View>
       <View style={styles.ruleRow}>
         <View style={[styles.dot, { backgroundColor: RED }]} />
         <Text style={styles.ruleText}>
           -20 pts por danos ou perda de componentes
+        </Text>
+      </View>
+      <View style={styles.ruleRow}>
+        <View style={[styles.dot, { backgroundColor: RED }]} />
+        <Text style={styles.ruleText}>
+          -2 pts ao cancelar com menos de 2h de antecedência
+        </Text>
+      </View>
+      <View style={styles.ruleRow}>
+        <View style={[styles.dot, { backgroundColor: RED }]} />
+        <Text style={styles.ruleText}>
+          -5 pts ao não retirar o jogo (reserva cancelada 30 min após o horário)
         </Text>
       </View>
     </View>
@@ -256,7 +271,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   dot: { width: 8, height: 8, borderRadius: 999 },
-  ruleText: { color: "#4B5563", fontWeight: "600", fontSize: 12 },
+  ruleText: { flexShrink: 1, color: "#4B5563", fontWeight: "600", fontSize: 12 },
   meBox: {
     backgroundColor: BLUE,
     borderRadius: 22,

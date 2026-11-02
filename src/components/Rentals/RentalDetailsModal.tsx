@@ -1,6 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { formatDateTime, getRentalStatusMeta } from "@/src/utils/rentals";
 import type { RentalItemModel } from "./RentalItem";
+
+const CANCEL_PENALTY_WINDOW_MS = 2 * 60 * 60 * 1000;
 
 type Props = {
   visible: boolean;
@@ -8,55 +12,10 @@ type Props = {
   onClose: () => void;
   onCancelRental: (rentalId: string) => void | Promise<void>;
   cancelLoading?: boolean;
+  // Erro do último cancelamento, mostrado dentro do próprio modal: no iOS
+  // outro Modal (alerta) não abre por cima deste.
+  cancelError?: string | null;
 };
-
-function fmtDateTime(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("pt-BR");
-}
-
-function getStatusMeta(status: string) {
-  const s = (status || "").toUpperCase();
-
-  if (s === "PENDING") {
-    return {
-      label: "Pendente",
-      color: "#FBBC04",
-      description: "Seu aluguel ainda não foi ativado. Você pode cancelá-lo.",
-    };
-  }
-
-  if (s === "ACTIVE") {
-    return {
-      label: "Ativo",
-      color: "#2FA84F",
-      description: "Seu aluguel está em andamento.",
-    };
-  }
-
-  if (s === "RETURNED") {
-    return {
-      label: "Devolvido",
-      color: "#31358B",
-      description: "Esse aluguel já foi finalizado com devolução.",
-    };
-  }
-
-  if (s === "CANCELED") {
-    return {
-      label: "Cancelado",
-      color: "#B3193A",
-      description: "Esse aluguel foi cancelado.",
-    };
-  }
-
-  return {
-    label: status || "—",
-    color: "#6A6A6A",
-    description: "Informações do aluguel.",
-  };
-}
 
 function getRemainingText(endDate: string, status: string) {
   if ((status || "").toUpperCase() !== "ACTIVE") return null;
@@ -83,13 +42,26 @@ export default function RentalDetailsModal({
   onClose,
   onCancelRental,
   cancelLoading = false,
+  cancelError = null,
 }: Props) {
+  // Cancelar pede confirmação: o primeiro toque só mostra o aviso.
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+
+  useEffect(() => {
+    setConfirmingCancel(false);
+  }, [rental?.id, visible]);
+
   if (!rental) return null;
 
-  const status = getStatusMeta(rental.status);
+  const status = getRentalStatusMeta(rental.status);
   const remainingText = getRemainingText(rental.endDate, rental.status);
 
   const canCancel = (rental.status || "").toUpperCase() === "PENDING";
+
+  // Regra de produto: só perde pontos quem cancela com menos de 2 h para a
+  // retirada.
+  const cancelLosesPoints =
+    new Date(rental.startDate).getTime() - Date.now() < CANCEL_PENALTY_WINDOW_MS;
 
   const copyLabel =
     rental.copy?.number != null
@@ -106,7 +78,13 @@ export default function RentalDetailsModal({
 
           <View style={styles.header}>
             <Text style={styles.title}>Detalhes do aluguel</Text>
-            <Pressable onPress={onClose} style={styles.closeBtn}>
+            <Pressable
+              onPress={onClose}
+              style={styles.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar detalhes do aluguel"
+              hitSlop={6}
+            >
               <Ionicons name="close" size={20} color="#31358B" />
             </Pressable>
           </View>
@@ -138,21 +116,58 @@ export default function RentalDetailsModal({
 
           <View style={styles.infoBox}>
             <InfoRow icon="cube-outline" label="Exemplar" value={copyLabel} />
-            <InfoRow icon="calendar-outline" label="Início" value={fmtDateTime(rental.startDate)} />
-            <InfoRow icon="calendar-clear-outline" label="Prazo final" value={fmtDateTime(rental.endDate)} />
+            <InfoRow icon="calendar-outline" label="Retirada" value={formatDateTime(rental.startDate)} />
+            <InfoRow icon="calendar-clear-outline" label="Devolução até" value={formatDateTime(rental.endDate)} />
           </View>
 
-          {canCancel ? (
+          {canCancel && confirmingCancel ? (
+            <View style={styles.confirmBox}>
+              <Text style={styles.confirmTitle}>Cancelar esta reserva?</Text>
+              <Text style={styles.confirmText}>
+                {cancelLosesPoints
+                  ? "Como faltam menos de 2 horas, você perde 2 pontos."
+                  : "Cancelar com antecedência não tira pontos."}
+              </Text>
+
+              {cancelError ? (
+                <Text style={styles.errorText} accessibilityRole="alert">
+                  {cancelError}
+                </Text>
+              ) : null}
+
+              <View style={styles.confirmRow}>
+                <Pressable
+                  style={[styles.keepBtn, cancelLoading && { opacity: 0.7 }]}
+                  onPress={() => setConfirmingCancel(false)}
+                  disabled={cancelLoading}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.keepBtnText}>Manter reserva</Text>
+                </Pressable>
+
+                <Pressable
+                  style={[styles.confirmBtn, cancelLoading && { opacity: 0.7 }]}
+                  onPress={() => onCancelRental(rental.id)}
+                  disabled={cancelLoading}
+                  accessibilityRole="button"
+                  accessibilityLabel="Sim, cancelar reserva"
+                  accessibilityState={{ busy: cancelLoading, disabled: cancelLoading }}
+                >
+                  {cancelLoading ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={styles.cancelBtnText}>Sim, cancelar</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          ) : canCancel ? (
             <Pressable
-              style={[styles.cancelBtn, cancelLoading && { opacity: 0.7 }]}
-              onPress={() => onCancelRental(rental.id)}
-              disabled={cancelLoading}
+              style={styles.cancelBtn}
+              onPress={() => setConfirmingCancel(true)}
+              accessibilityRole="button"
             >
-              {cancelLoading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={styles.cancelBtnText}>Cancelar aluguel</Text>
-              )}
+              <Text style={styles.cancelBtnText}>Cancelar reserva</Text>
             </Pressable>
           ) : null}
         </View>
@@ -324,6 +339,65 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  confirmBox: {
+    marginTop: 18,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 18,
+    padding: 14,
+  },
+
+  confirmTitle: {
+    color: "#B3193A",
+    fontWeight: "900",
+    fontSize: 15,
+  },
+
+  confirmText: {
+    marginTop: 4,
+    color: "#6A6A6A",
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+
+  errorText: {
+    marginTop: 10,
+    color: "#B3193A",
+    fontWeight: "800",
+    lineHeight: 20,
+  },
+
+  confirmRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+
+  keepBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#E6E6EF",
+  },
+
+  keepBtnText: {
+    color: "#2C2C2C",
+    fontWeight: "900",
+    fontSize: 14,
+  },
+
+  confirmBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#B3193A",
   },
 
   cancelBtnText: {
