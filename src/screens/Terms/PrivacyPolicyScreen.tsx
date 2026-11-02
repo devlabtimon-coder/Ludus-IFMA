@@ -2,6 +2,7 @@ import HomeBackground from "@/src/components/Home/HomeBackground";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 const BLUE = "#31358B";
 const DARK_BLUE = "#0A1F5C";
@@ -17,13 +18,14 @@ function Bullet({ children }: { children: React.ReactNode }) {
 }
 
 export default function PrivacyPolicyScreen() {
+  const safeTop = useSafeTop(54);
   const router = useRouter();
 
   return (
     <View style={styles.root}>
       <HomeBackground />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: safeTop }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={22} color="#fff" />
         </TouchableOpacity>

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 interface BackButtonProps {
   color?: string;
@@ -8,9 +9,15 @@ interface BackButtonProps {
 
 export default function BackButton({ color = "#B3193A" }: BackButtonProps) {
   const router = useRouter();
+  const top = useSafeTop(47, 4);
 
   return (
-    <Pressable style={styles.container} onPress={() => router.back()}>
+    <Pressable
+      style={[styles.container, { top }]}
+      onPress={() => router.back()}
+      accessibilityRole="button"
+      accessibilityLabel="Voltar"
+    >
       <Ionicons name="chevron-back" size={22} color={color} />
     </Pressable>
   );

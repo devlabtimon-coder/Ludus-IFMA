@@ -23,6 +23,7 @@ import {
     Text,
     View,
 } from "react-native";
+import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 const BLUE = "#31358B";
 const DARK_BLUE = "#0A1F5C";
@@ -105,6 +106,7 @@ function joinNames(names: string[]) {
 }
 
 export default function AboutScreen() {
+  const safeTop = useSafeTop(56);
   const router = useRouter();
   const [about, setAbout] = useState<AboutContent>(DEFAULT_ABOUT);
   const [changelogOpen, setChangelogOpen] = useState(false);
@@ -153,7 +155,7 @@ export default function AboutScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: safeTop }]}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={22} color="#fff" />
           </Pressable>
