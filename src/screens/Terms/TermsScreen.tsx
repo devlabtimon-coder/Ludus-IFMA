@@ -53,9 +53,9 @@ export default function TermsScreen() {
 
           <Text style={styles.paragraph}>
             O App Ludus disponibiliza aos alunos regularmente matriculados e aos servidores
-            ativos do Campus de Timon uma coleção de jogos para aluguel gratuito, com prazo
-            de até 3 (três) dias. Abaixo, algumas informações importantes para quem está
-            alugando um ou mais jogos:
+            ativos do Campus de Timon uma coleção de jogos para aluguel gratuito, com
+            retirada e devolução no mesmo dia. Abaixo, algumas informações importantes
+            para quem está alugando um ou mais jogos:
           </Text>
 
           <View style={styles.bullets}>
@@ -66,14 +66,15 @@ export default function TermsScreen() {
             </Bullet>
 
             <Bullet>
-              Não haverá entrega ou retirada dos jogos fora do Campus de Timon. O usuário
-              se compromete a retirar e devolver o jogo no local indicado, até o prazo
-              máximo de 3 dias;
+              O aluguel dos jogos é gratuito. Não há cobrança pelo uso, desde que o jogo
+              seja devolvido nas mesmas condições em que foi retirado;
             </Bullet>
 
             <Bullet>
-              O aluguel dos jogos é gratuito. Não há cobrança pelo período de uso, desde
-              que o jogo seja devolvido nas mesmas condições em que foi retirado;
+              Não haverá entrega ou retirada dos jogos fora do Campus de Timon. A retirada
+              e a devolução acontecem no mesmo dia, na biblioteca, dentro do horário de
+              funcionamento (segunda a sexta, das 8h às 19h). Para jogar de novo em outro
+              dia, basta fazer uma nova reserva;
             </Bullet>
 
             <Bullet>
@@ -82,22 +83,38 @@ export default function TermsScreen() {
             </Bullet>
 
             <Bullet>
-              O prazo de aluguel é de até 3 dias. Caso o usuário deseje renovar o empréstimo,
-              deverá consultar a disponibilidade do jogo e, se possível, realizar nova
-              retirada após a devolução;
+              Há tolerância de 30 minutos após o horário marcado para a retirada. Quem não
+              comparece nesse prazo tem a reserva encerrada e perde 5 pontos;
+            </Bullet>
+
+            <Bullet>
+              A reserva pode ser cancelada pelo app. O cancelamento só tira pontos (2 pontos)
+              quando é feito com menos de 2 horas para o horário da retirada;
             </Bullet>
 
             <Bullet>
               No momento da devolução, os componentes do jogo serão conferidos novamente
               por um funcionário/monitor do App Ludus. Em caso de ausência de peças ou cartas,
               sujeira excessiva ou avaria em qualquer componente do jogo (caixa, peças, manual,
-              etc.), o usuário será responsável pela reposição ou pagamento do valor correspondente
-              ao item danificado ou faltante, conforme tabela de preços do App Ludus;
+              etc.), o usuário perde 20 pontos e fica responsável pela reposição do item
+              danificado ou faltante, conforme orientação da biblioteca;
             </Bullet>
 
             <Bullet>
-              Em caso de atraso na devolução, o usuário poderá ter seu cadastro suspenso
-              temporariamente, até regularizar a situação;
+              Em caso de atraso na devolução, o usuário perde 10 pontos e não pode fazer novas
+              reservas enquanto estiver com o jogo em atraso. Persistindo o atraso, o cadastro
+              poderá ser suspenso até regularizar a situação;
+            </Bullet>
+
+            <Bullet>
+              A categoria do usuário sobe ao completar 11, 31 e 61 aluguéis devolvidos no
+              prazo e sem avaria;
+            </Bullet>
+
+            <Bullet>
+              As recompensas de temporada são brindes. O código do brinde aparece no app e
+              deve ser mostrado na biblioteca para a retirada. Cada código vale uma vez e
+              pode ser usado até o fim da temporada seguinte;
             </Bullet>
 
             <Bullet>
@@ -127,7 +144,7 @@ export default function TermsScreen() {
           <View style={styles.divider} />
 
           <Text style={styles.footerNote}>
-            Última atualização: v1.0 • Campus de Timon
+            Última atualização: v1.1 • Campus de Timon
           </Text>
         </ScrollView>
       </View>

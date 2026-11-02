@@ -19,6 +19,51 @@ const logoLudusDice = require("../../../assets/logo-dice.png");
 
 type GuideTab = "mechanics" | "users" | "games";
 
+// Regras de produto mostradas no guia (iguais às do Termo de Compromisso).
+const RENTAL_RULES: {
+  title: string;
+  desc: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  color: string;
+}[] = [
+  {
+    title: "Grátis",
+    desc: "Alugar não custa nada. Só cuide bem do jogo.",
+    icon: "gift-outline",
+    color: "#22C55E",
+  },
+  {
+    title: "Retirada e devolução no mesmo dia",
+    desc: "Na biblioteca, de segunda a sexta, das 8h às 19h. Para jogar outro dia, faça uma nova reserva.",
+    icon: "time-outline",
+    color: "#31358B",
+  },
+  {
+    title: "Atraso na devolução",
+    desc: "Devolver com atraso tira 10 pontos. Enquanto o jogo atrasado não voltar, novas reservas ficam bloqueadas.",
+    icon: "alert-circle-outline",
+    color: "#E53935",
+  },
+  {
+    title: "Cancelamento",
+    desc: "Cancelar com menos de 2 horas para a retirada tira 2 pontos. Antes disso, não perde nada.",
+    icon: "close-circle-outline",
+    color: "#F59E0B",
+  },
+  {
+    title: "Não comparecimento",
+    desc: "Há 30 minutos de tolerância. Depois disso a reserva é encerrada e você perde 5 pontos.",
+    icon: "hourglass-outline",
+    color: "#7C3AED",
+  },
+  {
+    title: "Brindes da temporada",
+    desc: "As recompensas são brindes: mostre o código na biblioteca para retirar. Valem até o fim da temporada seguinte.",
+    icon: "ribbon-outline",
+    color: "#FBBC04",
+  },
+];
+
 interface Mecanica {
   id: string | number;
   letter?: string;
@@ -532,6 +577,30 @@ export default function GuideScreen() {
                   </View>
                 </View>
               ))}
+
+              <View style={[styles.staticHero, styles.rulesHero]}>
+                <Text style={styles.staticMainTitle}>Regras do aluguel</Text>
+                <Text style={styles.staticDesc}>
+                  O que vale para todos os jogos do acervo.
+                </Text>
+              </View>
+
+              {RENTAL_RULES.map((rule) => (
+                <View key={rule.title} style={styles.levelCard}>
+                  <View
+                    style={[
+                      styles.levelIconWrap,
+                      { backgroundColor: rule.color + "20" },
+                    ]}
+                  >
+                    <Ionicons name={rule.icon} size={24} color={rule.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.levelName}>{rule.title}</Text>
+                    <Text style={styles.levelDesc}>{rule.desc}</Text>
+                  </View>
+                </View>
+              ))}
             </View>
           )}
 
@@ -829,6 +898,7 @@ const styles = StyleSheet.create({
   staticContainer: { paddingTop: 24, paddingHorizontal: 20 },
   staticHero: { alignItems: "center", marginBottom: 24 },
   staticHeroIcon: { fontSize: 48, marginBottom: 8 },
+  rulesHero: { marginTop: 24, marginBottom: 16 },
   staticMainTitle: {
     fontSize: 22,
     fontWeight: "900",
