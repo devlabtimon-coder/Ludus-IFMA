@@ -44,9 +44,40 @@ export default function RentalsCard({
 
   const data = tab === "ACTIVE" ? active : history;
 
+  // Retirado e com o horário de devolução vencido: o servidor bloqueia
+  // novas reservas até a devolução (OVERDUE_RENTAL).
+  const overdue = useMemo(() => {
+    const now = Date.now();
+    return active.find((r) => {
+      if ((r.status || "").toUpperCase() !== "ACTIVE") return false;
+      const end = new Date(r.endDate).getTime();
+      return Number.isFinite(end) && end < now;
+    });
+  }, [active]);
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Meus aluguéis</Text>
+
+      {overdue ? (
+        <Pressable
+          style={styles.overdue}
+          onPress={() => onPressRental?.(overdue)}
+          accessibilityRole="button"
+          accessibilityLabel={`Jogo em atraso: ${overdue.game?.title ?? ""}. Devolva na biblioteca. Enquanto isso, novas reservas ficam bloqueadas.`}
+        >
+          <Ionicons name="alert-circle" size={24} color="#B3193A" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.overdueTitle}>
+              Jogo em atraso — devolva na biblioteca
+            </Text>
+            <Text style={styles.overdueText}>
+              {overdue.game?.title ? `"${overdue.game.title}" passou do horário de devolução. ` : ""}
+              Enquanto isso, novas reservas ficam bloqueadas.
+            </Text>
+          </View>
+        </Pressable>
+      ) : null}
 
       <View style={styles.tabs}>
         <Pressable
@@ -145,6 +176,26 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   title: { fontSize: 22, fontWeight: "900", color: "#2C2C2C", marginBottom: 14 },
+
+  overdue: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "#FDECEF",
+    borderWidth: 1,
+    borderColor: "#F5B5C1",
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 14,
+  },
+  overdueTitle: { fontWeight: "900", fontSize: 14, color: "#B3193A" },
+  overdueText: {
+    marginTop: 4,
+    fontWeight: "600",
+    fontSize: 13,
+    color: "#5A1A26",
+    lineHeight: 18,
+  },
 
   tabs: { flexDirection: "row", gap: 10, marginBottom: 14 },
   tab: {
