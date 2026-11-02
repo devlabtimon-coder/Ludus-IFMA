@@ -111,6 +111,7 @@ export const styles = StyleSheet.create({
   googleText: {
     fontSize: 16,
     fontWeight: "500",
+    flexShrink: 1,
   },
 
   register: {
