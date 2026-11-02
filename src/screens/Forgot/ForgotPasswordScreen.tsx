@@ -416,7 +416,7 @@ function StepCode({
             ref={(r) => { inputsRef.current[index] = r; }}
             style={styles.input}
             value={otp[index]}
-            maxLength={Platform.OS === "ios" ? 1 : 6}
+            maxLength={6}
             keyboardType="number-pad"
             inputMode="numeric"
             returnKeyType="done"

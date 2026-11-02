@@ -170,7 +170,18 @@ export default function VerifyPhoneForm() {
 
   const handleChange = (text: string, index: number) => {
     const digits = (text || "").replace(/\D/g, "");
-    if (digits.length > 1) return;
+    // Código colado ou preenchido pelo iOS a partir do SMS: espalha nas caixas.
+    if (digits.length > 1) {
+      setOtp((prev) => {
+        const next = [...prev];
+        for (let k = 0; k < digits.length && index + k < OTP_LENGTH; k++) {
+          next[index + k] = digits[k];
+        }
+        return next;
+      });
+      focusIndex(Math.min(index + digits.length, OTP_LENGTH - 1));
+      return;
+    }
     const digit = digits.slice(-1);
     setOtp((prev) => {
       const next = [...prev];
@@ -294,7 +305,7 @@ export default function VerifyPhoneForm() {
                     }}
                     style={styles.input}
                     value={otp[index]}
-                    maxLength={Platform.OS === "ios" ? 1 : 6}
+                    maxLength={6}
                     keyboardType="number-pad"
                     inputMode="numeric"
                     returnKeyType="done"
