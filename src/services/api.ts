@@ -7,6 +7,7 @@ import axiosRetry, {
 import * as SecureStore from "expo-secure-store";
 import { showLudusAlert } from "./alert.service";
 import { goToVerify } from "./navigation";
+import { handleAccountBlocked } from "./session";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
@@ -44,16 +45,7 @@ api.interceptors.response.use(
     const code = error?.response?.data?.code;
 
     if (status === 403 && code === "ACCOUNT_BLOCKED") {
-      await SecureStore.deleteItemAsync("token");
-      await SecureStore.deleteItemAsync("user");
-
-      showLudusAlert({
-        type: "error",
-        title: "Acesso Bloqueado",
-        message:
-          "Sua conta foi suspensa por um administrador. Contate o suporte para mais informações.",
-      });
-
+      await handleAccountBlocked();
       return Promise.reject(error);
     }
 
