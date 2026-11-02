@@ -170,6 +170,8 @@ export default function ProfileScreen() {
       setLeaving(true);
       await logout();
       setLogoutOpen(false);
+      // Tira as telas logadas da pilha: o gesto de voltar não leva de volta a elas.
+      if (router.canDismiss()) router.dismissAll();
       router.replace("/onboarding");
     } finally {
       setLeaving(false);
