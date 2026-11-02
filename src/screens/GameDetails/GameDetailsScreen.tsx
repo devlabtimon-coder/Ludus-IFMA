@@ -293,11 +293,43 @@ export default function GameDetailsScreen() {
           const code = e?.response?.data?.code;
           const msg = e?.response?.data?.error;
 
+          // Sem resposta: a reserva pode ter sido criada mesmo assim (o
+          // POST não é repetido automaticamente para não duplicar).
+          if (!e?.response) {
+            showAlert(
+              "error",
+              "Sem resposta do servidor",
+              "Não sabemos se a reserva foi criada. Confira em Meus aluguéis antes de tentar de novo.",
+            );
+            return;
+          }
+
           if (code === "RENTAL_LIMIT_REACHED") {
             showAlert(
               "info",
               "Limite atingido",
-              "Você já possui 2 aluguéis em aberto. Finalize um para agendar outro.",
+              msg
+                ? `${msg} Finalize ou cancele um para agendar outro.`
+                : "Você atingiu o limite de aluguéis em aberto. Finalize ou cancele um para agendar outro.",
+            );
+            return;
+          }
+
+          if (code === "ACCOUNT_PENDING") {
+            refreshUser();
+            showAlert(
+              "info",
+              "Cadastro não liberado",
+              "Você poderá alugar assim que a biblioteca aprovar o seu cadastro.",
+            );
+            return;
+          }
+
+          if (code === "CONCURRENCY_CONFLICT") {
+            showAlert(
+              "error",
+              "Horário Ocupado",
+              "Outra pessoa acabou de reservar este horário. Escolha outro horário.",
             );
             return;
           }
@@ -332,7 +364,7 @@ export default function GameDetailsScreen() {
         setRentLoading(false);
       }
     },
-    [game, fetchDetails, showAlert],
+    [game, fetchDetails, showAlert, refreshUser],
   );
 
   const openRentFlow = useCallback(() => {
