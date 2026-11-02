@@ -55,7 +55,9 @@ export default function PrivacyPolicyScreen() {
 
           <Text style={styles.sectionTitle}>2. Dados que podem ser utilizados</Text>
           <View style={styles.bullets}>
-            <Bullet>Nome, e-mail institucional e telefone.</Bullet>
+            <Bullet>Nome, e-mail institucional, telefone e matrícula.</Bullet>
+            <Bullet>Foto de perfil, quando enviada.</Bullet>
+            <Bullet>Documento de identidade e comprovante de matrícula enviados para a aprovação do cadastro, guardados com acesso restrito à equipe da biblioteca.</Bullet>
             <Bullet>Informações relacionadas ao cadastro e autenticação.</Bullet>
             <Bullet>Dados de uso do sistema, como histórico de empréstimos, reservas e interações no app.</Bullet>
             <Bullet>Informações necessárias para notificações, segurança e funcionamento da aplicação.</Bullet>
@@ -87,6 +89,9 @@ export default function PrivacyPolicyScreen() {
             Os dados não devem ser compartilhados com terceiros fora das
             finalidades institucionais e operacionais do sistema, exceto quando
             necessário para autenticação, comunicação ou cumprimento de exigências legais.
+            Para funcionar, o Ludus usa serviços de terceiros: Google e Firebase
+            (login e verificação do telefone), Cloudinary (armazenamento de fotos
+            e documentos), Expo (notificações) e Resend (envio de e-mails).
           </Text>
 
           <View style={styles.divider} />
@@ -96,6 +101,7 @@ export default function PrivacyPolicyScreen() {
             <Bullet>Consultar os dados vinculados à própria conta.</Bullet>
             <Bullet>Solicitar atualização de informações cadastrais.</Bullet>
             <Bullet>Entender como o sistema utiliza suas informações.</Bullet>
+            <Bullet>Excluir a própria conta em Perfil › Conta › Excluir minha conta. Os dados pessoais, documentos e a foto são apagados; os aluguéis já feitos ficam no histórico da biblioteca sem identificar o usuário.</Bullet>
           </View>
 
           <View style={styles.divider} />
