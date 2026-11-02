@@ -230,22 +230,26 @@ export default function RegisterFormIFMA() {
     } catch (e: any) {
       const status = e?.response?.status;
       const code = e?.response?.data?.code;
+      // Só mostra a mensagem do servidor (em português); nunca o texto
+      // técnico do axios ou do SDK.
       const msg =
         e?.response?.data?.error ||
-        e?.message ||
-        "Erro desconhecido ao iniciar o registo.";
+        "Não foi possível concluir o registro. Tente novamente.";
 
-      if (e?.message === "Network Error") {
+      if (!e?.response && !e?.isAxiosError) {
+        // Falha depois da resposta (ex.: ao salvar a sessão do Google).
+        showAlert("error", "Não foi possível cadastrar", msg);
+      } else if (!e?.response) {
         showAlert(
           "error",
-          "Erro de Conexão",
-          "O aplicativo não conseguiu conectar-se ao servidor. Verifique sua rede e o backend.",
+          "Sem conexão",
+          "Não conseguimos falar com o servidor. Verifique sua internet e tente novamente.",
         );
-      } else if (status === 404) {
+      } else if (status === 404 || (status ?? 0) >= 500) {
         showAlert(
           "error",
-          "Rota Inválida (404)",
-          "O servidor não encontrou a rota /auth/ifma/register.",
+          "Serviço indisponível",
+          "O cadastro está indisponível no momento. Tente novamente em alguns minutos.",
         );
       } else if (code === "INVALID_INSTITUTIONAL_EMAIL") {
         showAlert("error", "E-mail inválido", msg);
@@ -258,7 +262,7 @@ export default function RegisterFormIFMA() {
       } else if (code === "WAIT_BEFORE_RESEND") {
         showAlert("info", "Aguarde um momento", msg);
       } else {
-        showAlert("error", "Erro do Servidor", msg);
+        showAlert("error", "Não foi possível cadastrar", msg);
       }
     } finally {
       setLoading(false);

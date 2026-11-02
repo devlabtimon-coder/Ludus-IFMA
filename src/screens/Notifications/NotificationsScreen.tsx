@@ -29,7 +29,11 @@ export default function NotificationsScreen() {
       const res = await api.get<MeResponse>("/notifications/me");
       setItems(res.data?.notifications ?? []);
     } catch (e: any) {
-      setErr(e?.response?.data?.error || "Não foi possível carregar notificações.");
+      setErr(
+        e?.response
+          ? "Não foi possível carregar as notificações."
+          : "Sem conexão. Verifique sua internet e tente novamente.",
+      );
       setItems([]);
     } finally {
       setLoading(false);
