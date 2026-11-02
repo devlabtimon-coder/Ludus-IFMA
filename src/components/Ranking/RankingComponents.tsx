@@ -131,6 +131,18 @@ export function RulesBox() {
           -20 pts por danos ou perda de componentes
         </Text>
       </View>
+      <View style={styles.ruleRow}>
+        <View style={[styles.dot, { backgroundColor: RED }]} />
+        <Text style={styles.ruleText}>
+          -2 pts ao cancelar uma reserva pendente
+        </Text>
+      </View>
+      <View style={styles.ruleRow}>
+        <View style={[styles.dot, { backgroundColor: RED }]} />
+        <Text style={styles.ruleText}>
+          -5 pts ao não retirar o jogo (reserva cancelada 30 min após o horário)
+        </Text>
+      </View>
     </View>
   );
 }
@@ -256,7 +268,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   dot: { width: 8, height: 8, borderRadius: 999 },
-  ruleText: { color: "#4B5563", fontWeight: "600", fontSize: 12 },
+  ruleText: { flexShrink: 1, color: "#4B5563", fontWeight: "600", fontSize: 12 },
   meBox: {
     backgroundColor: BLUE,
     borderRadius: 22,

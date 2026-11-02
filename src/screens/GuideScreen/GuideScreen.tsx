@@ -478,8 +478,9 @@ export default function GuideScreen() {
                 <Text style={styles.staticHeroIcon}>🏆</Text>
                 <Text style={styles.staticMainTitle}>Progressão de Nível</Text>
                 <Text style={styles.staticDesc}>
-                  Entenda como evoluir sua categoria e desbloquear acesso a
-                  jogos exclusivos do Ludus.
+                  Sua categoria sobe conforme o total de retiradas concluídas
+                  (contadas quando a biblioteca confirma que você retirou o
+                  jogo) e libera novos níveis do acervo.
                 </Text>
               </View>
 
@@ -488,25 +489,25 @@ export default function GuideScreen() {
                   name: "Starter",
                   color: "#22C55E",
                   icon: "leaf",
-                  desc: "Nível inicial após cadastro. Acesso: Latão e Bronze.",
+                  desc: "Nível inicial após o cadastro. Acesso aos jogos Latão e Bronze.",
                 },
                 {
                   name: "Family",
                   color: "#F59E0B",
                   icon: "home",
-                  desc: "Conclua 10 aluguéis sem atraso. Acesso estendido ao Prata.",
+                  desc: "A partir de 11 retiradas concluídas. Libera também os jogos Prata.",
                 },
                 {
                   name: "Expert",
                   color: "#7C3AED",
                   icon: "medal",
-                  desc: "10+ aluguéis e avaliações. Acesso a Ouro liberado.",
+                  desc: "A partir de 31 retiradas concluídas. Libera também os jogos Ouro.",
                 },
                 {
                   name: "Ultragamer",
                   color: "#31358B",
                   icon: "trophy",
-                  desc: "Com mais +10 aluguéis, você atinge o auge do engajamento. Acesso VIP aos jogos Diamante.",
+                  desc: "A partir de 61 retiradas concluídas. Acesso a todo o acervo, incluindo os jogos Diamante.",
                 },
               ].map((lvl) => (
                 <View key={lvl.name} style={styles.levelCard}>
@@ -549,25 +550,25 @@ export default function GuideScreen() {
                   name: "Latão",
                   color: "#8B7355",
                   icon: "shield-outline",
-                  desc: "Regras simples, rápidos. Ideais para iniciar. Acesso Livre.",
+                  desc: "Regras simples, rápidos. Ideais para iniciar. Liberado para todas as categorias.",
                 },
                 {
                   name: "Bronze",
                   color: "#CD7F32",
                   icon: "shield-half-outline",
-                  desc: "Profundidade moderada, partidas até 60 min. Acesso Livre.",
+                  desc: "Profundidade moderada, partidas até 60 min. Liberado para todas as categorias.",
                 },
                 {
                   name: "Prata",
                   color: "#7A7A7A",
                   icon: "shield",
-                  desc: "Mecânicas complexas, múltiplas fases. Requer Family+.",
+                  desc: "Mecânicas complexas, múltiplas fases. Requer Family, Expert ou Ultragamer.",
                 },
                 {
                   name: "Ouro",
                   color: "#B8860B",
                   icon: "star-outline",
-                  desc: "Estratégia pesada, longa duração. Requer Expert+.",
+                  desc: "Estratégia pesada, longa duração. Requer Expert ou Ultragamer.",
                 },
                 {
                   name: "Diamante",
