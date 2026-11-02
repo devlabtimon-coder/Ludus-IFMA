@@ -514,7 +514,7 @@ export default function GameDetailsScreen() {
                     setRateOpen(true);
                   }}
                   available={!!game.available}
-                  rentalDaysText="Por agendamento"
+                  rentalDaysText="Retirada e devolução no mesmo dia"
                   availabilityForecast={null}
                   tier={game.tier}
                 />

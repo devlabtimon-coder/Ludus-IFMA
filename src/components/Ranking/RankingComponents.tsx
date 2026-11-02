@@ -122,8 +122,11 @@ export function RulesBox() {
         <Text style={styles.ruleText}>+5 pts ao devolver no tempo correto</Text>
       </View>
       <View style={styles.ruleRow}>
-        <View style={[styles.dot, { backgroundColor: GRAY }]} />
-        <Text style={styles.ruleText}>+2 pts ao devolver com atraso</Text>
+        <View style={[styles.dot, { backgroundColor: RED }]} />
+        <Text style={styles.ruleText}>
+          -10 pts ao devolver com atraso (e novas reservas ficam bloqueadas
+          até a devolução)
+        </Text>
       </View>
       <View style={styles.ruleRow}>
         <View style={[styles.dot, { backgroundColor: RED }]} />
