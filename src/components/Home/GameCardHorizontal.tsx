@@ -5,14 +5,9 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 interface GameCardHorizontalProps {
   id: string;
   title: string;
-  price: number;
   rating: number;
   image?: string | null;
   isAvailableNow?: boolean;
-}
-
-function formatBRL(value: number) {
-  return `R$ ${value.toFixed(2).replace(".", ",")}`;
 }
 
 function formatRating(value: number) {
@@ -30,7 +25,6 @@ function getHighResImage(url?: string | null) {
 export default function GameCardHorizontal({
   id,
   title,
-  price,
   rating,
   image,
   isAvailableNow,
@@ -63,7 +57,6 @@ export default function GameCardHorizontal({
         <Text style={styles.title} numberOfLines={2}>
           {title}
         </Text>
-        <Text style={styles.price}>{formatBRL(price)} / dia</Text>
 
         {isAvailableNow !== undefined && (
           <View style={styles.availabilityRow}>
@@ -136,12 +129,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     minHeight: 38,
-  },
-  price: {
-    color: "#08b73f",
-    fontWeight: "800",
-    marginTop: 6,
-    fontSize: 14,
   },
   availabilityRow: {
     flexDirection: "row",

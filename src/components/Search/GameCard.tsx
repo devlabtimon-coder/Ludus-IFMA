@@ -7,7 +7,7 @@ export type Game = {
   id: string;
   title: string;
   cover?: string | null;
-  price: number;
+  price?: number;
   rating?: number | null;
   minPlayers?: number | null;
   maxPlayers?: number | null;
@@ -37,8 +37,6 @@ export default function GameCard({ item }: Props) {
       : item?.minPlayers
         ? `${item.minPlayers}+ jogadores`
         : "—";
-
-  const priceText = Number(item?.price ?? 0).toFixed(2);
 
   return (
     <Pressable style={({ pressed }) => [styles.card, pressed && { opacity: 0.9 }]} onPress={() => router.push(`/game/${item.id}`)}>
@@ -73,11 +71,6 @@ export default function GameCard({ item }: Props) {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.price}>
-            R$ {priceText}
-            <Text style={styles.perDay}> / dia</Text>
-          </Text>
-
           <View style={styles.rating}>
             <Ionicons name="star" size={14} color="#FFC107" />
             <Text style={styles.ratingText}>{rating}</Text>
@@ -135,21 +128,9 @@ const styles = StyleSheet.create({
 
   footer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     marginTop: 10,
-  },
-
-  price: {
-    color: "#2E7D32",
-    fontWeight: "700",
-    fontSize: 14,
-  },
-
-  perDay: {
-    color: "#777",
-    fontWeight: "400",
-    fontSize: 12,
   },
 
   rating: {

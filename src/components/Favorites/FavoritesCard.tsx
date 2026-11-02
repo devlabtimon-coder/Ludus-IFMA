@@ -7,15 +7,14 @@ export type FavoriteGame = {
   id: string;
   title: string;
   cover?: string | null;
-  price: number;
+  price?: number;
   rating?: number | null;
   locationLabel?: string; 
 };
 
-type SortKey = "price" | "rating" | "title";
+export type SortKey = "rating" | "title";
 
 function sortLabel(k: SortKey) {
-  if (k === "price") return "preço";
   if (k === "rating") return "avaliação";
   return "nome";
 }

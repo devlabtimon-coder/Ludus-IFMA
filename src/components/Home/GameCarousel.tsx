@@ -4,7 +4,7 @@ import GameCardHorizontal from "./GameCardHorizontal";
 export interface ForYouGame {
   id: string;
   title: string;
-  price: number;
+  price?: number;
   rating?: number | null;
   ratingsCount?: number | null;
   cover?: string | null;
@@ -27,7 +27,6 @@ export default function GameCarousel({ data }: { data: ForYouGame[] }) {
           <GameCardHorizontal
             id={item.id}
             title={item.title}
-            price={item.price}
             image={item.cover ?? null}
             rating={Number(item.rating ?? 0)}
             isAvailableNow={item.isAvailableNow}
