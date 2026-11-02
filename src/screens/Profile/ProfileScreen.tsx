@@ -216,7 +216,7 @@ export default function ProfileScreen() {
 
             <ProfileMenuItem
               icon="ticket-outline"
-              title="Meus Prêmios e Cupons"
+              title="Meus Brindes"
               onPress={() => router.push("/wallet")}
             />
 

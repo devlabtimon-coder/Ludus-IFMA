@@ -53,7 +53,7 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
 
               const rewardDesc =
                 season?.rewards?.[`nivel${lvl}`]?.cuponsGerados?.[0]
-                  ?.descricao || `Recompensa Surpresa do ${customLevelName}`;
+                  ?.descricao || `Brinde surpresa do ${customLevelName}`;
 
               return (
                 <View key={lvl} style={styles.roadmapRow}>
@@ -111,7 +111,7 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
             }}
           >
             <Ionicons name="ticket" size={20} color="#fff" />
-            <Text style={styles.walletBtnText}>Acessar Minha Carteira</Text>
+            <Text style={styles.walletBtnText}>Ver meus brindes</Text>
           </Pressable>
         </View>
       </View>
