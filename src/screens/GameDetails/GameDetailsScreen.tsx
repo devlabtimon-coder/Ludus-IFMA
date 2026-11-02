@@ -347,6 +347,25 @@ export default function GameDetailsScreen() {
             return;
           }
 
+          if (code === "OVERDUE_RENTAL") {
+            showAlert(
+              "error",
+              "Jogo em atraso",
+              msg ||
+                "Você está com um jogo em atraso. Devolva-o na biblioteca para fazer novas reservas.",
+            );
+            return;
+          }
+
+          if (code === "SAME_DAY_ONLY") {
+            showAlert(
+              "info",
+              "Devolução no mesmo dia",
+              "A retirada e a devolução precisam ser no mesmo dia. Escolha um horário de início e de fim na mesma data.",
+            );
+            return;
+          }
+
           if (code === "TIME_SLOT_TAKEN") {
             showAlert(
               "error",
