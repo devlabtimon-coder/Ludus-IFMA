@@ -31,7 +31,13 @@ export function RewardsModal({ visible, onClose, season, userLevel }: Props) {
                 {season?.name || "Temporada Atual"}
               </Text>
             </View>
-            <Pressable style={styles.closeBtn} onPress={onClose} hitSlop={10}>
+            <Pressable
+              style={styles.closeBtn}
+              onPress={onClose}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar recompensas"
+            >
               <Ionicons name="close" size={24} color="#666" />
             </Pressable>
           </View>

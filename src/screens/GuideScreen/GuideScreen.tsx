@@ -340,6 +340,9 @@ export default function GuideScreen() {
                     <Pressable
                       onPress={clearAll}
                       style={styles.clearFiltersBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel="Limpar busca e filtros"
+                      hitSlop={12}
                     >
                       <Ionicons name="close" size={14} color="#666" />
                     </Pressable>

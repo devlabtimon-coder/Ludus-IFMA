@@ -19,7 +19,13 @@ export function HowToPlayModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.topBar}>
-        <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={10}>
+        <Pressable
+          onPress={onClose}
+          style={styles.closeBtn}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar"
+        >
           <Ionicons name="close" size={24} color="#fff" />
         </Pressable>
         <Text style={styles.topTitle} numberOfLines={1}>{title}</Text>

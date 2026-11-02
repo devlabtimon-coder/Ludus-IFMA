@@ -6,7 +6,13 @@ export default function FilterButton() {
   const router = useRouter();
 
   return (
-    <Pressable style={styles.container} onPress={() => router.push("/filter")}>
+    <Pressable
+      style={styles.container}
+      onPress={() => router.push("/filter")}
+      accessibilityRole="button"
+      accessibilityLabel="Filtros"
+      hitSlop={4}
+    >
       <Ionicons name="filter" size={16} color="#FFFFFF" />
       <Text style={styles.text}>Filtros</Text>
     </Pressable>

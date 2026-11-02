@@ -48,6 +48,12 @@ export function Header() {
           goToRoute("/notifications");
         }}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={
+          notificationsCount > 0
+            ? `Notificações, ${notificationsCount} não lidas`
+            : "Notificações"
+        }
       >
         <Ionicons
           name={

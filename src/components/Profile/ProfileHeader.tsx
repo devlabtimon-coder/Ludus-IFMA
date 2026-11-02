@@ -20,7 +20,12 @@ export function ProfileHeader({ user, onPressChangePhoto }: Props) {
           source={avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR}
           style={styles.avatar}
         />
-        <Pressable onPress={onPressChangePhoto} style={styles.cameraBtn}>
+        <Pressable
+          onPress={onPressChangePhoto}
+          style={styles.cameraBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Alterar foto de perfil"
+        >
           <Ionicons name="camera" size={18} color="#fff" />
         </Pressable>
       </View>

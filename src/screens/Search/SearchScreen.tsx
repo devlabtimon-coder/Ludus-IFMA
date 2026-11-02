@@ -141,6 +141,10 @@ export default function SearchScreen() {
 
           <Pressable
             onPress={() => router.push("/filter")}
+            accessibilityRole="button"
+            accessibilityLabel={
+              activeCount > 0 ? `Filtros, ${activeCount} ativos` : "Filtros"
+            }
             style={{
               height: 44,
               paddingHorizontal: 16,

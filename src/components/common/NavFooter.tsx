@@ -8,8 +8,22 @@ export function NavFooter() {
   const pathName = usePathname();
   const insets = useSafeAreaInsets();
 
+  function isActive(route: string) {
+    return pathName.startsWith(route);
+  }
+
   function getColor(route: string) {
-    return pathName.startsWith(route) ? "#FBBC04" : "#DDD";
+    return isActive(route) ? "#FBBC04" : "#DDD";
+  }
+
+  // Ícones de 26pt: o hitSlop leva a área de toque a ~44pt sem mudar o layout.
+  function tabProps(route: string, label: string) {
+    return {
+      accessibilityRole: "button" as const,
+      accessibilityLabel: label,
+      accessibilityState: { selected: isActive(route) },
+      hitSlop: 9,
+    };
   }
 
   return (
@@ -22,23 +36,38 @@ export function NavFooter() {
         },
       ]}
     >
-      <TouchableOpacity onPress={() => router.push("/home")}>
+      <TouchableOpacity
+        onPress={() => router.push("/home")}
+        {...tabProps("/home", "Início")}
+      >
         <Ionicons name="grid" size={26} color={getColor("/home")} />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/favorites")}>
+      <TouchableOpacity
+        onPress={() => router.push("/favorites")}
+        {...tabProps("/favorites", "Favoritos")}
+      >
         <Ionicons name="heart" size={26} color={getColor("/favorites")} />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/guide")}>
+      <TouchableOpacity
+        onPress={() => router.push("/guide")}
+        {...tabProps("/guide", "Guia")}
+      >
         <Ionicons name="book" size={26} color={getColor("/guide")} />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/rentals")}>
+      <TouchableOpacity
+        onPress={() => router.push("/rentals")}
+        {...tabProps("/rentals", "Meus aluguéis")}
+      >
         <Ionicons name="bag" size={26} color={getColor("/rentals")} />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/profile")}>
+      <TouchableOpacity
+        onPress={() => router.push("/profile")}
+        {...tabProps("/profile", "Perfil")}
+      >
         <Ionicons name="person" size={26} color={getColor("/profile")} />
       </TouchableOpacity>
     </View>
