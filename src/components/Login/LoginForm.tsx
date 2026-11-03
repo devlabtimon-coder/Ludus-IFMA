@@ -290,7 +290,12 @@ export function LoginForm() {
           </Pressable>
         </View>
 
-        <Pressable onPress={() => router.push("/forgot-password")}>
+        <Pressable
+          onPress={() =>
+            // Leva o e-mail já digitado, se houver, para não precisar digitar de novo.
+            router.push({ pathname: "/forgot-password", params: email.includes("@") ? { email: email.trim().toLowerCase() } : {} })
+          }
+        >
           <Text style={styles.forgot}>Esqueceu a senha?</Text>
         </Pressable>
 

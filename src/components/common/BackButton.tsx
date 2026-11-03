@@ -5,9 +5,11 @@ import { useSafeTop } from "@/src/hooks/useSafeTop";
 
 interface BackButtonProps {
   color?: string;
+  // Substitui o voltar padrão (ex.: voltar uma etapa dentro da mesma tela).
+  onPress?: () => void;
 }
 
-export default function BackButton({ color = "#B3193A" }: BackButtonProps) {
+export default function BackButton({ color = "#B3193A", onPress }: BackButtonProps) {
   const router = useRouter();
   const top = useSafeTop(47, 4);
 
@@ -15,7 +17,7 @@ export default function BackButton({ color = "#B3193A" }: BackButtonProps) {
     <Pressable
       style={[styles.container, { top }]}
       // Aberta direto por uma notificação, a tela não tem para onde voltar.
-      onPress={() => (router.canGoBack() ? router.back() : router.replace("/home"))}
+      onPress={onPress ?? (() => (router.canGoBack() ? router.back() : router.replace("/home")))}
       accessibilityRole="button"
       accessibilityLabel="Voltar"
     >
