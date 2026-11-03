@@ -1,258 +1,232 @@
 import BackButton from "@/src/components/common/BackButton";
-import LudusAlert from "@/src/components/common/LudusAlert/LudusAlert";
-import { styles } from "@/src/components/Verify/styles";
-import VerifyBackground from "@/src/components/Verify/VerifyBackground";
-import VerifyHero from "@/src/components/Verify/VerifyHero";
+import LoginBackground from "@/src/components/Login/LoginBackground";
+import { styles as form } from "@/src/components/Login/styles";
+import { PasswordStrengthSection } from "@/src/components/Register/PasswordStrengthSection";
 import { api } from "@/src/services/api";
+import { getPasswordRules, getPasswordStrength } from "@/src/utils/passwordStrength";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Animated,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    TextInput,
-    View
+  ActivityIndicator,
+  Animated,
+  BackHandler,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
-type Step = "email" | "code" | "newPassword";
-type AlertType = "error" | "success" | "info";
+// Recuperação de senha em três etapas (e-mail → código → nova senha) e uma tela de conclusão,
+// no mesmo padrão visual do login e do cadastro: fundo azul, folha branca, rótulos e erros embaixo do campo.
+
+type Step = "email" | "code" | "newPassword" | "done";
 
 const OTP_LENGTH = 6;
+const RESEND_SECONDS = 30;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const STEP_INFO: Record<Exclude<Step, "done">, { index: number; icon: keyof typeof Ionicons.glyphMap }> = {
+  email: { index: 1, icon: "mail-outline" },
+  code: { index: 2, icon: "keypad-outline" },
+  newPassword: { index: 3, icon: "lock-closed-outline" },
+};
+
+const apiError = (e: any, fallback: string): string =>
+  e?.response?.data?.error ||
+  e?.response?.data?.message ||
+  (!e?.response ? "Sem conexão com o servidor. Verifique a internet e tente de novo." : fallback);
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ email?: string }>();
 
   const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(
+    typeof params.email === "string" && EMAIL_RE.test(params.email) ? params.email : "",
+  );
   const [resetToken, setResetToken] = useState("");
 
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertType, setAlertType] = useState<AlertType>("info");
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
+  const fade = useRef(new Animated.Value(1)).current;
+  const scrollRef = useRef<ScrollView>(null);
 
-  const showAlert = (type: AlertType, title: string, message: string) => {
-    setAlertType(type);
-    setAlertTitle(title);
-    setAlertMessage(message);
-    setAlertVisible(true);
-  };
-
-  
-  const [renderHero, setRenderHero] = useState(true);
-  const heroOpacity = useRef(new Animated.Value(1)).current;
-  const heroScaleY = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", () => {
-      setRenderHero(true);
-      heroOpacity.setValue(1);
-      heroScaleY.setValue(1);
-
-      Animated.parallel([
-        Animated.timing(heroOpacity, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heroScaleY, {
-          toValue: 0,
-          duration: 160,
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
-        if (finished) setRenderHero(false);
+  const goTo = useCallback(
+    (next: Step) => {
+      Animated.timing(fade, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
+        setStep(next);
+        scrollRef.current?.scrollTo({ y: 0, animated: false });
+        Animated.timing(fade, { toValue: 1, duration: 180, useNativeDriver: true }).start();
       });
-    });
+    },
+    [fade],
+  );
 
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setRenderHero(true);
-      heroOpacity.setValue(0);
-      heroScaleY.setValue(0);
+  // Voltar dentro do fluxo: do código volta para o e-mail; nas outras etapas sai da tela.
+  const handleBack = useCallback(() => {
+    if (step === "code") {
+      goTo("email");
+      return true;
+    }
+    if (step === "done") {
+      router.replace("/login");
+      return true;
+    }
+    if (router.canGoBack()) router.back();
+    else router.replace("/login");
+    return true;
+  }, [step, goTo, router]);
 
-      Animated.parallel([
-        Animated.timing(heroOpacity, {
-          toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-        Animated.timing(heroScaleY, {
-          toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, [heroOpacity, heroScaleY]);
-
-  const Wrapper: any = Platform.OS === "ios" ? KeyboardAvoidingView : View;
-  const wrapperProps =
-    Platform.OS === "ios"
-      ? { behavior: "padding" as const, keyboardVerticalOffset: 0 }
-      : {};
-
-
-  const stepOpacity = useRef(new Animated.Value(1)).current;
-
-  function transitionTo(next: Step) {
-    Animated.timing(stepOpacity, {
-      toValue: 0,
-      duration: 130,
-      useNativeDriver: true,
-    }).start(() => {
-      setStep(next);
-      Animated.timing(stepOpacity, {
-        toValue: 1,
-        duration: 180,
-        useNativeDriver: true,
-      }).start();
-    });
-  }
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", handleBack);
+      return () => sub.remove();
+    }, [handleBack]),
+  );
 
   return (
-    <View style={styles.container}>
-      <VerifyBackground />
-      <BackButton />
+    <View style={s.container}>
+      <LoginBackground />
+      {step !== "done" && <BackButton onPress={handleBack} />}
 
-      <Wrapper style={{ flex: 1 }} {...wrapperProps}>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={{ flex: 1, paddingTop: 100 }}>
-            <View style={styles.card}>
+      <View style={s.blueTopSpace} />
 
-       
-              {renderHero && (
-                <Animated.View
-                  style={{
-                    opacity: heroOpacity,
-                    transform: [{ scaleY: heroScaleY }],
-                    overflow: "hidden",
-                  }}
-                >
-                  <VerifyHero method={step === "newPassword" ? "password" : "email"} />
-                </Animated.View>
+      <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <View style={form.container}>
+          <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={s.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <Animated.View style={{ opacity: fade }}>
+              {step !== "done" && <StepHeader step={step} />}
+
+              {step === "email" && (
+                <StepEmail
+                  email={email}
+                  setEmail={setEmail}
+                  onSent={() => goTo("code")}
+                  onLogin={handleBack}
+                />
               )}
 
+              {step === "code" && (
+                <StepCode
+                  email={email}
+                  onVerified={(token) => {
+                    setResetToken(token);
+                    goTo("newPassword");
+                  }}
+                  onChangeEmail={() => goTo("email")}
+                />
+              )}
 
-              <View style={local.stepsRow}>
-                {(["email", "code", "newPassword"] as Step[]).map((s, i) => (
-                  <View
-                    key={s}
-                    style={[
-                      local.dot,
-                      step === s && local.dotActive,
-                      (step === "code" && i === 0) ||
-                      (step === "newPassword" && i < 2)
-                        ? local.dotDone
-                        : null,
-                    ]}
-                  />
-                ))}
-              </View>
+              {step === "newPassword" && (
+                <StepNewPassword
+                  resetToken={resetToken}
+                  onSaved={() => goTo("done")}
+                  onRestart={() => goTo("email")}
+                />
+              )}
 
-              <Animated.View style={{ opacity: stepOpacity }}>
-                {step === "email" && (
-                  <StepEmail
-                    email={email}
-                    setEmail={setEmail}
-                    showAlert={showAlert}
-                    onNext={() => transitionTo("code")}
-                  />
-                )}
-
-                {step === "code" && (
-                  <StepCode
-                    email={email}
-                    showAlert={showAlert}
-                    onNext={(token) => {
-                      setResetToken(token);
-                      transitionTo("newPassword");
-                    }}
-                    onBack={() => transitionTo("email")}
-                  />
-                )}
-
-                {step === "newPassword" && (
-                  <StepNewPassword
-                    resetToken={resetToken}
-                    showAlert={showAlert}
-                    onSuccess={() => {
-                      showAlert(
-                        "success",
-                        "Senha redefinida! ✅",
-                        "Sua nova senha foi salva. Faça login para continuar."
-                      );
-                      setTimeout(() => router.replace("/login"), 1800);
-                    }}
-                  />
-                )}
-              </Animated.View>
-
-            </View>
-          </View>
-        </ScrollView>
-      </Wrapper>
-
-      <LudusAlert
-        visible={alertVisible}
-        type={alertType}
-        title={alertTitle}
-        message={alertMessage}
-        onClose={() => setAlertVisible(false)}
-      />
+              {step === "done" && <StepDone onLogin={() => router.replace("/login")} />}
+            </Animated.View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
+function StepHeader({ step }: { step: Exclude<Step, "done"> }) {
+  const { index, icon } = STEP_INFO[step];
+  return (
+    <View style={s.header}>
+      <View style={s.headerTop}>
+        <View style={s.iconBadge}>
+          <Ionicons name={icon} size={26} color="#31358B" />
+        </View>
+        <Text style={s.stepLabel}>Etapa {index} de 3</Text>
+      </View>
+      <View style={s.progress} accessibilityRole="progressbar" accessibilityValue={{ min: 1, max: 3, now: index }}>
+        {[1, 2, 3].map((n) => (
+          <View key={n} style={[s.progressBar, n <= index && s.progressBarOn]} />
+        ))}
+      </View>
+    </View>
+  );
+}
 
+function FieldError({ message }: { message: string }) {
+  if (!message) return null;
+  return (
+    <View style={s.errorRow} accessibilityLiveRegion="polite">
+      <Ionicons name="alert-circle" size={16} color="#B3193A" />
+      <Text style={s.errorText}>{message}</Text>
+    </View>
+  );
+}
+
+function PrimaryButton({
+  label,
+  loadingLabel,
+  loading,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  loadingLabel: string;
+  loading: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const off = loading || disabled;
+  return (
+    <Pressable
+      style={[form.button, s.primaryButton, off && s.buttonOff]}
+      onPress={onPress}
+      disabled={off}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!off, busy: loading }}
+    >
+      {loading && <ActivityIndicator color="#FFF" style={{ marginRight: 10 }} />}
+      <Text style={form.buttonText}>{loading ? loadingLabel : label}</Text>
+    </Pressable>
+  );
+}
 
 function StepEmail({
   email,
   setEmail,
-  showAlert,
-  onNext,
+  onSent,
+  onLogin,
 }: {
   email: string;
   setEmail: (v: string) => void;
-  showAlert: (t: AlertType, title: string, msg: string) => void;
-  onNext: () => void;
+  onSent: () => void;
+  onLogin: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit() {
     const clean = email.trim().toLowerCase();
+    if (!clean) return setError("Informe o e-mail da sua conta.");
+    if (!EMAIL_RE.test(clean)) return setError("Confira o e-mail digitado.");
 
-    if (!clean) {
-      showAlert("info", "Campo obrigatório", "Informe seu e-mail cadastrado.");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
-      showAlert("info", "E-mail inválido", "Verifique o endereço digitado.");
-      return;
-    }
-
+    setError("");
     setLoading(true);
     try {
       await api.post("/auth/forgot-password", { email: clean });
-      onNext();
+      setEmail(clean);
+      onSent();
     } catch (e: any) {
-      const msg = e?.response?.data?.error || "Erro ao enviar código.";
-      showAlert("error", "Erro", msg);
+      setError(apiError(e, "Não foi possível enviar o código. Tente de novo."));
     } finally {
       setLoading(false);
     }
@@ -260,240 +234,260 @@ function StepEmail({
 
   return (
     <View>
-      <Text style={styles.title}>
-        Informe seu e-mail para receber o código de redefinição.
+      <Text style={form.title}>Esqueceu a senha?</Text>
+      <Text style={form.subtitle}>
+        Sem problema. Informe o e-mail da sua conta e enviaremos um código para criar uma nova senha.
       </Text>
 
-      <View style={local.inputWrap}>
-        <TextInput
-          style={local.textInput}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="seu@email.com"
-          placeholderTextColor="#999"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="send"
-          onSubmitEditing={handleSubmit}
-        />
-      </View>
+      <Text style={form.label}>E-mail</Text>
+      <TextInput
+        style={[form.input, s.inputTight, !!error && s.inputError]}
+        value={email}
+        onChangeText={(v) => {
+          setEmail(v);
+          if (error) setError("");
+        }}
+        placeholder="seu.email@acad.ifma.edu.br"
+        placeholderTextColor="#999"
+        keyboardType="email-address"
+        textContentType="emailAddress"
+        autoComplete="email"
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="send"
+        onSubmitEditing={handleSubmit}
+        editable={!loading}
+        accessibilityLabel="E-mail"
+      />
+      <FieldError message={error} />
 
-      <Pressable
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Enviando..." : "Enviar código"}
+      <PrimaryButton label="Enviar código" loadingLabel="Enviando..." loading={loading} onPress={handleSubmit} />
+
+      <Text style={form.register}>
+        Lembrou a senha?{" "}
+        <Text style={form.link} onPress={onLogin}>
+          Voltar para o login
         </Text>
-      </Pressable>
+      </Text>
     </View>
   );
 }
-
-
 
 function StepCode({
   email,
-  showAlert,
-  onNext,
-  onBack,
+  onVerified,
+  onChangeEmail,
 }: {
   email: string;
-  showAlert: (t: AlertType, title: string, msg: string) => void;
-  onNext: (token: string) => void;
-  onBack: () => void;
+  onVerified: (token: string) => void;
+  onChangeEmail: () => void;
 }) {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [focused, setFocused] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [countdown, setCountdown] = useState(30);
-  const [isCounting, setIsCounting] = useState(true);
-  const inputsRef = useRef<(TextInput | null)[]>([]);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [resending, setResending] = useState(false);
+  const [countdown, setCountdown] = useState(RESEND_SECONDS);
+  const inputs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
-    if (!isCounting) return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setIsCounting(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isCounting]);
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
-  const focusIndex = (i: number) => {
-    if (i < 0 || i >= OTP_LENGTH) return;
-    inputsRef.current[i]?.focus();
-  };
+  useEffect(() => {
+    const t = setTimeout(() => inputs.current[0]?.focus(), 350);
+    return () => clearTimeout(t);
+  }, []);
+
+  const verify = useCallback(
+    async (code: string) => {
+      if (code.length < OTP_LENGTH) {
+        setError("Digite os 6 números do código.");
+        return;
+      }
+      setError("");
+      setNotice("");
+      setLoading(true);
+      try {
+        const res = await api.post("/auth/forgot-password/verify", { email, code });
+        onVerified(res.data.resetToken);
+      } catch (e: any) {
+        setError(apiError(e, "Código inválido ou expirado."));
+        setOtp(Array(OTP_LENGTH).fill(""));
+        inputs.current[0]?.focus();
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, onVerified],
+  );
 
   const handleChange = (text: string, index: number) => {
     const digits = (text || "").replace(/\D/g, "");
+    const next = [...otp];
 
     if (digits.length > 1) {
-      const next = [...otp];
-      for (let k = 0; k < digits.length && index + k < OTP_LENGTH; k++) {
-        next[index + k] = digits[k];
-      }
-      setOtp(next);
-      focusIndex(Math.min(index + digits.length, OTP_LENGTH - 1));
-      return;
+      // Colou o código ou o iOS preencheu pelo e-mail.
+      for (let k = 0; k < digits.length && index + k < OTP_LENGTH; k++) next[index + k] = digits[k];
+    } else {
+      next[index] = digits;
     }
 
-    const digit = digits.slice(-1);
-    const next = [...otp];
-    next[index] = digit;
     setOtp(next);
-    if (digit && index < OTP_LENGTH - 1) focusIndex(index + 1);
+    if (error) setError("");
+
+    const filled = next.join("");
+    if (filled.length === OTP_LENGTH && !next.includes("")) {
+      inputs.current[Math.min(index + digits.length, OTP_LENGTH - 1)]?.blur();
+      verify(filled);
+      return;
+    }
+    if (digits) inputs.current[Math.min(index + digits.length, OTP_LENGTH - 1)]?.focus();
   };
 
   const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key !== "Backspace") return;
-    if (otp[index]) return;
-    if (index > 0) {
-      const next = [...otp];
-      next[index - 1] = "";
-      setOtp(next);
-      focusIndex(index - 1);
-    }
+    if (e.nativeEvent.key !== "Backspace" || otp[index] || index === 0) return;
+    const next = [...otp];
+    next[index - 1] = "";
+    setOtp(next);
+    inputs.current[index - 1]?.focus();
   };
 
-  async function handleVerify() {
-    const code = otp.join("");
-    if (code.length < 6) {
-      showAlert("info", "Código incompleto", "Por favor, preencha os 6 dígitos.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await api.post("/auth/forgot-password/verify", { email, code });
-      onNext(res.data.resetToken);
-    } catch (e: any) {
-      const msg = e?.response?.data?.error || "Código inválido ou expirado.";
-      showAlert("error", "Erro", msg);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleResend() {
-    if (isCounting || resendLoading) return;
-    setResendLoading(true);
+    if (countdown > 0 || resending) return;
+    setResending(true);
+    setError("");
+    setNotice("");
     try {
       await api.post("/auth/forgot-password", { email });
-      showAlert("success", "E-mail enviado 📩", "Novo código enviado para seu e-mail!");
-      setCountdown(30);
-      setIsCounting(true);
+      setNotice("Enviamos um novo código. Ele substitui o anterior.");
       setOtp(Array(OTP_LENGTH).fill(""));
+      setCountdown(RESEND_SECONDS);
+      inputs.current[0]?.focus();
     } catch (e: any) {
       const retryAfter = e?.response?.data?.retryAfter;
-      const msg = e?.response?.data?.error || "Erro ao reenviar código.";
-      if (retryAfter && typeof retryAfter === "number") {
-        setCountdown(retryAfter);
-        setIsCounting(true);
-      }
-      showAlert("error", "Erro", msg);
+      if (typeof retryAfter === "number") setCountdown(retryAfter);
+      setError(apiError(e, "Não foi possível reenviar o código."));
     } finally {
-      setResendLoading(false);
+      setResending(false);
     }
   }
 
   return (
     <View>
-      <Text style={styles.title}>
-        Digite o código que enviamos para o seu e-mail.
+      <Text style={form.title}>Digite o código</Text>
+      <Text style={form.subtitle}>
+        Se existir uma conta com o e-mail <Text style={s.strong}>{email}</Text>, você vai receber um código de 6
+        números. Confira também a caixa de spam.
       </Text>
 
-      <View style={styles.otpContainer}>
-        {Array.from({ length: OTP_LENGTH }).map((_, index) => (
+      <Text style={form.label}>Código de verificação</Text>
+      <View style={s.otpRow}>
+        {otp.map((digit, index) => (
           <TextInput
             key={index}
-            ref={(r) => { inputsRef.current[index] = r; }}
-            style={styles.input}
-            value={otp[index]}
-            maxLength={6}
+            ref={(r) => {
+              inputs.current[index] = r;
+            }}
+            style={[
+              s.otpBox,
+              (focused === index || !!digit) && s.otpBoxActive,
+              !!error && s.inputError,
+            ]}
+            value={digit}
+            maxLength={index === 0 ? OTP_LENGTH : 1}
             keyboardType="number-pad"
             inputMode="numeric"
-            returnKeyType="done"
-            autoCorrect={false}
-            autoCapitalize="none"
-            textContentType="oneTimeCode"
-            importantForAutofill="yes"
+            textContentType={index === 0 ? "oneTimeCode" : "none"}
+            autoComplete={index === 0 ? "one-time-code" : "off"}
+            onFocus={() => setFocused(index)}
             onChangeText={(t) => handleChange(t, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}
+            editable={!loading}
+            selectTextOnFocus
+            accessibilityLabel={`Dígito ${index + 1} de ${OTP_LENGTH}`}
           />
         ))}
       </View>
+      <FieldError message={error} />
+      {!!notice && (
+        <View style={s.noticeRow} accessibilityLiveRegion="polite">
+          <Ionicons name="checkmark-circle" size={16} color="#2E7D32" />
+          <Text style={s.noticeText}>{notice}</Text>
+        </View>
+      )}
 
-      <Text style={styles.resend}>Não recebeu o e-mail?</Text>
+      <PrimaryButton
+        label="Confirmar código"
+        loadingLabel="Verificando..."
+        loading={loading}
+        onPress={() => verify(otp.join(""))}
+      />
 
-      <Pressable onPress={handleResend} disabled={isCounting || resendLoading}>
-        <Text style={[styles.resendBold, (isCounting || resendLoading) && { opacity: 0.5 }]}>
-          {isCounting
-            ? `Reenviar em 00:${countdown.toString().padStart(2, "0")}`
-            : resendLoading
-            ? "Enviando..."
-            : "REENVIAR E-MAIL"}
+      <View style={s.linksRow}>
+        <Text style={s.mutedText}>Não recebeu?</Text>
+        {countdown > 0 ? (
+          <Text style={s.mutedLink}>Reenviar em 0:{String(countdown).padStart(2, "0")}</Text>
+        ) : (
+          <Text style={form.link} onPress={handleResend}>
+            {resending ? "Reenviando..." : "Reenviar código"}
+          </Text>
+        )}
+      </View>
+
+      <Text style={[form.register, { marginTop: 18 }]}>
+        E-mail errado?{" "}
+        <Text style={form.link} onPress={onChangeEmail}>
+          Usar outro e-mail
         </Text>
-      </Pressable>
-
-      <View style={{ flexGrow: 1 }} />
-
-      <Pressable
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={handleVerify}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Verificando..." : "Confirmar código"}
-        </Text>
-      </Pressable>
-
-      <Pressable style={local.backLink} onPress={onBack}>
-        <Text style={local.backLinkText}>← Voltar</Text>
-      </Pressable>
+      </Text>
     </View>
   );
 }
 
-
-
 function StepNewPassword({
   resetToken,
-  showAlert,
-  onSuccess,
+  onSaved,
+  onRestart,
 }: {
   resetToken: string;
-  showAlert: (t: AlertType, title: string, msg: string) => void;
-  onSuccess: () => void;
+  onSaved: () => void;
+  onRestart: () => void;
 }) {
-  const [newPassword, setNewPassword] = useState("");
+  const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [hideNew, setHideNew] = useState(true);
+  const [hidePassword, setHidePassword] = useState(true);
   const [hideConfirm, setHideConfirm] = useState(true);
+  const [touched, setTouched] = useState({ password: false, confirm: false });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [expired, setExpired] = useState(false);
+  const confirmRef = useRef<TextInput>(null);
 
-  async function handleReset() {
-    if (newPassword.length < 6) {
-      showAlert("info", "Senha fraca", "A senha deve ter pelo menos 6 caracteres.");
-      return;
-    }
-    if (newPassword !== confirm) {
-      showAlert("error", "Senhas diferentes", "As senhas digitadas não coincidem.");
-      return;
-    }
+  const strength = useMemo(() => getPasswordStrength(password), [password]);
+  const rules = useMemo(() => getPasswordRules(password), [password]);
+
+  const passwordError =
+    touched.password && password.length > 0 && password.length < 6 ? "Use pelo menos 6 caracteres." : "";
+  const confirmError =
+    touched.confirm && confirm.length > 0 && confirm !== password ? "As senhas não são iguais." : "";
+
+  async function handleSave() {
+    setTouched({ password: true, confirm: true });
+    if (password.length < 6 || confirm !== password) return;
+
+    setError("");
     setLoading(true);
     try {
-      await api.post("/auth/forgot-password/reset", { resetToken, newPassword });
-      onSuccess();
+      await api.post("/auth/forgot-password/reset", { resetToken, newPassword: password });
+      onSaved();
     } catch (e: any) {
-      const msg = e?.response?.data?.error || "Erro ao redefinir senha.";
-      showAlert("error", "Erro", msg);
+      const status = e?.response?.status;
+      setExpired(status === 400 || status === 401);
+      setError(apiError(e, "Não foi possível salvar a nova senha. Tente de novo."));
     } finally {
       setLoading(false);
     }
@@ -501,129 +495,163 @@ function StepNewPassword({
 
   return (
     <View>
-      <View style={{ alignItems: "center" }}>
-      </View>
+      <Text style={form.title}>Crie uma nova senha</Text>
+      <Text style={form.subtitle}>Escolha uma senha que você não use em outros lugares.</Text>
 
-      <Text style={styles.title}>
-        Crie uma nova senha para a sua conta.
-      </Text>
-
-      <View style={local.passwordWrap}>
+      <Text style={form.label}>Nova senha</Text>
+      <View style={[form.passwordWrapper, !!passwordError && s.inputError]}>
         <TextInput
-          style={local.passwordInput}
-          value={newPassword}
-          onChangeText={setNewPassword}
-          placeholder="Nova senha (mín. 6 caracteres)"
+          style={form.inputPassword}
+          value={password}
+          onChangeText={setPassword}
+          onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+          placeholder="Mínimo de 6 caracteres"
           placeholderTextColor="#999"
-          secureTextEntry={hideNew}
+          secureTextEntry={hidePassword}
+          textContentType="newPassword"
+          autoComplete="new-password"
           autoCapitalize="none"
+          autoCorrect={false}
           returnKeyType="next"
+          onSubmitEditing={() => confirmRef.current?.focus()}
+          editable={!loading}
+          accessibilityLabel="Nova senha"
         />
-        <Pressable onPress={() => setHideNew((v) => !v)}>
-          <Ionicons
-            name={hideNew ? "eye-off-outline" : "eye-outline"}
-            size={22}
-            color="#888"
-          />
+        <Pressable
+          onPress={() => setHidePassword((v) => !v)}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={hidePassword ? "Mostrar senha" : "Ocultar senha"}
+        >
+          <Ionicons name={hidePassword ? "eye-off" : "eye"} size={24} color="#535353" />
         </Pressable>
       </View>
+      <FieldError message={passwordError} />
+      <View style={{ marginTop: 10 }}>
+        <PasswordStrengthSection visible={password.length > 0} strength={strength} rules={rules} />
+      </View>
 
-      <View style={local.passwordWrap}>
+      <Text style={[form.label, { marginTop: 8 }]}>Confirmar nova senha</Text>
+      <View style={[form.passwordWrapper, !!confirmError && s.inputError]}>
         <TextInput
-          style={local.passwordInput}
+          ref={confirmRef}
+          style={form.inputPassword}
           value={confirm}
           onChangeText={setConfirm}
-          placeholder="Confirmar nova senha"
+          onBlur={() => setTouched((t) => ({ ...t, confirm: true }))}
+          placeholder="Digite a senha de novo"
           placeholderTextColor="#999"
           secureTextEntry={hideConfirm}
+          textContentType="newPassword"
+          autoComplete="new-password"
           autoCapitalize="none"
+          autoCorrect={false}
           returnKeyType="done"
-          onSubmitEditing={handleReset}
+          onSubmitEditing={handleSave}
+          editable={!loading}
+          accessibilityLabel="Confirmar nova senha"
         />
-        <Pressable onPress={() => setHideConfirm((v) => !v)}>
-          <Ionicons
-            name={hideConfirm ? "eye-off-outline" : "eye-outline"}
-            size={22}
-            color="#888"
-          />
+        <Pressable
+          onPress={() => setHideConfirm((v) => !v)}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={hideConfirm ? "Mostrar senha" : "Ocultar senha"}
+        >
+          <Ionicons name={hideConfirm ? "eye-off" : "eye"} size={24} color="#535353" />
         </Pressable>
       </View>
+      <FieldError message={confirmError} />
+      <FieldError message={error} />
 
-      <View style={{ flexGrow: 1 }} />
-
-      <Pressable
-        style={[styles.button, loading && { opacity: 0.7 }]}
-        onPress={handleReset}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Salvando..." : "Redefinir senha"}
-        </Text>
-      </Pressable>
+      <View style={{ height: 16 }} />
+      {expired ? (
+        <PrimaryButton label="Pedir um novo código" loadingLabel="" loading={false} onPress={onRestart} />
+      ) : (
+        <PrimaryButton label="Salvar nova senha" loadingLabel="Salvando..." loading={loading} onPress={handleSave} />
+      )}
     </View>
   );
 }
 
-// ─── Estilos locais (só o que não existe no styles do Verify) ─────────────────
+function StepDone({ onLogin }: { onLogin: () => void }) {
+  return (
+    <View style={s.done}>
+      <View style={s.doneBadge}>
+        <Ionicons name="checkmark" size={44} color="#FFF" />
+      </View>
+      <Text style={[form.title, s.center]}>Senha alterada</Text>
+      <Text style={[form.subtitle, s.center]}>
+        Tudo certo! Agora é só entrar no Ludus com a sua nova senha.
+      </Text>
+      <View style={s.fullWidth}>
+        <PrimaryButton label="Ir para o login" loadingLabel="" loading={false} onPress={onLogin} />
+      </View>
+    </View>
+  );
+}
 
-const local = {
-  stepsRow: {
-    flexDirection: "row" as const,
-    justifyContent: "center" as const,
-    gap: 8,
-    marginBottom: 4,
+const s = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#04096E" },
+  blueTopSpace: { height: 140, width: "100%" },
+  flex: { flex: 1 },
+  scroll: { flexGrow: 1, padding: 28, paddingBottom: Platform.OS === "ios" ? 60 : 120 },
+
+  header: { marginBottom: 22 },
+  headerTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 14 },
+  iconBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "#F0F2FF",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#D0D0D0",
-  },
-  dotActive: {
-    backgroundColor: "#04096E",
-    width: 24,
-    borderRadius: 5,
-  },
-  dotDone: {
-    backgroundColor: "#2E7D32",
-  },
-  inputWrap: {
-    borderWidth: 1,
-    borderColor: "#979BB5",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    marginTop: 30,
-    marginBottom: 8,
-    height: 56,
-    justifyContent: "center" as const,
-  },
-  textInput: {
-    fontSize: 15,
-    color: "#222",
-  },
-  passwordWrap: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    borderWidth: 1,
-    borderColor: "#979BB5",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    marginTop: 20,
-    height: 56,
-  },
-  passwordInput: {
+  stepLabel: { fontSize: 14, fontWeight: "700", color: "#5F6380" },
+  progress: { flexDirection: "row", gap: 8 },
+  progressBar: { flex: 1, height: 6, borderRadius: 999, backgroundColor: "#E4E7EE" },
+  progressBarOn: { backgroundColor: "#31358B" },
+
+  inputTight: { marginBottom: 6 },
+  inputError: { borderColor: "#E62325" },
+  errorRow: { flexDirection: "row", alignItems: "flex-start", gap: 6, marginTop: 4, marginBottom: 4 },
+  errorText: { flex: 1, color: "#B3193A", fontSize: 13, fontWeight: "600", lineHeight: 18 },
+  noticeRow: { flexDirection: "row", alignItems: "flex-start", gap: 6, marginTop: 4 },
+  noticeText: { flex: 1, color: "#1F7A39", fontSize: 13, fontWeight: "600", lineHeight: 18 },
+
+  primaryButton: { flexDirection: "row", justifyContent: "center", marginTop: 18 },
+  buttonOff: { opacity: 0.6 },
+
+  strong: { fontWeight: "700", color: "#31358B" },
+
+  otpRow: { flexDirection: "row", gap: 8, marginBottom: 6 },
+  otpBox: {
     flex: 1,
-    fontSize: 15,
-    color: "#222",
+    height: 58,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 14,
+    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1A1A2E",
+    backgroundColor: "#FFF",
   },
-  backLink: {
-    alignItems: "center" as const,
-    paddingVertical: 12,
-    marginBottom: 20,
+  otpBoxActive: { borderColor: "#31358B", borderWidth: 1.5, backgroundColor: "#F7F8FF" },
+
+  linksRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6 },
+  mutedText: { color: "#535353" },
+  mutedLink: { color: "#5F6380", fontWeight: "600" },
+
+  done: { alignItems: "center", paddingTop: 24 },
+  doneBadge: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: "#2E7D32",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 22,
   },
-  backLinkText: {
-    color: "#888",
-    fontSize: 14,
-    fontWeight: "600" as const,
-  },
-};
+  center: { textAlign: "center" },
+  fullWidth: { alignSelf: "stretch" },
+});
