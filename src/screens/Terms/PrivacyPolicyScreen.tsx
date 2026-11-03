@@ -57,7 +57,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.bullets}>
             <Bullet>Nome, e-mail institucional, telefone e matrícula.</Bullet>
             <Bullet>Foto de perfil, quando enviada.</Bullet>
-            <Bullet>Documento de identidade e comprovante de matrícula enviados para a aprovação do cadastro, guardados com acesso restrito à equipe da biblioteca.</Bullet>
+            <Bullet>Documento de identidade e comprovante de matrícula, usados só para aprovar o cadastro e apagados depois da aprovação (fica registrado apenas quem aprovou e quando).</Bullet>
             <Bullet>Informações relacionadas ao cadastro e autenticação.</Bullet>
             <Bullet>Dados de uso do sistema, como histórico de empréstimos, reservas e interações no app.</Bullet>
             <Bullet>Informações necessárias para notificações, segurança e funcionamento da aplicação.</Bullet>
@@ -91,7 +91,8 @@ export default function PrivacyPolicyScreen() {
             necessário para autenticação, comunicação ou cumprimento de exigências legais.
             Para funcionar, o Ludus usa serviços de terceiros: Google e Firebase
             (login e verificação do telefone), Cloudinary (armazenamento de fotos
-            e documentos), Expo (notificações) e Resend (envio de e-mails).
+            e documentos), Expo (notificações), Resend (envio de e-mails), Railway
+            (hospedagem do servidor e do banco de dados) e Sentry (registro de erros técnicos).
           </Text>
 
           <View style={styles.divider} />
@@ -115,7 +116,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.divider} />
 
           <Text style={styles.footerNote}>
-            Última atualização: v1.0 • App Ludus • IFMA Campus Timon
+            Última atualização: v1.1 • App Ludus • IFMA Campus Timon
           </Text>
         </ScrollView>
       </View>
