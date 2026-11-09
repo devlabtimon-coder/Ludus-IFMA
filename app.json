@@ -115,6 +115,10 @@
               "RNFBApp",
               "RNFBAuth"
             ]
+          },
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
           }
         }
       ]
