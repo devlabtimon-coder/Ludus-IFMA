@@ -118,6 +118,12 @@ export default function TermsScreen() {
             </Bullet>
 
             <Bullet>
+              As temporadas, o ranking e os brindes são organizados pela biblioteca do IFMA
+              Campus Timon, sem custo e sem necessidade de compra. A Apple e o Google não
+              patrocinam nem participam deles de nenhuma forma;
+            </Bullet>
+
+            <Bullet>
               A critério dos administradores do App Ludus, qualquer jogo pode ser retirado
               do catálogo de aluguel. Não insista em alugar jogos indisponíveis;
             </Bullet>
@@ -144,7 +150,7 @@ export default function TermsScreen() {
           <View style={styles.divider} />
 
           <Text style={styles.footerNote}>
-            Última atualização: v1.1 • Campus de Timon
+            Última atualização: v1.2 • Campus de Timon
           </Text>
         </ScrollView>
       </View>
